@@ -29,6 +29,18 @@ const Sidebar = () => {
         }
     }, []);
 
+    // Close sidebar when window resizes to desktop
+    useEffect(() => {
+        const handleResize = () => {
+            if (window.innerWidth >= 1024 && isMobileOpen) {
+                setIsMobileOpen(false);
+            }
+        };
+
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, [isMobileOpen]);
+
     // Sidebar configuration based on user permissions
     const menuItems = [
         {
@@ -84,18 +96,7 @@ const Sidebar = () => {
     // Filter menu items based on user permissions
     const filteredMenuItems = menuItems.filter(item => {
         if (item.permission === null) return true;
-        // Check if user has permission or is super_admin
         const permissions = user?.permissions || [];
-        
-        // Debug logging
-        if (!permissions.includes(item.permission) && !permissions.includes('super_admin')) {
-            console.debug(`Permission check for ${item.title}:`, {
-                required: item.permission,
-                has: permissions,
-                allowed: false
-            });
-        }
-        
         return permissions.includes(item.permission) || permissions.includes('super_admin');
     });
 
@@ -132,18 +133,21 @@ const Sidebar = () => {
 
     return (
         <>
-            {/* Mobile Toggle Button */}
-            <button
-                onClick={toggleMobileSidebar}
-                className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-white rounded-lg shadow-lg border border-gray-200"
-            >
-                {isMobileOpen ? <FaTimes size={20} /> : <FaBars size={20} />}
-            </button>
+            {/* Mobile Toggle Button - Only show when sidebar is closed */}
+            {!isMobileOpen && (
+                <button
+                    onClick={toggleMobileSidebar}
+                    className="lg:hidden fixed top-4 left-4 z-50 p-2.5 bg-white rounded-lg shadow-lg border border-gray-200 hover:bg-gray-50 transition-colors"
+                    aria-label="Open menu"
+                >
+                    <FaBars size={20} className="text-gray-700" />
+                </button>
+            )}
 
             {/* Backdrop for mobile */}
             {isMobileOpen && (
                 <div
-                    className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-40"
+                    className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity duration-300"
                     onClick={closeMobileSidebar}
                 />
             )}
@@ -151,11 +155,12 @@ const Sidebar = () => {
             {/* Sidebar */}
             <aside
                 className={`
-          fixed lg:sticky top-0 left-0 z-40
-          w-64 h-screen bg-gray-900 text-white
-          transition-transform duration-300 ease-in-out
-          ${isMobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-        `}
+                    fixed lg:sticky top-0 left-0 z-40
+                    w-64 h-screen bg-gray-900 text-white
+                    transition-transform duration-300 ease-in-out
+                    ${isMobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+                    shadow-2xl
+                `}
             >
                 {/* Brand */}
                 <div className="flex items-center justify-between p-4 border-b border-gray-700">
@@ -168,9 +173,11 @@ const Sidebar = () => {
                             <p className="text-xs text-gray-400">Smart admin workspace</p>
                         </div>
                     </div>
+                    {/* Close button - Only show on mobile when sidebar is open */}
                     <button
                         onClick={closeMobileSidebar}
-                        className="lg:hidden text-gray-400 hover:text-white"
+                        className="lg:hidden text-gray-400 hover:text-white hover:bg-gray-800 p-2 rounded-lg transition-colors"
+                        aria-label="Close menu"
                     >
                         <FaTimes size={20} />
                     </button>
@@ -190,12 +197,12 @@ const Sidebar = () => {
                                         to={item.path}
                                         onClick={closeMobileSidebar}
                                         className={`
-                      flex items-center gap-3 px-4 py-3 rounded-lg transition-all
-                      ${isActive
+                                            flex items-center gap-3 px-4 py-3 rounded-lg transition-all
+                                            ${isActive
                                                 ? 'bg-blue-600 text-white'
                                                 : 'text-gray-300 hover:bg-gray-800 hover:text-white'
                                             }
-                    `}
+                                        `}
                                     >
                                         <Icon size={18} />
                                         <span className="text-sm font-medium">{item.title}</span>
