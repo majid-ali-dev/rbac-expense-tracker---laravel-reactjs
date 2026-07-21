@@ -4,11 +4,11 @@ import { FaEdit, FaTrash, FaPlus } from 'react-icons/fa';
 const PermissionTable = ({ permissions, pagination, onEdit, onDelete, onPageChange, onCreate }) => {
     if (!permissions || permissions.length === 0) {
         return (
-            <div className="text-center py-8">
+            <div className="text-center py-12">
                 <p className="text-gray-500">No permissions found</p>
                 <button
                     onClick={onCreate}
-                    className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    className="mt-4 inline-flex items-center gap-2 px-4 py-2.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
                 >
                     <FaPlus size={14} />
                     Create Permission
@@ -34,14 +34,14 @@ const PermissionTable = ({ permissions, pagination, onEdit, onDelete, onPageChan
                         {permissions.map((permission, index) => (
                             <tr key={permission.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                                 <td className="py-3 px-4 text-sm text-gray-700">
-                                    {((pagination?.current_page || 1) - 1) * (pagination?.per_page || 15) + index + 1}
+                                    {((pagination?.current_page || 1) - 1) * (pagination?.per_page || 10) + index + 1}
                                 </td>
-                                <td className="py-3 px-4 text-sm font-medium text-gray-900">
+                                <td className="py-3 px-4">
                                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
                                         {permission.name}
                                     </span>
                                 </td>
-                                <td className="py-3 px-4 text-sm text-gray-700">
+                                <td className="py-3 px-4">
                                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                                         {permission.roles_count || 0} roles
                                     </span>
@@ -75,7 +75,7 @@ const PermissionTable = ({ permissions, pagination, onEdit, onDelete, onPageChan
 
             {/* Pagination */}
             {pagination && pagination.last_page > 1 && (
-                <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200">
+                <div className="flex items-center justify-between px-4 py-4 border-t border-gray-200">
                     <div className="text-sm text-gray-700">
                         Showing {((pagination.current_page - 1) * pagination.per_page) + 1} to{' '}
                         {Math.min(pagination.current_page * pagination.per_page, pagination.total)} of{' '}
@@ -85,17 +85,17 @@ const PermissionTable = ({ permissions, pagination, onEdit, onDelete, onPageChan
                         <button
                             onClick={() => onPageChange(pagination.current_page - 1)}
                             disabled={pagination.current_page <= 1}
-                            className="px-3 py-1 border border-gray-300 rounded-lg text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                            className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
                         >
                             Previous
                         </button>
-                        <span className="px-3 py-1 bg-blue-600 text-white rounded-lg text-sm">
+                        <span className="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium">
                             {pagination.current_page}
                         </span>
                         <button
                             onClick={() => onPageChange(pagination.current_page + 1)}
                             disabled={pagination.current_page >= pagination.last_page}
-                            className="px-3 py-1 border border-gray-300 rounded-lg text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                            className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
                         >
                             Next
                         </button>

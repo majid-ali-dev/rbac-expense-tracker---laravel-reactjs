@@ -14,7 +14,7 @@ const usePermissionStore = create((set, get) => ({
         last_page: 1,
     },
 
-    fetchPermissions: async (page = 1, perPage = 15) => {
+    fetchPermissions: async (page = 1, perPage = 10) => { // Changed default to 10
         set({ loading: true, error: null });
         try {
             const response = await permissionAPI.getPermissions(page, perPage);
