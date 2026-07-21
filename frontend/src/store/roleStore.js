@@ -14,7 +14,7 @@ const useRoleStore = create((set, get) => ({
         last_page: 1,
     },
 
-    fetchRoles: async (page = 1, perPage = 15) => {
+    fetchRoles: async (page = 1, perPage = 10) => { // Changed default to 10
         set({ loading: true, error: null });
         try {
             const response = await roleAPI.getRoles(page, perPage);

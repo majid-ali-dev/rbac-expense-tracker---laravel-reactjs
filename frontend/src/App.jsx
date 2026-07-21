@@ -18,19 +18,45 @@ function App() {
           style: {
             background: '#363636',
             color: '#fff',
+            padding: '16px 24px', // Increased padding
+            borderRadius: '12px',
+            fontSize: '15px', // Increased font size
+            maxWidth: '500px', // Increased max width
+            minWidth: '300px', // Minimum width
+            boxShadow: '0 10px 40px rgba(0,0,0,0.2)',
           },
           success: {
-            duration: 3000,
+            duration: 4000,
             style: {
               background: '#22c55e',
               color: '#fff',
+              padding: '16px 24px',
+              borderRadius: '12px',
+              fontSize: '15px',
+              maxWidth: '500px',
+              minWidth: '300px',
+              boxShadow: '0 10px 40px rgba(34, 197, 94, 0.3)',
+            },
+            iconTheme: {
+              primary: '#fff',
+              secondary: '#22c55e',
             },
           },
           error: {
-            duration: 4000,
+            duration: 5000,
             style: {
               background: '#ef4444',
               color: '#fff',
+              padding: '16px 24px',
+              borderRadius: '12px',
+              fontSize: '15px',
+              maxWidth: '500px',
+              minWidth: '300px',
+              boxShadow: '0 10px 40px rgba(239, 68, 68, 0.3)',
+            },
+            iconTheme: {
+              primary: '#fff',
+              secondary: '#ef4444',
             },
           },
         }}

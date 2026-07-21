@@ -20,7 +20,7 @@ class PermissionController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $perPage = $request->get('per_page', 15);
+        $perPage = $request->get('per_page', 10); // Changed from 15 to 10
         $permissions = $this->permissionService->getAllPaginated($perPage);
 
         return response()->json([

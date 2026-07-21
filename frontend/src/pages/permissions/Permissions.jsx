@@ -23,7 +23,7 @@ const Permissions = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
-        fetchPermissions(1, 15);
+        fetchPermissions(1, 10); // Changed from 15 to 10
         return () => clearError();
     }, []);
 

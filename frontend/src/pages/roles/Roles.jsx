@@ -24,7 +24,7 @@ const Roles = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
-        fetchRoles(1, 15);
+        fetchRoles(1, 10); // Changed from 15 to 10
         return () => clearError();
     }, []);
 
