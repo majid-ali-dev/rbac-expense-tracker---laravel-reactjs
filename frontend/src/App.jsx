@@ -5,6 +5,7 @@ import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 import Dashboard from './pages/dashboard/Dashboard';
 import Roles from './pages/roles/Roles';
+import Permissions from './pages/permissions/Permissions';
 import ProtectedRoute from './components/layout/ProtectedRoute';
 
 function App() {
@@ -44,6 +45,7 @@ function App() {
         <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/roles" element={<Roles />} />
+          <Route path="/permissions" element={<Permissions />} />
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
         </Route>
 
