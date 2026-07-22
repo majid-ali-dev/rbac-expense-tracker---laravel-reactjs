@@ -4,6 +4,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\RolePermissionController;
 use Illuminate\Support\Facades\Route;
 
 // Public routes
@@ -34,5 +35,12 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/{id}', [PermissionController::class, 'show'])->name('permissions.show');
         Route::put('/{id}', [PermissionController::class, 'update'])->name('permissions.update');
         Route::delete('/{id}', [PermissionController::class, 'destroy'])->name('permissions.delete');
+    });
+
+    // Role-Permission Management Routes
+    Route::prefix('role-permissions')->group(function () {
+        Route::get('/', [RolePermissionController::class, 'index'])->name('role-permissions.index');
+        Route::get('/{id}/edit', [RolePermissionController::class, 'edit'])->name('role-permissions.edit');
+        Route::put('/{id}', [RolePermissionController::class, 'update'])->name('role-permissions.update');
     });
 });

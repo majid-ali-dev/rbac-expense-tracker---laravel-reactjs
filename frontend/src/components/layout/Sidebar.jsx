@@ -43,7 +43,7 @@ const Sidebar = () => {
         { title: 'Dashboard', icon: FaHome, path: '/dashboard', permission: null },
         { title: 'Roles', icon: FaUserShield, path: '/roles', permission: 'assign-roles' },
         { title: 'Permissions', icon: FaKey, path: '/permissions', permission: 'assign-roles' },
-        { title: 'Roles & Permissions', icon: FaLayerGroup, path: '/role-permissions', permission: 'assign-roles' },
+        { title: 'Roles & Permissions', icon: FaLayerGroup, path: '/role-permissions', permission: 'assign-roles' }, // This should be there
         { title: 'Manage Users', icon: FaUsers, path: '/users', permission: 'manage-users' },
         { title: 'Categories', icon: FaShoppingCart, path: '/categories', permission: 'manage-categories' },
         { title: 'Expenses', icon: FaMoneyBillWave, path: '/expenses', permission: 'view-expense' },
