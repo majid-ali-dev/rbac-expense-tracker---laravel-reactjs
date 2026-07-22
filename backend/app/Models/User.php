@@ -2,22 +2,28 @@
 
 namespace App\Models;
 
+use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Support\Collection;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens;
 
     protected $with = ['roles.permissions'];
 
-    protected $fillable = ['name','email','password','phone','total_amount','status'];
+    protected $fillable = ['name', 'email', 'password', 'phone', 'total_amount', 'status'];
 
-    protected $casts = ['total_amount' => 'decimal:2'];
+    protected $casts = [
+        'total_amount' => 'decimal:2',
+        'email_verified_at' => 'datetime',
+    ];
+
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
 
     public function expenses()
     {
@@ -34,12 +40,15 @@ class User extends Authenticatable
         return $this->belongsToMany(Role::class)->withTimestamps();
     }
 
-    public function permissions(): Collection
+    public function permissions(): array
     {
-        return $this->roles->flatMap(fn ($role) 
-        => $role->permissions)->pluck('name')->filter()->unique()->values();
+        return $this->roles->flatMap(fn($role) => $role->permissions)
+            ->pluck('name')
+            ->filter()
+            ->unique()
+            ->values()
+            ->toArray(); // Convert to array
     }
-
 
     public function hasRole(string $role): bool
     {
@@ -48,12 +57,12 @@ class User extends Authenticatable
 
     public function hasPermission(string $permission): bool
     {
-        return $this->permissions()->contains($permission);
+        return in_array($permission, $this->permissions());
     }
 
     public function hasAnyPermission(array $permissions): bool
     {
-        return $this->permissions()->intersect($permissions)->isNotEmpty();
+        return !empty(array_intersect($permissions, $this->permissions()));
     }
 
     public function roleNames(): Collection
@@ -66,7 +75,6 @@ class User extends Authenticatable
         if ($this->relationLoaded('payments')) {
             return (float) $this->payments->sum('paid_amount');
         }
-
         return (float) $this->payments()->sum('paid_amount');
     }
 
@@ -83,7 +91,6 @@ class User extends Authenticatable
         if ((float) $this->total_paid < (float) $this->total_amount) {
             return 'partial';
         }
-
         return 'paid';
     }
 }
