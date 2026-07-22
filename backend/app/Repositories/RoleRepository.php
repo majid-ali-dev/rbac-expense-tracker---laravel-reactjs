@@ -8,7 +8,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 class RoleRepository implements RoleRepositoryInterface
 {
-    public function getAllPaginated(int $perPage = 15): LengthAwarePaginator
+    public function getAllPaginated(int $perPage = 10): LengthAwarePaginator
     {
         return Role::withCount('users')
             ->latest()
@@ -17,7 +17,7 @@ class RoleRepository implements RoleRepositoryInterface
 
     public function findById(int $id): ?Role
     {
-        return Role::with(['permissions', 'users'])->find($id);
+        return Role::with(['permissions', 'users'])->withCount('users')->find($id);
     }
 
     public function findByName(string $name): ?Role

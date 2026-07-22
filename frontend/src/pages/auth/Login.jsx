@@ -50,13 +50,13 @@ const Login = () => {
                                 },
                             })}
                             className={`
-                w-full px-4 py-3 rounded-xl border transition-colors
-                ${errors.email
+                                w-full px-4 py-3 rounded-xl border transition-colors
+                                ${errors.email
                                     ? 'border-red-500 focus:ring-red-500'
                                     : 'border-gray-300 focus:ring-blue-500'
                                 }
-                focus:outline-none focus:ring-2
-              `}
+                                focus:outline-none focus:ring-2
+                            `}
                             placeholder="Enter your email"
                         />
                         {errors.email && (
@@ -80,13 +80,13 @@ const Login = () => {
                                     },
                                 })}
                                 className={`
-                  w-full px-4 py-3 rounded-xl border transition-colors
-                  ${errors.password
+                                    w-full px-4 py-3 rounded-xl border transition-colors
+                                    ${errors.password
                                         ? 'border-red-500 focus:ring-red-500'
                                         : 'border-gray-300 focus:ring-blue-500'
                                     }
-                  focus:outline-none focus:ring-2
-                `}
+                                    focus:outline-none focus:ring-2
+                                `}
                                 placeholder="Enter your password"
                             />
                             <button

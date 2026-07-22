@@ -9,7 +9,7 @@ use Illuminate\Support\Collection;
 
 class PermissionRepository implements PermissionRepositoryInterface
 {
-    public function getAllPaginated(int $perPage = 15): LengthAwarePaginator
+    public function getAllPaginated(int $perPage = 10): LengthAwarePaginator
     {
         return Permission::withCount('roles')
             ->latest()
@@ -18,7 +18,7 @@ class PermissionRepository implements PermissionRepositoryInterface
 
     public function findById(int $id): ?Permission
     {
-        return Permission::with(['roles'])->find($id);
+        return Permission::with(['roles'])->withCount('roles')->find($id);
     }
 
     public function findByName(string $name): ?Permission

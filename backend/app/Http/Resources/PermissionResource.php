@@ -12,8 +12,7 @@ class PermissionResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
-            'roles' => RoleResource::collection($this->whenLoaded('roles')),
-            'roles_count' => $this->whenCounted('roles'),
+            'roles_count' => $this->roles_count ?? $this->roles()->count(),
             'created_at' => $this->created_at?->toISOString(),
             'updated_at' => $this->updated_at?->toISOString(),
         ];
