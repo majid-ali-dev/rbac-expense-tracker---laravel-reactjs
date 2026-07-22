@@ -3,7 +3,7 @@ import { FaPlus } from 'react-icons/fa';
 import usePermissionStore from '../../store/permissionStore';
 import PermissionTable from '../../components/permissions/PermissionTable';
 import PermissionForm from '../../components/permissions/PermissionForm';
-import PermissionDeleteModal from '../../components/permissions/PermissionDeleteModal';
+import { showDeleteConfirm, showDeletedSuccess } from '../../utils/toast';
 
 const Permissions = () => {
     const {
@@ -19,11 +19,10 @@ const Permissions = () => {
 
     const [showForm, setShowForm] = useState(false);
     const [editingPermission, setEditingPermission] = useState(null);
-    const [deletingPermission, setDeletingPermission] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
-        fetchPermissions(1, 10); // Changed from 15 to 10
+        fetchPermissions(1, 10);
         return () => clearError();
     }, []);
 
@@ -37,8 +36,18 @@ const Permissions = () => {
         setShowForm(true);
     };
 
-    const handleDelete = (permission) => {
-        setDeletingPermission(permission);
+    const handleDelete = async (permission) => {
+        const result = await showDeleteConfirm(
+            'Are you sure?',
+            `You won't be able to revert this! Permission "${permission.name}" will be deleted.`
+        );
+
+        if (result.isConfirmed) {
+            const response = await deletePermission(permission.id);
+            if (response.success) {
+                await showDeletedSuccess('Deleted!', 'Permission has been deleted successfully.');
+            }
+        }
     };
 
     const handleFormSubmit = async (data) => {
@@ -60,15 +69,6 @@ const Permissions = () => {
         }
     };
 
-    const handleDeleteConfirm = async () => {
-        if (!deletingPermission) return;
-
-        const result = await deletePermission(deletingPermission.id);
-        if (result.success) {
-            setDeletingPermission(null);
-        }
-    };
-
     const handlePageChange = (page) => {
         if (page >= 1 && page <= pagination.last_page) {
             fetchPermissions(page, pagination.per_page);
@@ -80,13 +80,8 @@ const Permissions = () => {
         setEditingPermission(null);
     };
 
-    const handleCancelDelete = () => {
-        setDeletingPermission(null);
-    };
-
     return (
         <div className="space-y-6">
-            {/* Page Header */}
             <div className="flex items-center justify-between flex-wrap gap-4">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900">Permissions Management</h1>
@@ -94,14 +89,13 @@ const Permissions = () => {
                 </div>
                 <button
                     onClick={handleCreate}
-                    className="inline-flex items-center gap-2 px-4 py-2.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                    className="inline-flex items-center gap-2 px-4 py-2.5 bg-purple-600 text-white rounded-2xl hover:bg-purple-700 transition-all shadow-lg shadow-purple-600/20"
                 >
                     <FaPlus size={16} />
                     Create Permission
                 </button>
             </div>
 
-            {/* Permission Form */}
             {showForm && (
                 <PermissionForm
                     permission={editingPermission}
@@ -111,9 +105,8 @@ const Permissions = () => {
                 />
             )}
 
-            {/* Permission Table */}
             {!showForm && (
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                     {loading && permissions.length === 0 ? (
                         <div className="flex items-center justify-center py-12">
                             <div className="text-center">
@@ -132,16 +125,6 @@ const Permissions = () => {
                         />
                     )}
                 </div>
-            )}
-
-            {/* Delete Modal */}
-            {deletingPermission && (
-                <PermissionDeleteModal
-                    permission={deletingPermission}
-                    onConfirm={handleDeleteConfirm}
-                    onCancel={handleCancelDelete}
-                    loading={loading}
-                />
             )}
         </div>
     );

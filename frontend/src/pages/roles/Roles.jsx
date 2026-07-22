@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { FaPlus } from 'react-icons/fa';
-import { toast } from 'react-hot-toast';
 import useRoleStore from '../../store/roleStore';
 import RoleTable from '../../components/roles/RoleTable';
 import RoleForm from '../../components/roles/RoleForm';
-import RoleDeleteModal from '../../components/roles/RoleDeleteModal';
+import { showDeleteConfirm, showDeletedSuccess } from '../../utils/toast';
 
 const Roles = () => {
     const {
@@ -20,11 +19,10 @@ const Roles = () => {
 
     const [showForm, setShowForm] = useState(false);
     const [editingRole, setEditingRole] = useState(null);
-    const [deletingRole, setDeletingRole] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
-        fetchRoles(1, 10); // Changed from 15 to 10
+        fetchRoles(1, 10);
         return () => clearError();
     }, []);
 
@@ -38,8 +36,18 @@ const Roles = () => {
         setShowForm(true);
     };
 
-    const handleDelete = (role) => {
-        setDeletingRole(role);
+    const handleDelete = async (role) => {
+        const result = await showDeleteConfirm(
+            'Are you sure?',
+            `You won't be able to revert this! Role "${role.name}" will be deleted.`
+        );
+        
+        if (result.isConfirmed) {
+            const response = await deleteRole(role.id);
+            if (response.success) {
+                await showDeletedSuccess('Deleted!', 'Role has been deleted successfully.');
+            }
+        }
     };
 
     const handleFormSubmit = async (data) => {
@@ -61,15 +69,6 @@ const Roles = () => {
         }
     };
 
-    const handleDeleteConfirm = async () => {
-        if (!deletingRole) return;
-
-        const result = await deleteRole(deletingRole.id);
-        if (result.success) {
-            setDeletingRole(null);
-        }
-    };
-
     const handlePageChange = (page) => {
         if (page >= 1 && page <= pagination.last_page) {
             fetchRoles(page, pagination.per_page);
@@ -81,13 +80,8 @@ const Roles = () => {
         setEditingRole(null);
     };
 
-    const handleCancelDelete = () => {
-        setDeletingRole(null);
-    };
-
     return (
         <div className="space-y-6">
-            {/* Page Header */}
             <div className="flex items-center justify-between flex-wrap gap-4">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900">Roles Management</h1>
@@ -95,14 +89,13 @@ const Roles = () => {
                 </div>
                 <button
                     onClick={handleCreate}
-                    className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-2xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20"
                 >
                     <FaPlus size={16} />
                     Create Role
                 </button>
             </div>
 
-            {/* Role Form */}
             {showForm && (
                 <RoleForm
                     role={editingRole}
@@ -112,9 +105,8 @@ const Roles = () => {
                 />
             )}
 
-            {/* Role Table */}
             {!showForm && (
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                     {loading && roles.length === 0 ? (
                         <div className="flex items-center justify-center py-12">
                             <div className="text-center">
@@ -133,16 +125,6 @@ const Roles = () => {
                         />
                     )}
                 </div>
-            )}
-
-            {/* Delete Modal */}
-            {deletingRole && (
-                <RoleDeleteModal
-                    role={deletingRole}
-                    onConfirm={handleDeleteConfirm}
-                    onCancel={handleCancelDelete}
-                    loading={loading}
-                />
             )}
         </div>
     );

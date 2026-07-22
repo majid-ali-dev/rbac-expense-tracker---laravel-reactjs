@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { toast } from 'react-hot-toast';
 import useAuthStore from '../../store/authStore';
 
 const Register = () => {
@@ -12,7 +11,6 @@ const Register = () => {
     const {
         register,
         handleSubmit,
-        watch,
         formState: { errors },
     } = useForm();
 
@@ -25,16 +23,7 @@ const Register = () => {
         });
 
         if (result.success) {
-            toast.success('Registration successful!');
             navigate('/dashboard');
-        } else {
-            // Handle validation errors
-            if (typeof result.error === 'object') {
-                const errors = Object.values(result.error).flat();
-                toast.error(errors[0] || 'Registration failed. Please try again.');
-            } else {
-                toast.error(result.error || 'Registration failed. Please try again.');
-            }
         }
     };
 

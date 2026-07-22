@@ -4,7 +4,6 @@ import { FaFileAlt, FaMoneyBillWave, FaUsers, FaWallet } from 'react-icons/fa';
 const DashboardStats = ({ stats, paymentData }) => {
     const statItems = [];
 
-    // Add expense stats if user has permission
     if (stats?.can_view_expenses) {
         statItems.push({
             label: 'Total Expenses',
@@ -20,7 +19,6 @@ const DashboardStats = ({ stats, paymentData }) => {
         });
     }
 
-    // Add payment stats for members
     if (paymentData) {
         statItems.push({
             label: 'Total Assigned',
@@ -58,21 +56,21 @@ const DashboardStats = ({ stats, paymentData }) => {
     }
 
     return (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {statItems.map((item, index) => {
                 const Icon = item.icon;
                 return (
                     <div
                         key={index}
-                        className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
+                        className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow hover:-translate-y-1 duration-200"
                     >
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-sm font-medium text-gray-600">{item.label}</p>
-                                <p className="text-2xl font-bold text-gray-900 mt-1">{item.value}</p>
+                                <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">{item.label}</p>
+                                <p className="text-2xl font-extrabold text-gray-900 mt-2">{item.value}</p>
                             </div>
-                            <div className={`${item.color} p-3 rounded-lg text-white`}>
-                                <Icon size={20} />
+                            <div className={`${item.color} p-3.5 rounded-2xl text-white shadow-lg shadow-${item.color}/30`}>
+                                <Icon size={22} />
                             </div>
                         </div>
                     </div>

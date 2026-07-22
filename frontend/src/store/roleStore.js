@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { roleAPI } from '../services/roleApi';
-import { toast } from 'react-hot-toast';
+import { showSuccess, showError } from '../utils/toast';
 
 const useRoleStore = create((set, get) => ({
     roles: [],
@@ -9,17 +9,17 @@ const useRoleStore = create((set, get) => ({
     error: null,
     pagination: {
         current_page: 1,
-        per_page: 15,
+        per_page: 10,
         total: 0,
         last_page: 1,
     },
 
-    fetchRoles: async (page = 1, perPage = 10) => { // Changed default to 10
+    fetchRoles: async (page = 1, perPage = 10) => {
         set({ loading: true, error: null });
         try {
             const response = await roleAPI.getRoles(page, perPage);
             const { data, meta } = response.data;
-
+            
             set({
                 roles: data,
                 pagination: meta || {
@@ -34,7 +34,7 @@ const useRoleStore = create((set, get) => ({
         } catch (error) {
             const errorMessage = error.response?.data?.message || 'Failed to fetch roles';
             set({ loading: false, error: errorMessage });
-            toast.error(errorMessage);
+            showError(errorMessage);
             return { success: false, error: errorMessage };
         }
     },
@@ -49,7 +49,7 @@ const useRoleStore = create((set, get) => ({
         } catch (error) {
             const errorMessage = error.response?.data?.message || 'Failed to fetch role';
             set({ loading: false, error: errorMessage });
-            toast.error(errorMessage);
+            showError(errorMessage);
             return { success: false, error: errorMessage };
         }
     },
@@ -59,19 +59,17 @@ const useRoleStore = create((set, get) => ({
         try {
             const response = await roleAPI.createRole(roleData);
             const role = response.data.data;
-            toast.success('Role created successfully');
-
-            // Refresh the list
+            showSuccess('Role created successfully');
+            
             await get().fetchRoles(1, get().pagination.per_page);
-
             set({ loading: false });
             return { success: true, role };
         } catch (error) {
-            const errorMessage = error.response?.data?.errors?.name?.[0] ||
-                error.response?.data?.message ||
-                'Failed to create role';
+            const errorMessage = error.response?.data?.errors?.name?.[0] || 
+                               error.response?.data?.message || 
+                               'Failed to create role';
             set({ loading: false, error: errorMessage });
-            toast.error(errorMessage);
+            showError(errorMessage);
             return { success: false, error: errorMessage };
         }
     },
@@ -81,19 +79,17 @@ const useRoleStore = create((set, get) => ({
         try {
             const response = await roleAPI.updateRole(id, roleData);
             const role = response.data.data;
-            toast.success('Role updated successfully');
-
-            // Refresh the list
+            showSuccess('Role updated successfully');
+            
             await get().fetchRoles(get().pagination.current_page, get().pagination.per_page);
-
             set({ loading: false });
             return { success: true, role };
         } catch (error) {
-            const errorMessage = error.response?.data?.errors?.name?.[0] ||
-                error.response?.data?.message ||
-                'Failed to update role';
+            const errorMessage = error.response?.data?.errors?.name?.[0] || 
+                               error.response?.data?.message || 
+                               'Failed to update role';
             set({ loading: false, error: errorMessage });
-            toast.error(errorMessage);
+            showError(errorMessage);
             return { success: false, error: errorMessage };
         }
     },
@@ -102,17 +98,15 @@ const useRoleStore = create((set, get) => ({
         set({ loading: true, error: null });
         try {
             await roleAPI.deleteRole(id);
-            toast.success('Role deleted successfully');
-
-            // Refresh the list
+            showSuccess('Role deleted successfully');
+            
             await get().fetchRoles(get().pagination.current_page, get().pagination.per_page);
-
             set({ loading: false });
             return { success: true };
         } catch (error) {
             const errorMessage = error.response?.data?.message || 'Failed to delete role';
             set({ loading: false, error: errorMessage });
-            toast.error(errorMessage);
+            showError(errorMessage);
             return { success: false, error: errorMessage };
         }
     },

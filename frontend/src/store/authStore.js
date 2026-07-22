@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { authAPI } from '../services/api';
+import { showSuccess, showError } from '../utils/toast';
 
 const useAuthStore = create(
     persist(
@@ -15,54 +16,6 @@ const useAuthStore = create(
                 set({ loading: true, error: null });
                 try {
                     const response = await authAPI.login({ email, password });
-                    console.log('Login response:', response.data);
-
-                    const { data } = response.data;
-
-                    if (data.token) {
-                        localStorage.setItem('token', data.token);
-                    }
-
-                    // Ensure user data is properly set
-                    const userData = data.user;
-
-                    set({
-                        user: userData,
-                        token: data.token,
-                        isAuthenticated: true,
-                        loading: false,
-                        error: null,
-                    });
-
-                    return { success: true, data: userData };
-                } catch (error) {
-                    console.error('Login error:', error);
-                    let errorMessage = 'Login failed. Please try again.';
-
-                    if (error.response?.data?.errors) {
-                        const errors = Object.values(error.response.data.errors).flat();
-                        errorMessage = errors[0] || errorMessage;
-                    } else if (error.response?.data?.message) {
-                        errorMessage = error.response.data.message;
-                    } else if (error.response?.data?.error) {
-                        errorMessage = error.response.data.error;
-                    }
-
-                    set({
-                        loading: false,
-                        error: errorMessage,
-                        isAuthenticated: false,
-                    });
-                    return { success: false, error: errorMessage };
-                }
-            },
-
-            register: async (userData) => {
-                set({ loading: true, error: null });
-                try {
-                    const response = await authAPI.register(userData);
-                    console.log('Register response:', response.data);
-
                     const { data } = response.data;
 
                     if (data.token) {
@@ -77,25 +30,54 @@ const useAuthStore = create(
                         error: null,
                     });
 
-                    return { success: true, data };
+                    showSuccess('Login successful!');
+                    return { success: true, data: data.user };
                 } catch (error) {
-                    console.error('Register error:', error);
-                    let errorMessage = 'Registration failed. Please try again.';
-
+                    let errorMessage = 'Login failed. Please try again.';
                     if (error.response?.data?.errors) {
                         const errors = Object.values(error.response.data.errors).flat();
                         errorMessage = errors[0] || errorMessage;
                     } else if (error.response?.data?.message) {
                         errorMessage = error.response.data.message;
-                    } else if (error.response?.data?.error) {
-                        errorMessage = error.response.data.error;
+                    }
+
+                    set({ loading: false, error: errorMessage, isAuthenticated: false });
+                    showError(errorMessage);
+                    return { success: false, error: errorMessage };
+                }
+            },
+
+            register: async (userData) => {
+                set({ loading: true, error: null });
+                try {
+                    const response = await authAPI.register(userData);
+                    const { data } = response.data;
+
+                    if (data.token) {
+                        localStorage.setItem('token', data.token);
                     }
 
                     set({
+                        user: data.user,
+                        token: data.token,
+                        isAuthenticated: true,
                         loading: false,
-                        error: errorMessage,
-                        isAuthenticated: false,
+                        error: null,
                     });
+
+                    showSuccess('Registration successful!');
+                    return { success: true, data };
+                } catch (error) {
+                    let errorMessage = 'Registration failed. Please try again.';
+                    if (error.response?.data?.errors) {
+                        const errors = Object.values(error.response.data.errors).flat();
+                        errorMessage = errors[0] || errorMessage;
+                    } else if (error.response?.data?.message) {
+                        errorMessage = error.response.data.message;
+                    }
+
+                    set({ loading: false, error: errorMessage, isAuthenticated: false });
+                    showError(errorMessage);
                     return { success: false, error: errorMessage };
                 }
             },
@@ -103,6 +85,7 @@ const useAuthStore = create(
             logout: async () => {
                 try {
                     await authAPI.logout();
+                    showSuccess('Logged out successfully');
                 } catch (error) {
                     console.error('Logout error:', error);
                 } finally {
@@ -122,8 +105,6 @@ const useAuthStore = create(
                 set({ loading: true });
                 try {
                     const response = await authAPI.me();
-                    console.log('Fetch user response:', response.data);
-
                     const user = response.data.data;
                     set({
                         user: user,
@@ -133,8 +114,6 @@ const useAuthStore = create(
                     });
                     return { success: true, user };
                 } catch (error) {
-                    console.error('Fetch user error:', error);
-                    // If token is invalid, clear everything
                     localStorage.removeItem('token');
                     localStorage.removeItem('user');
                     set({

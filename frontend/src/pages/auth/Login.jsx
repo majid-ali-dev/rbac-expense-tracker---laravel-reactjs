@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { toast } from 'react-hot-toast';
 import useAuthStore from '../../store/authStore';
 
 const Login = () => {
@@ -18,10 +17,7 @@ const Login = () => {
     const onSubmit = async (data) => {
         const result = await login(data.email, data.password);
         if (result.success) {
-            toast.success('Login successful!');
             navigate('/dashboard');
-        } else {
-            toast.error(result.error || 'Login failed. Please try again.');
         }
     };
 

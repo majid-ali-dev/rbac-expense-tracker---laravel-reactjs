@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { permissionAPI } from '../services/permissionApi';
-import { toast } from 'react-hot-toast';
+import { showSuccess, showError } from '../utils/toast';
 
 const usePermissionStore = create((set, get) => ({
     permissions: [],
@@ -9,17 +9,17 @@ const usePermissionStore = create((set, get) => ({
     error: null,
     pagination: {
         current_page: 1,
-        per_page: 15,
+        per_page: 10,
         total: 0,
         last_page: 1,
     },
 
-    fetchPermissions: async (page = 1, perPage = 10) => { // Changed default to 10
+    fetchPermissions: async (page = 1, perPage = 10) => {
         set({ loading: true, error: null });
         try {
             const response = await permissionAPI.getPermissions(page, perPage);
             const { data, meta } = response.data;
-
+            
             set({
                 permissions: data,
                 pagination: meta || {
@@ -34,7 +34,7 @@ const usePermissionStore = create((set, get) => ({
         } catch (error) {
             const errorMessage = error.response?.data?.message || 'Failed to fetch permissions';
             set({ loading: false, error: errorMessage });
-            toast.error(errorMessage);
+            showError(errorMessage);
             return { success: false, error: errorMessage };
         }
     },
@@ -49,7 +49,7 @@ const usePermissionStore = create((set, get) => ({
         } catch (error) {
             const errorMessage = error.response?.data?.message || 'Failed to fetch permission';
             set({ loading: false, error: errorMessage });
-            toast.error(errorMessage);
+            showError(errorMessage);
             return { success: false, error: errorMessage };
         }
     },
@@ -59,19 +59,17 @@ const usePermissionStore = create((set, get) => ({
         try {
             const response = await permissionAPI.createPermission(permissionData);
             const permission = response.data.data;
-            toast.success('Permission created successfully');
-
-            // Refresh the list
+            showSuccess('Permission created successfully');
+            
             await get().fetchPermissions(1, get().pagination.per_page);
-
             set({ loading: false });
             return { success: true, permission };
         } catch (error) {
-            const errorMessage = error.response?.data?.errors?.name?.[0] ||
-                error.response?.data?.message ||
-                'Failed to create permission';
+            const errorMessage = error.response?.data?.errors?.name?.[0] || 
+                               error.response?.data?.message || 
+                               'Failed to create permission';
             set({ loading: false, error: errorMessage });
-            toast.error(errorMessage);
+            showError(errorMessage);
             return { success: false, error: errorMessage };
         }
     },
@@ -81,19 +79,17 @@ const usePermissionStore = create((set, get) => ({
         try {
             const response = await permissionAPI.updatePermission(id, permissionData);
             const permission = response.data.data;
-            toast.success('Permission updated successfully');
-
-            // Refresh the list
+            showSuccess('Permission updated successfully');
+            
             await get().fetchPermissions(get().pagination.current_page, get().pagination.per_page);
-
             set({ loading: false });
             return { success: true, permission };
         } catch (error) {
-            const errorMessage = error.response?.data?.errors?.name?.[0] ||
-                error.response?.data?.message ||
-                'Failed to update permission';
+            const errorMessage = error.response?.data?.errors?.name?.[0] || 
+                               error.response?.data?.message || 
+                               'Failed to update permission';
             set({ loading: false, error: errorMessage });
-            toast.error(errorMessage);
+            showError(errorMessage);
             return { success: false, error: errorMessage };
         }
     },
@@ -102,17 +98,15 @@ const usePermissionStore = create((set, get) => ({
         set({ loading: true, error: null });
         try {
             await permissionAPI.deletePermission(id);
-            toast.success('Permission deleted successfully');
-
-            // Refresh the list
+            showSuccess('Permission deleted successfully');
+            
             await get().fetchPermissions(get().pagination.current_page, get().pagination.per_page);
-
             set({ loading: false });
             return { success: true };
         } catch (error) {
             const errorMessage = error.response?.data?.message || 'Failed to delete permission';
             set({ loading: false, error: errorMessage });
-            toast.error(errorMessage);
+            showError(errorMessage);
             return { success: false, error: errorMessage };
         }
     },
