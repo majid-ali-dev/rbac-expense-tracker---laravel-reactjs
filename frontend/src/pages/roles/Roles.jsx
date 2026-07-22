@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { FaPlus } from 'react-icons/fa';
 import useRoleStore from '../../store/roleStore';
 import RoleTable from '../../components/roles/RoleTable';
 import RoleForm from '../../components/roles/RoleForm';
@@ -69,62 +68,46 @@ const Roles = () => {
         }
     };
 
-    const handlePageChange = (page) => {
-        if (page >= 1 && page <= pagination.last_page) {
-            fetchRoles(page, pagination.per_page);
-        }
-    };
-
     const handleCancelForm = () => {
         setShowForm(false);
         setEditingRole(null);
     };
 
+    const handlePageChange = (page) => {
+        if (page >= 1 && page <= (pagination?.last_page || 1)) {
+            fetchRoles(page, pagination?.per_page || 10);
+        }
+    };
+
+    if (loading && roles.length === 0) {
+        return (
+            <div className="flex items-center justify-center min-h-[60vh]">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                    <p className="mt-4 text-gray-600">Loading roles...</p>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between flex-wrap gap-4">
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Roles Management</h1>
-                    <p className="text-gray-600 mt-1">Manage user roles and permissions</p>
-                </div>
-                <button
-                    onClick={handleCreate}
-                    className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-2xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20"
-                >
-                    <FaPlus size={16} />
-                    Create Role
-                </button>
-            </div>
-
-            {showForm && (
+            {showForm ? (
                 <RoleForm
                     role={editingRole}
                     onSubmit={handleFormSubmit}
                     onCancel={handleCancelForm}
                     loading={isSubmitting || loading}
                 />
-            )}
-
-            {!showForm && (
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                    {loading && roles.length === 0 ? (
-                        <div className="flex items-center justify-center py-12">
-                            <div className="text-center">
-                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-                                <p className="mt-3 text-gray-600">Loading roles...</p>
-                            </div>
-                        </div>
-                    ) : (
-                        <RoleTable
-                            roles={roles}
-                            pagination={pagination}
-                            onEdit={handleEdit}
-                            onDelete={handleDelete}
-                            onPageChange={handlePageChange}
-                            onCreate={handleCreate}
-                        />
-                    )}
-                </div>
+            ) : (
+                <RoleTable
+                    roles={roles}
+                    pagination={pagination}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                    onCreate={handleCreate}
+                    onPageChange={handlePageChange}
+                />
             )}
         </div>
     );
