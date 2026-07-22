@@ -16,19 +16,22 @@ class RoleService
         $this->roleRepository = $roleRepository;
     }
 
-    public function getAllPaginated(int $perPage = 15): LengthAwarePaginator
+    public function getAllPaginated(int $perPage = 10): LengthAwarePaginator
     {
-        return $this->roleRepository->getAllPaginated($perPage);
+        return Role::with('permissions')
+            ->withCount('users')
+            ->latest()
+            ->paginate($perPage);
     }
 
     public function findById(int $id): ?Role
     {
-        return $this->roleRepository->findById($id);
+        return Role::with(['permissions', 'users'])->withCount('users')->find($id);
     }
 
     public function create(array $data): Role
     {
-        return $this->roleRepository->create($data);
+        return Role::create($data);
     }
 
     public function update(int $id, array $data): bool
@@ -37,7 +40,7 @@ class RoleService
         if (!$role) {
             return false;
         }
-        return $this->roleRepository->update($role, $data);
+        return $role->update($data);
     }
 
     public function delete(int $id): bool
@@ -46,11 +49,11 @@ class RoleService
         if (!$role) {
             return false;
         }
-        return $this->roleRepository->delete($role);
+        return $role->delete();
     }
 
     public function getAllRoles(): Collection
     {
-        return $this->roleRepository->getAllRoles();
+        return Role::orderBy('name')->get(['id', 'name']);
     }
 }

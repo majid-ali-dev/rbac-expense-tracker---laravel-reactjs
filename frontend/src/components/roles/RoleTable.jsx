@@ -18,6 +18,7 @@ const RoleTable = ({ roles = [], pagination, onEdit, onDelete, onCreate, onPageC
             id: 'name',
             header: 'Role Name',
             accessorFn: (row) => row.name,
+
             cell: ({ getValue }) => (
                 <span className="font-semibold text-gray-900">{getValue() || '-'}</span>
             ),
