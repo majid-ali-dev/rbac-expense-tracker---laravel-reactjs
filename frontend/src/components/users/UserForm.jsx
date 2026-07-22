@@ -212,7 +212,7 @@ const UserForm = ({ user, roles = [], onSubmit, onCancel, loading }) => {
                         <p className="mt-1.5 text-sm text-red-600">{errors.total_amount.message}</p>
                     )}
                     <p className="mt-1 text-xs text-gray-500">
-                        Optional: Set user's total membership amount
+                        <span className="font-semibold">Note:</span> This is the total amount the user has paid.
                     </p>
                 </div>
 
