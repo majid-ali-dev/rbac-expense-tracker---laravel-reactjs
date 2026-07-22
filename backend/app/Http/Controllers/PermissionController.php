@@ -20,7 +20,7 @@ class PermissionController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $perPage = $request->get('per_page', 10); // Changed from 15 to 10
+        $perPage = $request->get('per_page', 10);
         $permissions = $this->permissionService->getAllPaginated($perPage);
 
         return response()->json([
@@ -37,21 +37,13 @@ class PermissionController extends Controller
 
     public function store(PermissionStoreRequest $request): JsonResponse
     {
-        try {
-            $permission = $this->permissionService->create($request->validated());
+        $permission = $this->permissionService->create($request->validated());
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Permission created successfully',
-                'data' => new PermissionResource($permission),
-            ], 201);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to create permission',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
+        return response()->json([
+            'success' => true,
+            'message' => 'Permission created successfully',
+            'data' => new PermissionResource($permission),
+        ], 201);
     }
 
     public function show(int $id): JsonResponse
@@ -73,55 +65,39 @@ class PermissionController extends Controller
 
     public function update(PermissionUpdateRequest $request, int $id): JsonResponse
     {
-        try {
-            $updated = $this->permissionService->update($id, $request->validated());
+        $updated = $this->permissionService->update($id, $request->validated());
 
-            if (!$updated) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Permission not found',
-                ], 404);
-            }
-
-            $permission = $this->permissionService->findById($id);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Permission updated successfully',
-                'data' => new PermissionResource($permission),
-            ]);
-        } catch (\Exception $e) {
+        if (!$updated) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to update permission',
-                'error' => $e->getMessage(),
-            ], 500);
+                'message' => 'Permission not found',
+            ], 404);
         }
+
+        $permission = $this->permissionService->findById($id);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Permission updated successfully',
+            'data' => new PermissionResource($permission),
+        ]);
     }
 
     public function destroy(int $id): JsonResponse
     {
-        try {
-            $deleted = $this->permissionService->delete($id);
+        $deleted = $this->permissionService->delete($id);
 
-            if (!$deleted) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Permission not found',
-                ], 404);
-            }
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Permission deleted successfully',
-            ]);
-        } catch (\Exception $e) {
+        if (!$deleted) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to delete permission',
-                'error' => $e->getMessage(),
-            ], 500);
+                'message' => 'Permission not found',
+            ], 404);
         }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Permission deleted successfully',
+        ]);
     }
 
     public function allPermissions(): JsonResponse

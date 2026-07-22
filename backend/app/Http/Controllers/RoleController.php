@@ -20,7 +20,7 @@ class RoleController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $perPage = $request->get('per_page', 10); // Changed from 15 to 10
+        $perPage = $request->get('per_page', 10);
         $roles = $this->roleService->getAllPaginated($perPage);
 
         return response()->json([
@@ -37,21 +37,13 @@ class RoleController extends Controller
 
     public function store(RoleStoreRequest $request): JsonResponse
     {
-        try {
-            $role = $this->roleService->create($request->validated());
+        $role = $this->roleService->create($request->validated());
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Role created successfully',
-                'data' => new RoleResource($role),
-            ], 201);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to create role',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
+        return response()->json([
+            'success' => true,
+            'message' => 'Role created successfully',
+            'data' => new RoleResource($role),
+        ], 201);
     }
 
     public function show(int $id): JsonResponse
@@ -73,55 +65,39 @@ class RoleController extends Controller
 
     public function update(RoleUpdateRequest $request, int $id): JsonResponse
     {
-        try {
-            $updated = $this->roleService->update($id, $request->validated());
+        $updated = $this->roleService->update($id, $request->validated());
 
-            if (!$updated) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Role not found',
-                ], 404);
-            }
-
-            $role = $this->roleService->findById($id);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Role updated successfully',
-                'data' => new RoleResource($role),
-            ]);
-        } catch (\Exception $e) {
+        if (!$updated) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to update role',
-                'error' => $e->getMessage(),
-            ], 500);
+                'message' => 'Role not found',
+            ], 404);
         }
+
+        $role = $this->roleService->findById($id);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Role updated successfully',
+            'data' => new RoleResource($role),
+        ]);
     }
 
     public function destroy(int $id): JsonResponse
     {
-        try {
-            $deleted = $this->roleService->delete($id);
+        $deleted = $this->roleService->delete($id);
 
-            if (!$deleted) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Role not found',
-                ], 404);
-            }
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Role deleted successfully',
-            ]);
-        } catch (\Exception $e) {
+        if (!$deleted) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to delete role',
-                'error' => $e->getMessage(),
-            ], 500);
+                'message' => 'Role not found',
+            ], 404);
         }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Role deleted successfully',
+        ]);
     }
 
     public function allRoles(): JsonResponse
