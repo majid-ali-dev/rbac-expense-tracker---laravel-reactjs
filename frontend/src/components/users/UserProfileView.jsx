@@ -45,10 +45,16 @@ const UserProfileView = ({ user, paymentHistory, onBack }) => {
                 </div>
                 <button
                     onClick={handleDownloadPDF}
-                    className="inline-flex items-center gap-2 px-6 py-2.5 bg-red-600 text-white font-bold rounded-2xl hover:bg-red-700 transition-all shadow-lg shadow-red-600/20"
+                    className="inline-flex items-center gap-2.5 px-6 py-2.5 bg-gradient-to-r from-red-600 to-red-700 text-white font-bold rounded-2xl hover:from-red-700 hover:to-red-800 transition-all duration-300 shadow-lg shadow-red-600/30 hover:shadow-red-600/50 hover:-translate-y-0.5 active:scale-95"
                 >
-                    <FaDownload size={16} />
-                    Download PDF
+                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                        <polyline points="14 2 14 8 20 8" />
+                        <line x1="12" y1="18" x2="12" y2="12" />
+                        <polyline points="9 15 12 18 15 15" />
+                    </svg>
+                    <span>PDF</span>
+                   
                 </button>
             </div>
 
