@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\RoleController;
@@ -54,5 +55,15 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::put('/{id}', [UserController::class, 'update'])->name('users.update');
         Route::put('/{id}/total', [UserController::class, 'updateTotal'])->name('users.update-total');
         Route::delete('/{id}', [UserController::class, 'destroy'])->name('users.delete');
+    });
+
+    // Category Management Routes
+    Route::prefix('categories')->group(function () {
+        Route::get('/', [CategoryController::class, 'index'])->name('categories.index');
+        Route::post('/', [CategoryController::class, 'store'])->name('categories.store');
+        Route::get('/all', [CategoryController::class, 'allCategories'])->name('categories.all');
+        Route::get('/{id}', [CategoryController::class, 'show'])->name('categories.show');
+        Route::put('/{id}', [CategoryController::class, 'update'])->name('categories.update');
+        Route::delete('/{id}', [CategoryController::class, 'destroy'])->name('categories.delete');
     });
 });

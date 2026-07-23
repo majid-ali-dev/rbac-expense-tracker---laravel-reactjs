@@ -8,6 +8,7 @@ import Permissions from './pages/permissions/Permissions';
 import RolePermissions from './pages/role-permissions/RolePermissions';
 import Users from './pages/users/Users';
 import UserProfile from './pages/users/UserProfile';
+import Categories from './pages/categories/Categories';
 import ProtectedRoute from './components/layout/ProtectedRoute';
 
 function App() {
@@ -26,6 +27,7 @@ function App() {
           <Route path="/role-permissions" element={<RolePermissions />} />
           <Route path="/users" element={<Users />} />
           <Route path="/users/:id" element={<UserProfile />} />
+          <Route path="/categories" element={<Categories />} />
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
         </Route>
 
