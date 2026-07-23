@@ -22,12 +22,12 @@ class UserRepository implements UserRepositoryInterface
 
     public function findById(int $id): ?User
     {
-        return User::with(['roles', 'payments'])->find($id);
+        return User::with(['roles', 'payments.updater'])->find($id);
     }
 
     public function findByEmail(string $email): ?User
     {
-        return User::where('email', $email)->first();
+        return User::with(['roles', 'payments'])->where('email', $email)->first();
     }
 
     public function create(array $data): User

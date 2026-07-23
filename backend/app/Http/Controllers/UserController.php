@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\User\UserStoreRequest;
 use App\Http\Requests\User\UserTotalUpdateRequest;
 use App\Http\Requests\User\UserUpdateRequest;
+use App\Http\Resources\UserProfileResource;
 use App\Http\Resources\UserResource;
 use App\Services\UserService;
 use Illuminate\Http\JsonResponse;
@@ -59,9 +60,9 @@ class UserController extends Controller
 
     public function show(int $id): JsonResponse
     {
-        $user = $this->userService->findById($id);
+        $userData = $this->userService->getUserWithPaymentHistory($id);
 
-        if (!$user) {
+        if (!$userData) {
             return response()->json([
                 'success' => false,
                 'message' => 'User not found',
@@ -70,7 +71,7 @@ class UserController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => new UserResource($user),
+            'data' => new UserProfileResource($userData),
         ]);
     }
 
