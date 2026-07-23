@@ -22,4 +22,7 @@ export const userAPI = {
 
     // Get all roles
     getRoles: () => api.get('/users/roles'),
+
+    // Get user with payment history
+    getUserWithPayments: (id) => api.get(`/users/${id}`),
 };

@@ -1,8 +1,8 @@
 import React from 'react';
-import { FaEdit, FaTrash } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaEye } from 'react-icons/fa';
 import DataTable from '../common/DataTable';
 
-const UserTable = ({ users = [], pagination, onEdit, onDelete, onCreate, onPageChange }) => {
+const UserTable = ({ users = [], pagination, onEdit, onDelete, onView, onCreate, onPageChange }) => {
     const columns = [
         {
             id: 'id',
@@ -44,22 +44,30 @@ const UserTable = ({ users = [], pagination, onEdit, onDelete, onCreate, onPageC
             id: 'total_amount',
             header: 'Total Amount',
             accessorFn: (row) => row.total_amount || 0,
-            cell: ({ getValue }) => (
-                <span className="font-medium text-gray-900">
-                    {parseFloat(getValue()).toFixed(2)}
-                </span>
-            ),
+            cell: ({ getValue }) => {
+                const amount = parseFloat(getValue());
+                return (
+                    <div className="flex items-center justify-center gap-1.5">
+                        <span className="font-bold text-gray-900">
+                            {amount.toFixed(2)}
+                        </span>
+                    </div>
+                );
+            },
             enableSorting: true,
         },
         {
             id: 'total_paid',
             header: 'Paid',
             accessorFn: (row) => row.total_paid || 0,
-            cell: ({ getValue }) => (
-                <span className="font-medium text-green-600">
-                    {parseFloat(getValue()).toFixed(2)}
-                </span>
-            ),
+            cell: ({ getValue }) => {
+                const amount = parseFloat(getValue());
+                return (
+                    <span className="font-bold text-green-600">
+                        {amount.toFixed(2)}
+                    </span>
+                );
+            },
             enableSorting: true,
         },
         {
@@ -67,10 +75,10 @@ const UserTable = ({ users = [], pagination, onEdit, onDelete, onCreate, onPageC
             header: 'Remaining',
             accessorFn: (row) => row.remaining || 0,
             cell: ({ getValue }) => {
-                const value = parseFloat(getValue());
+                const amount = parseFloat(getValue());
                 return (
-                    <span className={`font-bold ${value > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                        {value.toFixed(2)}
+                    <span className={`font-bold ${amount > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                        {amount.toFixed(2)}
                     </span>
                 );
             },
@@ -88,8 +96,15 @@ const UserTable = ({ users = [], pagination, onEdit, onDelete, onCreate, onPageC
                     'unpaid': 'bg-red-100 text-red-700',
                 }[status] || 'bg-gray-100 text-gray-700';
 
+                const icon = {
+                    'paid': '✓',
+                    'partial': '⏳',
+                    'unpaid': '✕',
+                }[status] || '•';
+
                 return (
-                    <span className={`inline-flex px-3 py-1 rounded-full text-xs font-bold ${badgeClass}`}>
+                    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${badgeClass}`}>
+                        <span>{icon}</span>
                         {status.charAt(0).toUpperCase() + status.slice(1)}
                     </span>
                 );
@@ -103,8 +118,15 @@ const UserTable = ({ users = [], pagination, onEdit, onDelete, onCreate, onPageC
             cell: ({ row }) => (
                 <div className="flex items-center justify-center gap-2">
                     <button
-                        onClick={() => onEdit(row.original)}
+                        onClick={() => onView(row.original)}
                         className="p-2 text-blue-600 hover:bg-blue-50 rounded-xl transition-all hover:scale-105"
+                        title="View"
+                    >
+                        <FaEye size={16} />
+                    </button>
+                    <button
+                        onClick={() => onEdit(row.original)}
+                        className="p-2 text-purple-600 hover:bg-purple-50 rounded-xl transition-all hover:scale-105"
                         title="Edit"
                     >
                         <FaEdit size={16} />
@@ -127,7 +149,7 @@ const UserTable = ({ users = [], pagination, onEdit, onDelete, onCreate, onPageC
             data={users}
             columns={columns}
             title="Users List"
-            createButtonText="Add User"
+            createButtonText="Add New User"
             onCreate={onCreate}
             searchPlaceholder="Search by ID, Name, Email..."
             itemsPerPage={pagination?.per_page || 10}

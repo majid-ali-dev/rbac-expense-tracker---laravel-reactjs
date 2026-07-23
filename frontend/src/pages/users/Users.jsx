@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import useUserStore from '../../store/userStore';
 import UserTable from '../../components/users/UserTable';
 import UserForm from '../../components/users/UserForm';
 import { showDeleteConfirm, showDeletedSuccess } from '../../utils/toast';
 
 const Users = () => {
+    const navigate = useNavigate();
     const {
         users,
         roles,
@@ -37,6 +39,10 @@ const Users = () => {
     const handleEdit = (user) => {
         setEditingUser(user);
         setShowForm(true);
+    };
+
+    const handleView = (user) => {
+        navigate(`/users/${user.id}`);
     };
 
     const handleDelete = async (user) => {
@@ -112,6 +118,7 @@ const Users = () => {
                     pagination={pagination}
                     onEdit={handleEdit}
                     onDelete={handleDelete}
+                    onView={handleView}
                     onCreate={handleCreate}
                     onPageChange={handlePageChange}
                 />
