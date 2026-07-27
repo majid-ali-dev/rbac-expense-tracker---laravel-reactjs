@@ -22,6 +22,7 @@ class ExpenseResource extends JsonResource
             'date_formatted' => $this->date?->format('d/m/Y'),
             'created_at' => $this->created_at?->toISOString(),
             'updated_at' => $this->updated_at?->toISOString(),
+            'histories' => ExpenseHistoryResource::collection($this->whenLoaded('histories')),
         ];
     }
 }
