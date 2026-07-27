@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\RolePermissionController;
@@ -65,5 +66,15 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/{id}', [CategoryController::class, 'show'])->name('categories.show');
         Route::put('/{id}', [CategoryController::class, 'update'])->name('categories.update');
         Route::delete('/{id}', [CategoryController::class, 'destroy'])->name('categories.delete');
+    });
+
+    // Expense Management Routes
+    Route::prefix('expenses')->group(function () {
+        Route::get('/', [ExpenseController::class, 'index'])->name('expenses.index');
+        Route::post('/', [ExpenseController::class, 'store'])->name('expenses.store');
+        Route::get('/categories', [ExpenseController::class, 'categories'])->name('expenses.categories');
+        Route::get('/{id}', [ExpenseController::class, 'show'])->name('expenses.show');
+        Route::put('/{id}', [ExpenseController::class, 'update'])->name('expenses.update');
+        Route::delete('/{id}', [ExpenseController::class, 'destroy'])->name('expenses.delete');
     });
 });
