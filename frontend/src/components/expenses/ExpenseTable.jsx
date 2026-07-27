@@ -93,7 +93,7 @@ const ExpenseTable = ({ expenses = [], pagination, onView, onEdit, onDelete, onC
 
     return (
         <div className="space-y-4">
-            {/* Header Buttons */}
+            {/* Header Buttons - Left: Add Expense, Right: View Expenses */}
             <div className="flex items-center justify-between flex-wrap gap-4">
                 <div className="flex items-center gap-3">
                     <button
@@ -103,6 +103,8 @@ const ExpenseTable = ({ expenses = [], pagination, onView, onEdit, onDelete, onC
                         <span className="text-lg font-bold">+</span>
                         Add Expense
                     </button>
+                </div>
+                <div className="flex items-center gap-3">
                     <button
                         onClick={handleViewExpenses}
                         className="inline-flex items-center gap-2 px-4 py-2.5 bg-purple-600 text-white font-bold rounded-2xl hover:bg-purple-700 transition-all shadow-lg shadow-purple-600/20"
