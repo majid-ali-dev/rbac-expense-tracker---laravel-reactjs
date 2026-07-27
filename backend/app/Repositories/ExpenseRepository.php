@@ -11,14 +11,14 @@ class ExpenseRepository implements ExpenseRepositoryInterface
 {
     public function getAllPaginated(int $perPage = 10): LengthAwarePaginator
     {
-        return Expense::with(['user', 'category'])
+        return Expense::with(['user', 'category', 'histories.user'])
             ->latest('date')
             ->paginate($perPage);
     }
 
     public function findById(int $id): ?Expense
     {
-        return Expense::with(['user', 'category'])->find($id);
+        return Expense::with(['user', 'category', 'histories.user'])->find($id);
     }
 
     public function create(array $data): Expense

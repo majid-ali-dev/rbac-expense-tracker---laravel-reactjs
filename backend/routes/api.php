@@ -8,6 +8,7 @@ use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\SheetDownloaderController;
 use Illuminate\Support\Facades\Route;
 
 // Public routes
@@ -68,11 +69,16 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::delete('/{id}', [CategoryController::class, 'destroy'])->name('categories.delete');
     });
 
-    // Expense Management Routes
+    // Expense Management Routes - ORDER MATTERS! Put specific routes BEFORE wildcard
     Route::prefix('expenses')->group(function () {
+        // Specific routes (must come before {id} wildcard)
+        Route::get('/sheet', [SheetDownloaderController::class, 'index'])->name('expenses.sheet');
+        Route::get('/download-sheet', [SheetDownloaderController::class, 'download'])->name('expenses.download-sheet');
+        Route::get('/categories', [ExpenseController::class, 'categories'])->name('expenses.categories');
+        
+        // CRUD routes (wildcards)
         Route::get('/', [ExpenseController::class, 'index'])->name('expenses.index');
         Route::post('/', [ExpenseController::class, 'store'])->name('expenses.store');
-        Route::get('/categories', [ExpenseController::class, 'categories'])->name('expenses.categories');
         Route::get('/{id}', [ExpenseController::class, 'show'])->name('expenses.show');
         Route::put('/{id}', [ExpenseController::class, 'update'])->name('expenses.update');
         Route::delete('/{id}', [ExpenseController::class, 'destroy'])->name('expenses.delete');

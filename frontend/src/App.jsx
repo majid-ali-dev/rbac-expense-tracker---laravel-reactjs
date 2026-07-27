@@ -10,17 +10,15 @@ import Users from './pages/users/Users';
 import UserProfile from './pages/users/UserProfile';
 import Categories from './pages/categories/Categories';
 import Expenses from './pages/expenses/Expenses';
+import ViewExpenses from './components/expenses/ViewExpenses';
 import ProtectedRoute from './components/layout/ProtectedRoute';
 
 function App() {
   return (
     <Router>
       <Routes>
-        {/* Public Routes */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-
-        {/* Protected Routes */}
         <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/roles" element={<Roles />} />
@@ -30,10 +28,9 @@ function App() {
           <Route path="/users/:id" element={<UserProfile />} />
           <Route path="/categories" element={<Categories />} />
           <Route path="/expenses" element={<Expenses />} />
+          <Route path="/expenses/view" element={<ViewExpenses />} />
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
         </Route>
-
-        {/* Fallback */}
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </Router>

@@ -42,7 +42,7 @@ class ExpenseController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Expense added successfully',
-            'data' => new ExpenseResource($expense->load(['user', 'category'])),
+            'data' => new ExpenseResource($expense->load(['user', 'category', 'histories.user'])),
         ], 201);
     }
 
@@ -57,9 +57,12 @@ class ExpenseController extends Controller
             ], 404);
         }
 
+        // Load histories with user for detailed view
+        $expense->load(['user', 'category', 'histories.user']);
+
         return response()->json([
             'success' => true,
-            'data' => new ExpenseResource($expense->load(['user', 'category'])),
+            'data' => new ExpenseResource($expense),
         ]);
     }
 
@@ -79,7 +82,7 @@ class ExpenseController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Expense updated successfully',
-            'data' => new ExpenseResource($expense->load(['user', 'category'])),
+            'data' => new ExpenseResource($expense->load(['user', 'category', 'histories.user'])),
         ]);
     }
 
