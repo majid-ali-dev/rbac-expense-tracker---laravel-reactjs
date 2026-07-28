@@ -1,12 +1,32 @@
 import React from 'react';
 import { FaArrowLeft, FaDownload, FaWallet, FaCalendar, FaPhone, FaEnvelope, FaUser } from 'react-icons/fa';
 import { generateUserProfilePDF } from '../../utils/pdfExport';
+import { showError } from '../../utils/toast';
 
 const UserProfileView = ({ user, paymentHistory, onBack }) => {
     if (!user) return null;
 
     const handleDownloadPDF = () => {
-        generateUserProfilePDF(user, paymentHistory);
+        try {
+            console.log('=== PDF Download Started ===');
+            console.log('User data:', user);
+            console.log('Payment history:', paymentHistory);
+
+            // Validate user data
+            if (!user) {
+                showError('User data not available');
+                return;
+            }
+
+            // Ensure paymentHistory is an array
+            const history = Array.isArray(paymentHistory) ? paymentHistory : [];
+
+            generateUserProfilePDF(user, history);
+
+        } catch (error) {
+            console.error('PDF Generation Error:', error);
+            showError('Failed to generate PDF: ' + error.message);
+        }
     };
 
     const getStatusBadge = (status) => {
@@ -54,7 +74,6 @@ const UserProfileView = ({ user, paymentHistory, onBack }) => {
                         <polyline points="9 15 12 18 15 15" />
                     </svg>
                     <span>PDF</span>
-                   
                 </button>
             </div>
 
