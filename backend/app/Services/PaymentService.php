@@ -29,7 +29,6 @@ class PaymentService
 
     public function createPayment(User $user, float $amount): Payment
     {
-        // Check if amount exceeds remaining balance
         $remaining = $user->remaining;
         if ($amount > $remaining) {
             throw new \Exception("Payment amount cannot exceed remaining balance of Rs " . number_format($remaining, 2));
@@ -42,7 +41,6 @@ class PaymentService
             'updated_by' => Auth::id(),
         ]);
 
-        // Update user totals
         $this->updateUserTotals($user);
 
         return $payment;
@@ -94,9 +92,7 @@ class PaymentService
         }
 
         $user->update([
-            'total_paid' => $totalPaid,
-            'remaining' => $remaining,
-            'payment_status' => $status,
+            'status' => $status,
         ]);
     }
 
@@ -122,5 +118,10 @@ class PaymentService
     public function getPaymentUsers()
     {
         return $this->paymentRepository->getPaymentUsers();
+    }
+
+    public function findPaymentById(int $id): ?Payment
+    {
+        return $this->paymentRepository->findPaymentById($id);
     }
 }
