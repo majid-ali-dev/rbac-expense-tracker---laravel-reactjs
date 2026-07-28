@@ -11,6 +11,8 @@ import UserProfile from './pages/users/UserProfile';
 import Categories from './pages/categories/Categories';
 import Expenses from './pages/expenses/Expenses';
 import ViewExpenses from './components/expenses/ViewExpenses';
+import Payments from './pages/payments/Payments';
+import AddPayment from './pages/payments/AddPayment';
 import ProtectedRoute from './components/layout/ProtectedRoute';
 
 function App() {
@@ -29,6 +31,8 @@ function App() {
           <Route path="/categories" element={<Categories />} />
           <Route path="/expenses" element={<Expenses />} />
           <Route path="/expenses/view" element={<ViewExpenses />} />
+          <Route path="/payments" element={<Payments />} />
+          <Route path="/payments/:id/add" element={<AddPayment />} />
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
         </Route>
         <Route path="*" element={<Navigate to="/dashboard" replace />} />

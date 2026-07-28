@@ -4,6 +4,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExpenseController;
+use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\RolePermissionController;
@@ -69,18 +70,23 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::delete('/{id}', [CategoryController::class, 'destroy'])->name('categories.delete');
     });
 
-    // Expense Management Routes - ORDER MATTERS! Put specific routes BEFORE wildcard
+    // Expense Management Routes
     Route::prefix('expenses')->group(function () {
-        // Specific routes (must come before {id} wildcard)
         Route::get('/sheet', [SheetDownloaderController::class, 'index'])->name('expenses.sheet');
         Route::get('/download-sheet', [SheetDownloaderController::class, 'download'])->name('expenses.download-sheet');
         Route::get('/categories', [ExpenseController::class, 'categories'])->name('expenses.categories');
-        
-        // CRUD routes (wildcards)
         Route::get('/', [ExpenseController::class, 'index'])->name('expenses.index');
         Route::post('/', [ExpenseController::class, 'store'])->name('expenses.store');
         Route::get('/{id}', [ExpenseController::class, 'show'])->name('expenses.show');
         Route::put('/{id}', [ExpenseController::class, 'update'])->name('expenses.update');
         Route::delete('/{id}', [ExpenseController::class, 'destroy'])->name('expenses.delete');
+    });
+
+    // Payment Management Routes
+    Route::prefix('payments')->group(function () {
+        Route::get('/', [PaymentController::class, 'index'])->name('payments.index');
+        Route::get('/{id}/add', [PaymentController::class, 'addPayment'])->name('payments.add');
+        Route::post('/{id}/pay', [PaymentController::class, 'pay'])->name('payments.pay');
+        Route::delete('/{id}', [PaymentController::class, 'destroy'])->name('payments.destroy');
     });
 });
