@@ -1,8 +1,12 @@
 import React from 'react';
 import { FaPlusCircle, FaEye } from 'react-icons/fa';
 import DataTable from '../common/DataTable';
+import useAuthStore from '../../store/authStore';
 
 const PaymentTable = ({ users = [], pagination, stats, onAddPayment, onPageChange }) => {
+    const { user } = useAuthStore();
+    const isManagerOrAdmin = user?.roles?.some(r => r.name === 'manager' || r.name === 'super_admin');
+
     const columns = [
         {
             id: 'user',
@@ -74,11 +78,17 @@ const PaymentTable = ({ users = [], pagination, stats, onAddPayment, onPageChang
             header: 'ACTION',
             accessorFn: (row) => row.id,
             cell: ({ row }) => {
-                const user = row.original;
-                const isPaid = user.payment_status === 'paid';
+                const userData = row.original;
+                const isPaid = userData.payment_status === 'paid';
+
+                // Only show action buttons for managers/admins
+                if (!isManagerOrAdmin) {
+                    return <span className="text-gray-400 text-sm">-</span>;
+                }
+
                 return (
                     <button
-                        onClick={() => onAddPayment(user)}
+                        onClick={() => onAddPayment(userData)}
                         className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-bold transition-all ${isPaid ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' : 'bg-green-600 text-white hover:bg-green-700 shadow-lg shadow-green-600/20'}`}
                     >
                         {isPaid ? <FaEye size={14} /> : <FaPlusCircle size={14} />}
@@ -90,7 +100,6 @@ const PaymentTable = ({ users = [], pagination, stats, onAddPayment, onPageChang
         },
     ];
 
-    // Stats cards - Moved to Bottom
     const StatsCards = () => {
         if (!stats) return null;
         return (
@@ -125,7 +134,6 @@ const PaymentTable = ({ users = [], pagination, stats, onAddPayment, onPageChang
 
     return (
         <div>
-            {/* Data Table */}
             <DataTable
                 data={users}
                 columns={columns}
@@ -138,8 +146,6 @@ const PaymentTable = ({ users = [], pagination, stats, onAddPayment, onPageChang
                 onPageChange={onPageChange}
                 pageCount={pagination?.last_page || 1}
             />
-
-            {/* Stats Cards at Bottom */}
             <StatsCards />
         </div>
     );

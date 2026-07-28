@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { dashboardAPI } from '../../services/api';
 import useAuthStore from '../../store/authStore';
 import DashboardStats from '../../components/dashboard/DashboardStats';
-import RecentExpenses from '../../components/dashboard/RecentExpenses';
 import { showError } from '../../utils/toast';
 
 const Dashboard = () => {
@@ -10,15 +9,15 @@ const Dashboard = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [dashboardData, setDashboardData] = useState({
-        stats: {},
+        expenses: { count: 0, total: 0 },
         paymentData: null,
+        memberStats: null,
+        allPaymentsSummary: null,
         recentExpenses: [],
     });
 
     useEffect(() => {
-        // Only fetch if user is authenticated
         if (isAuthenticated && user) {
-            console.log('Dashboard: User authenticated, fetching data for:', user.name);
             fetchDashboardData();
         }
     }, [isAuthenticated, user]);
@@ -28,18 +27,18 @@ const Dashboard = () => {
         setError(null);
         try {
             const response = await dashboardAPI.getDashboard();
-            console.log('Dashboard response:', response.data);
-
             const data = response.data.data;
 
             setDashboardData({
-                stats: data.stats || {},
+                expenses: data.expenses || { count: 0, total: 0 },
                 paymentData: data.payment_data || null,
+                memberStats: data.member_stats || null,
+                allPaymentsSummary: data.all_payments_summary || null,
                 recentExpenses: data.recent_expenses || [],
             });
         } catch (error) {
             console.error('Error fetching dashboard:', error);
-            const errorMessage = error.response?.data?.message || 'Failed to load dashboard data';
+            const errorMessage = error.response?.data?.message || 'Failed to load dashboard';
             setError(errorMessage);
             showError(errorMessage);
         } finally {
@@ -47,7 +46,6 @@ const Dashboard = () => {
         }
     };
 
-    // Show loading state
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-[60vh]">
@@ -59,7 +57,6 @@ const Dashboard = () => {
         );
     }
 
-    // Show error state
     if (error) {
         return (
             <div className="flex items-center justify-center min-h-[60vh]">
@@ -73,12 +70,15 @@ const Dashboard = () => {
         );
     }
 
-    // Show welcome message
+    const hasData = dashboardData.expenses.count > 0 ||
+        dashboardData.paymentData ||
+        (dashboardData.memberStats && dashboardData.memberStats.total > 0);
+
     return (
         <div className="space-y-6">
             {/* Welcome Section */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                <h1 className="text-2xl font-extrabold text-gray-900">Dashboard</h1>
                 <p className="text-gray-600 mt-1">
                     Welcome back, <span className="font-semibold">{user?.name || 'User'}</span>!
                     {user?.roles && user.roles.length > 0 && (
@@ -105,63 +105,18 @@ const Dashboard = () => {
 
             {/* Stats Cards */}
             <DashboardStats
-                stats={dashboardData.stats}
+                expenses={dashboardData.expenses}
                 paymentData={dashboardData.paymentData}
+                memberStats={dashboardData.memberStats}
+                allPaymentsSummary={dashboardData.allPaymentsSummary}
             />
 
-            {/* Recent Expenses */}
-            {dashboardData.stats.can_view_expenses && dashboardData.recentExpenses.length > 0 && (
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                    <h2 className="text-lg font-bold text-gray-900 mb-4">Recent Expenses</h2>
-                    <RecentExpenses expenses={dashboardData.recentExpenses} />
-                </div>
-            )}
-
-            {/* Payment Summary for Members */}
-            {dashboardData.paymentData && (
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                    <h2 className="text-lg font-bold text-gray-900 mb-4">Payment Summary</h2>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div>
-                            <p className="text-sm text-gray-600">Total Amount</p>
-                            <p className="text-lg font-semibold text-gray-900">
-                                Rs. {dashboardData.paymentData.total_amount?.toFixed(2)}
-                            </p>
-                        </div>
-                        <div>
-                            <p className="text-sm text-gray-600">Total Paid</p>
-                            <p className="text-lg font-semibold text-green-600">
-                                Rs. {dashboardData.paymentData.total_paid?.toFixed(2)}
-                            </p>
-                        </div>
-                        <div>
-                            <p className="text-sm text-gray-600">Remaining</p>
-                            <p className="text-lg font-semibold text-yellow-600">
-                                Rs. {dashboardData.paymentData.remaining?.toFixed(2)}
-                            </p>
-                        </div>
-                        <div>
-                            <p className="text-sm text-gray-600">Status</p>
-                            <span className={`
-                                inline-flex px-3 py-1 rounded-full text-sm font-medium
-                                ${dashboardData.paymentData.payment_status === 'paid'
-                                    ? 'bg-green-100 text-green-700'
-                                    : dashboardData.paymentData.payment_status === 'partial'
-                                        ? 'bg-yellow-100 text-yellow-700'
-                                        : 'bg-red-100 text-red-700'
-                                }
-                            `}>
-                                {dashboardData.paymentData.payment_status?.toUpperCase() || 'UNPAID'}
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Message when no data */}
-            {!dashboardData.stats.can_view_expenses && !dashboardData.paymentData && (
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 text-center">
-                    <p className="text-gray-600">Welcome! You don't have any data to display yet.</p>
+            {/* No Data Message */}
+            {!hasData && (
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
+                    <div className="text-5xl mb-4">📊</div>
+                    <p className="text-gray-500 text-lg font-medium">No data available</p>
+                    <p className="text-sm text-gray-400 mt-1">Start adding expenses and payments</p>
                 </div>
             )}
         </div>

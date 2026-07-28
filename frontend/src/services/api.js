@@ -49,7 +49,7 @@ export const authAPI = {
 
 // Dashboard API calls
 export const dashboardAPI = {
-    getDashboard: () => api.get('/dashboard'),
+    getDashboard: (params = '') => api.get(`/dashboard${params}`),
 };
 
 export default api;

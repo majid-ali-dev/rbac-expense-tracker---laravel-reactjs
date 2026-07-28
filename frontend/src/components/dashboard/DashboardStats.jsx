@@ -1,49 +1,112 @@
 import React from 'react';
-import { FaFileAlt, FaMoneyBillWave, FaUsers, FaWallet } from 'react-icons/fa';
+import {
+    FaFileAlt,
+    FaMoneyBillWave,
+    FaWallet,
+    FaCheckCircle,
+    FaClock,
+    FaUsers,
+    FaUserCheck,
+    FaUserTimes,
+    FaUserClock,
+    FaUserPlus,
+    FaUserMinus
+} from 'react-icons/fa';
 
-const DashboardStats = ({ stats, paymentData }) => {
+const DashboardStats = ({ expenses, paymentData, memberStats, allPaymentsSummary }) => {
     const statItems = [];
 
-    if (stats?.can_view_expenses) {
+    // === EXPENSE CARDS ===
+    if (expenses) {
         statItems.push({
             label: 'Total Expenses',
-            value: stats.expense_count || 0,
+            value: expenses.count || 0,
             icon: FaFileAlt,
             color: 'bg-blue-500',
         });
         statItems.push({
-            label: 'Total Amount',
-            value: `Rs. ${(stats.total_amount || 0).toFixed(2)}`,
+            label: 'Expense Amount',
+            value: `Rs. ${(expenses.total || 0).toFixed(2)}`,
             icon: FaMoneyBillWave,
             color: 'bg-green-500',
         });
     }
 
-    if (paymentData) {
+    // === USER PAYMENT CARDS ===
+    if (paymentData && paymentData.total_amount > 0) {
         statItems.push({
-            label: 'Total Assigned',
-            value: `Rs. ${(paymentData.total_amount || 0).toFixed(2)}`,
+            label: 'My Total',
+            value: `Rs. ${paymentData.total_amount.toFixed(2)}`,
             icon: FaWallet,
             color: 'bg-purple-500',
         });
         statItems.push({
-            label: 'Total Paid',
-            value: `Rs. ${(paymentData.total_paid || 0).toFixed(2)}`,
-            icon: FaUsers,
+            label: 'My Paid',
+            value: `Rs. ${paymentData.total_paid.toFixed(2)}`,
+            icon: FaCheckCircle,
             color: 'bg-indigo-500',
         });
         statItems.push({
-            label: 'Remaining',
-            value: `Rs. ${(paymentData.remaining || 0).toFixed(2)}`,
-            icon: FaWallet,
+            label: 'My Remaining',
+            value: `Rs. ${paymentData.remaining.toFixed(2)}`,
+            icon: FaClock,
+            color: 'bg-yellow-500',
+        });
+    }
+
+    // === ADMIN MEMBER STATS ===
+    if (memberStats && Object.keys(memberStats).length > 0) {
+        statItems.push({
+            label: 'Total Members',
+            value: memberStats.total || 0,
+            icon: FaUsers,
+            color: 'bg-cyan-500',
+        });
+        statItems.push({
+            label: 'Assigned',
+            value: memberStats.assigned || 0,
+            icon: FaUserPlus,
+            color: 'bg-emerald-500',
+        });
+        statItems.push({
+            label: 'Unassigned',
+            value: memberStats.unassigned || 0,
+            icon: FaUserMinus,
+            color: 'bg-gray-500',
+        });
+        statItems.push({
+            label: 'Paid',
+            value: memberStats.paid || 0,
+            icon: FaUserCheck,
+            color: 'bg-green-500',
+        });
+        statItems.push({
+            label: 'Partial',
+            value: memberStats.partial || 0,
+            icon: FaUserClock,
             color: 'bg-yellow-500',
         });
         statItems.push({
-            label: 'Payment Status',
-            value: paymentData.payment_status?.toUpperCase() || 'UNPAID',
-            icon: FaWallet,
-            color: paymentData.payment_status === 'paid' ? 'bg-green-500' :
-                paymentData.payment_status === 'partial' ? 'bg-yellow-500' : 'bg-red-500',
+            label: 'Unpaid',
+            value: memberStats.unpaid || 0,
+            icon: FaUserTimes,
+            color: 'bg-red-500',
+        });
+    }
+
+    // === ADMIN ALL PAYMENTS ===
+    if (allPaymentsSummary && Object.keys(allPaymentsSummary).length > 0) {
+        statItems.push({
+            label: 'All Paid',
+            value: `Rs. ${allPaymentsSummary.total_paid.toFixed(2)}`,
+            icon: FaCheckCircle,
+            color: 'bg-indigo-500',
+        });
+        statItems.push({
+            label: 'All Remaining',
+            value: `Rs. ${allPaymentsSummary.total_remaining.toFixed(2)}`,
+            icon: FaClock,
+            color: 'bg-yellow-500',
         });
     }
 
@@ -56,21 +119,25 @@ const DashboardStats = ({ stats, paymentData }) => {
     }
 
     return (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {statItems.map((item, index) => {
                 const Icon = item.icon;
                 return (
                     <div
                         key={index}
-                        className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow hover:-translate-y-1 duration-200"
+                        className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-all hover:-translate-y-1 duration-200"
                     >
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">{item.label}</p>
-                                <p className="text-2xl font-extrabold text-gray-900 mt-2">{item.value}</p>
+                                <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                                    {item.label}
+                                </p>
+                                <p className="text-xl font-extrabold text-gray-900 mt-1">
+                                    {item.value}
+                                </p>
                             </div>
-                            <div className={`${item.color} p-3.5 rounded-2xl text-white shadow-lg shadow-${item.color}/30`}>
-                                <Icon size={22} />
+                            <div className={`${item.color} p-3 rounded-xl text-white shadow-lg`}>
+                                <Icon size={20} />
                             </div>
                         </div>
                     </div>

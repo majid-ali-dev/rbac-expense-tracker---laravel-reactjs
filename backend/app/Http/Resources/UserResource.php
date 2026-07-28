@@ -9,11 +9,6 @@ class UserResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
-        // Load permissions if not already loaded
-        if (!$this->relationLoaded('roles')) {
-            $this->load('roles.permissions');
-        }
-
         return [
             'id' => $this->id,
             'name' => $this->name,
@@ -24,8 +19,10 @@ class UserResource extends JsonResource
             'remaining' => (float) $this->remaining,
             'payment_status' => $this->payment_status,
             'roles' => RoleResource::collection($this->whenLoaded('roles')),
-            'permissions' => $this->permissions(), // Add this line
+            'permissions' => $this->permissions(),
             'role_names' => $this->roles->pluck('name'),
+            'payments' => PaymentResource::collection($this->whenLoaded('payments')),
+            'joined_at' => $this->created_at?->format('d M Y'),
             'created_at' => $this->created_at?->toISOString(),
             'updated_at' => $this->updated_at?->toISOString(),
         ];
