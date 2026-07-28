@@ -4,11 +4,13 @@ namespace App\Providers;
 
 use App\Repositories\Contracts\CategoryRepositoryInterface;
 use App\Repositories\Contracts\ExpenseRepositoryInterface;
+use App\Repositories\Contracts\PaymentRepositoryInterface;
 use App\Repositories\Contracts\PermissionRepositoryInterface;
 use App\Repositories\Contracts\RoleRepositoryInterface;
 use App\Repositories\Contracts\UserRepositoryInterface;
 use App\Repositories\CategoryRepository;
 use App\Repositories\ExpenseRepository;
+use App\Repositories\PaymentRepository;
 use App\Repositories\PermissionRepository;
 use App\Repositories\RoleRepository;
 use App\Repositories\UserRepository;
@@ -23,6 +25,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(UserRepositoryInterface::class, UserRepository::class);
         $this->app->bind(CategoryRepositoryInterface::class, CategoryRepository::class);
         $this->app->bind(ExpenseRepositoryInterface::class, ExpenseRepository::class);
+        $this->app->bind(PaymentRepositoryInterface::class, PaymentRepository::class);
     }
 
     public function boot(): void
