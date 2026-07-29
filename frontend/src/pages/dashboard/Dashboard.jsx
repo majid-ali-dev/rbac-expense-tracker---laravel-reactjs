@@ -6,14 +6,17 @@ import DashboardStats from '../../components/dashboard/DashboardStats';
 import ExpenseTrendChart from '../../components/dashboard/charts/ExpenseTrendChart';
 import CategoryBreakdownChart from '../../components/dashboard/charts/CategoryBreakdownChart';
 import MemberStatusChart from '../../components/dashboard/charts/MemberStatusChart';
+import BudgetHealthChart from '../../components/dashboard/charts/BudgetHealthChart';
 import { showError } from '../../utils/toast';
 
 const initialState = {
-    expenses: { count: 0, total: 0 },
+    flags: { can_view_expense: false, show_admin_section: false },
+    expenses: null,
     paymentData: null,
     memberStats: null,
     allPaymentsSummary: null,
     charts: { expense_trend: [], category_breakdown: [] },
+    budgetHealth: null,
 };
 
 const Dashboard = () => {
@@ -36,11 +39,13 @@ const Dashboard = () => {
             const data = response.data.data;
 
             setDashboardData({
-                expenses: data.expenses || { count: 0, total: 0 },
+                flags: data.flags || { can_view_expense: false, show_admin_section: false },
+                expenses: data.expenses || null,
                 paymentData: data.payment_data || null,
                 memberStats: data.member_stats || null,
                 allPaymentsSummary: data.all_payments_summary || null,
                 charts: data.charts || { expense_trend: [], category_breakdown: [] },
+                budgetHealth: data.budget_health || null,
             });
         } catch (err) {
             console.error('Error fetching dashboard:', err);
@@ -76,9 +81,12 @@ const Dashboard = () => {
         );
     }
 
-    const isAdmin = dashboardData.memberStats && Object.keys(dashboardData.memberStats).length > 0;
+    const { flags } = dashboardData;
+    const showExpenseCharts = flags.can_view_expense;
+    const showAdminCharts = flags.show_admin_section;
+
     const hasData =
-        dashboardData.expenses.count > 0 ||
+        (dashboardData.expenses && dashboardData.expenses.count > 0) ||
         dashboardData.paymentData ||
         (dashboardData.memberStats && dashboardData.memberStats.total > 0);
 
@@ -93,16 +101,22 @@ const Dashboard = () => {
                 allPaymentsSummary={dashboardData.allPaymentsSummary}
             />
 
-            {hasData && (
+            {/* Row 1: expense charts (staff + admin) — fills all 3 columns exactly */}
+            {showExpenseCharts && (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                     <ExpenseTrendChart data={dashboardData.charts.expense_trend} />
                     <CategoryBreakdownChart data={dashboardData.charts.category_breakdown} />
-                    {isAdmin && (
-                        <MemberStatusChart
-                            data={dashboardData.memberStats.status_chart}
-                            total={dashboardData.memberStats.total}
-                        />
-                    )}
+                </div>
+            )}
+
+            {/* Row 2: admin-only — Member Status (1/3) + Budget Health (2/3) share the same row, no leftover space */}
+            {showAdminCharts && (
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                    <MemberStatusChart
+                        data={dashboardData.memberStats.status_chart}
+                        total={dashboardData.memberStats.total}
+                    />
+                    <BudgetHealthChart budgetHealth={dashboardData.budgetHealth} />
                 </div>
             )}
 
