@@ -3,12 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Expense;
-use App\Models\Payment;
 use App\Models\User;
 use App\Http\Resources\UserResource;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Carbon\Carbon;
+use Carbon\CarbonPeriod;
 
 class DashboardController extends Controller
 {
@@ -18,22 +17,59 @@ class DashboardController extends Controller
         $permissions = $user->permissions();
         $roleNames = $user->roleNames();
 
-        // Get current month date range
-        $from = Carbon::now()->startOfMonth()->format('Y-m-d');
-        $to = Carbon::now()->endOfMonth()->format('Y-m-d');
+        // Current month date range
+        $from = Carbon::now()->startOfMonth();
+        $to = Carbon::now()->endOfMonth();
+        $trendEnd = Carbon::now()->lessThan($to) ? Carbon::now() : $to->copy();
+
+        $canViewExpense = $user->hasPermission('view-expense');
 
         // ===== EXPENSE STATS =====
-        $expenseQuery = Expense::query()->whereBetween('date', [$from, $to]);
+        $expenseQuery = Expense::query()->whereBetween('date', [$from->format('Y-m-d'), $to->format('Y-m-d')]);
 
         if (!$user->hasRole('manager') && !$user->hasRole('super_admin') && !$user->hasPermission('view-all-expenses')) {
             $expenseQuery->where('user_id', $user->id);
         }
 
-        $expenseCount = $user->hasPermission('view-expense') ? (clone $expenseQuery)->count() : 0;
-        $expenseTotal = $user->hasPermission('view-expense') ? (clone $expenseQuery)->sum('amount') : 0;
+        $expenseCount = $canViewExpense ? (clone $expenseQuery)->count() : 0;
+        $expenseTotal = $canViewExpense ? (clone $expenseQuery)->sum('amount') : 0;
+
+        // ===== EXPENSE TREND (daily, for area chart) =====
+        $expenseTrend = [];
+        if ($canViewExpense) {
+            $dailyTotals = (clone $expenseQuery)
+                ->selectRaw('date, SUM(amount) as total')
+                ->groupBy('date')
+                ->pluck('total', 'date');
+
+            $period = CarbonPeriod::create($from, $trendEnd);
+            foreach ($period as $day) {
+                $key = $day->format('Y-m-d');
+                $expenseTrend[] = [
+                    'date' => $day->format('d M'),
+                    'amount' => (float) ($dailyTotals[$key] ?? 0),
+                ];
+            }
+        }
+
+        // ===== CATEGORY BREAKDOWN (bar chart) =====
+        $categoryBreakdown = [];
+        if ($canViewExpense) {
+            $categoryBreakdown = (clone $expenseQuery)
+                ->with('category')
+                ->get()
+                ->groupBy(fn($e) => $e->category->name ?? 'Uncategorized')
+                ->map(fn($group, $name) => [
+                    'name' => $name,
+                    'amount' => (float) $group->sum('amount'),
+                ])
+                ->sortByDesc('amount')
+                ->take(6)
+                ->values();
+        }
 
         // ===== RECENT EXPENSES =====
-        $recentExpenses = $user->hasPermission('view-expense')
+        $recentExpenses = $canViewExpense
             ? (clone $expenseQuery)->with(['user', 'category'])
             ->latest('date')
             ->limit(5)
@@ -44,7 +80,7 @@ class DashboardController extends Controller
         $paymentData = [];
         if ($user->total_amount > 0) {
             $paymentsInRange = $user->payments()
-                ->whereBetween('created_at', [$from . ' 00:00:00', $to . ' 23:59:59'])
+                ->whereBetween('created_at', [$from->format('Y-m-d 00:00:00'), $to->format('Y-m-d 23:59:59')])
                 ->get();
 
             $paymentData = [
@@ -62,7 +98,6 @@ class DashboardController extends Controller
         $allPaymentsSummary = [];
 
         if ($user->hasRole('manager') || $user->hasRole('super_admin')) {
-            // Load all members with their payments
             $allMembers = User::whereHas('roles', fn($q) => $q->where('name', 'member'))
                 ->with('payments')
                 ->get();
@@ -77,28 +112,20 @@ class DashboardController extends Controller
             $totalRemainingAll = 0;
 
             foreach ($allMembers as $member) {
-                // ===== ASSIGNED / UNASSIGNED =====
-                if ($member->total_amount > 0) {
+                if ((float) $member->total_amount > 0) {
                     $assignedMembers++;
                 } else {
                     $unassignedMembers++;
                 }
 
-                // ===== LIVE STATUS =====
                 match ($member->payment_status) {
                     'paid' => $paidMembers++,
                     'partial' => $partialMembers++,
                     default => $unpaidMembers++,
                 };
 
-                // ===== PAYMENTS IN CURRENT MONTH =====
                 $paidInRange = $member->payments
-                    ->filter(function ($payment) use ($from, $to) {
-                        return $payment->created_at->between(
-                            Carbon::parse($from)->startOfDay(),
-                            Carbon::parse($to)->endOfDay()
-                        );
-                    })
+                    ->filter(fn($p) => $p->created_at->between($from->copy()->startOfDay(), $to->copy()->endOfDay()))
                     ->sum('paid_amount');
 
                 $totalPaidAll += $paidInRange;
@@ -116,6 +143,12 @@ class DashboardController extends Controller
                 'unpaid' => $unpaidMembers,
                 'assigned' => $assignedMembers,
                 'unassigned' => $unassignedMembers,
+                // Ready-made chart data for the donut chart
+                'status_chart' => [
+                    ['name' => 'Paid', 'value' => $paidMembers],
+                    ['name' => 'Partial', 'value' => $partialMembers],
+                    ['name' => 'Unpaid', 'value' => $unpaidMembers],
+                ],
             ];
 
             $allPaymentsSummary = [
@@ -138,6 +171,10 @@ class DashboardController extends Controller
                 'member_stats' => $memberStats,
                 'all_payments_summary' => $allPaymentsSummary,
                 'recent_expenses' => $recentExpenses,
+                'charts' => [
+                    'expense_trend' => $expenseTrend,
+                    'category_breakdown' => $categoryBreakdown,
+                ],
             ],
         ]);
     }
