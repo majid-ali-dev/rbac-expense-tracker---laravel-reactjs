@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Expense;
+use App\Models\Payment;
 use App\Models\User;
 use App\Http\Resources\UserResource;
 use Illuminate\Http\JsonResponse;
@@ -17,52 +18,52 @@ class DashboardController extends Controller
         $permissions = $user->permissions();
         $roleNames = $user->roleNames();
 
+        $isAdminView = $user->hasRole('manager') || $user->hasRole('super_admin');
+        $canViewExpense = $user->hasPermission('view-expense');
+
         // Current month date range
         $from = Carbon::now()->startOfMonth();
         $to = Carbon::now()->endOfMonth();
         $trendEnd = Carbon::now()->lessThan($to) ? Carbon::now() : $to->copy();
-
-        $canViewExpense = $user->hasPermission('view-expense');
+        $daysInMonth = $to->daysInMonth;
+        $daysElapsed = $trendEnd->day;
 
         // ===== EXPENSE STATS =====
         $expenseQuery = Expense::query()->whereBetween('date', [$from->format('Y-m-d'), $to->format('Y-m-d')]);
 
-        if (!$user->hasRole('manager') && !$user->hasRole('super_admin') && !$user->hasPermission('view-all-expenses')) {
+        if (!$isAdminView && !$user->hasPermission('view-all-expenses')) {
             $expenseQuery->where('user_id', $user->id);
         }
 
         $expenseCount = $canViewExpense ? (clone $expenseQuery)->count() : 0;
-        $expenseTotal = $canViewExpense ? (clone $expenseQuery)->sum('amount') : 0;
+        $expenseTotal = $canViewExpense ? (float) (clone $expenseQuery)->sum('amount') : 0;
+
+        // Only send the expense block if the user is actually allowed to see it,
+        // so the frontend can hide the cards entirely instead of showing zeros.
+        $expenses = $canViewExpense ? ['count' => $expenseCount, 'total' => $expenseTotal] : null;
 
         // ===== EXPENSE TREND (daily, for area chart) =====
         $expenseTrend = [];
+        $categoryBreakdown = [];
         if ($canViewExpense) {
             $dailyTotals = (clone $expenseQuery)
                 ->selectRaw('date, SUM(amount) as total')
                 ->groupBy('date')
                 ->pluck('total', 'date');
 
-            $period = CarbonPeriod::create($from, $trendEnd);
-            foreach ($period as $day) {
+            foreach (CarbonPeriod::create($from, $trendEnd) as $day) {
                 $key = $day->format('Y-m-d');
                 $expenseTrend[] = [
                     'date' => $day->format('d M'),
                     'amount' => (float) ($dailyTotals[$key] ?? 0),
                 ];
             }
-        }
 
-        // ===== CATEGORY BREAKDOWN (bar chart) =====
-        $categoryBreakdown = [];
-        if ($canViewExpense) {
             $categoryBreakdown = (clone $expenseQuery)
                 ->with('category')
                 ->get()
                 ->groupBy(fn($e) => $e->category->name ?? 'Uncategorized')
-                ->map(fn($group, $name) => [
-                    'name' => $name,
-                    'amount' => (float) $group->sum('amount'),
-                ])
+                ->map(fn($group, $name) => ['name' => $name, 'amount' => (float) $group->sum('amount')])
                 ->sortByDesc('amount')
                 ->take(6)
                 ->values();
@@ -70,14 +71,11 @@ class DashboardController extends Controller
 
         // ===== RECENT EXPENSES =====
         $recentExpenses = $canViewExpense
-            ? (clone $expenseQuery)->with(['user', 'category'])
-            ->latest('date')
-            ->limit(5)
-            ->get()
+            ? (clone $expenseQuery)->with(['user', 'category'])->latest('date')->limit(5)->get()
             : collect();
 
-        // ===== USER PAYMENT DATA =====
-        $paymentData = [];
+        // ===== USER PAYMENT DATA (member's own payment card) =====
+        $paymentData = null;
         if ($user->total_amount > 0) {
             $paymentsInRange = $user->payments()
                 ->whereBetween('created_at', [$from->format('Y-m-d 00:00:00'), $to->format('Y-m-d 23:59:59')])
@@ -93,11 +91,12 @@ class DashboardController extends Controller
             ];
         }
 
-        // ===== MEMBER STATS (Admin Only) =====
-        $memberStats = [];
-        $allPaymentsSummary = [];
+        // ===== ADMIN-ONLY SECTIONS =====
+        $memberStats = null;
+        $allPaymentsSummary = null;
+        $budgetHealth = null;
 
-        if ($user->hasRole('manager') || $user->hasRole('super_admin')) {
+        if ($isAdminView) {
             $allMembers = User::whereHas('roles', fn($q) => $q->where('name', 'member'))
                 ->with('payments')
                 ->get();
@@ -143,7 +142,6 @@ class DashboardController extends Controller
                 'unpaid' => $unpaidMembers,
                 'assigned' => $assignedMembers,
                 'unassigned' => $unassignedMembers,
-                // Ready-made chart data for the donut chart
                 'status_chart' => [
                     ['name' => 'Paid', 'value' => $paidMembers],
                     ['name' => 'Partial', 'value' => $partialMembers],
@@ -155,6 +153,59 @@ class DashboardController extends Controller
                 'total_paid' => (float) $totalPaidAll,
                 'total_remaining' => (float) $totalRemainingAll,
             ];
+
+            // ===== BUDGET HEALTH (burn-rate) =====
+            $dailyExpenseTotals = (clone $expenseQuery)
+                ->selectRaw('date, SUM(amount) as total')
+                ->groupBy('date')
+                ->pluck('total', 'date');
+
+            $dailyPaymentTotals = Payment::whereBetween('created_at', [
+                $from->format('Y-m-d 00:00:00'),
+                $trendEnd->format('Y-m-d 23:59:59'),
+            ])
+                ->selectRaw('DATE(created_at) as day, SUM(paid_amount) as total')
+                ->groupBy('day')
+                ->pluck('total', 'day');
+
+            $cumulativeExpense = 0;
+            $cumulativeIncome = 0;
+            $budgetTrend = [];
+
+            foreach (CarbonPeriod::create($from, $trendEnd) as $day) {
+                $key = $day->format('Y-m-d');
+                $cumulativeExpense += (float) ($dailyExpenseTotals[$key] ?? 0);
+                $cumulativeIncome += (float) ($dailyPaymentTotals[$key] ?? 0);
+
+                $budgetTrend[] = [
+                    'date' => $day->format('d M'),
+                    'expenses' => round($cumulativeExpense, 2),
+                    'income' => round($cumulativeIncome, 2),
+                ];
+            }
+
+            $totalIncomeThisMonth = round($totalPaidAll, 2);
+            $totalExpenseThisMonth = round($cumulativeExpense, 2);
+            $avgDailyExpense = $daysElapsed > 0 ? $totalExpenseThisMonth / $daysElapsed : 0;
+            $projectedExpense = round($avgDailyExpense * $daysInMonth, 2);
+
+            if ($totalIncomeThisMonth > 0) {
+                $ratio = $projectedExpense / $totalIncomeThisMonth;
+                $status = $ratio >= 1 ? 'danger' : ($ratio >= 0.75 ? 'caution' : 'safe');
+            } else {
+                $status = $totalExpenseThisMonth > 0 ? 'danger' : 'safe';
+            }
+
+            $budgetHealth = [
+                'trend' => $budgetTrend,
+                'total_income' => $totalIncomeThisMonth,
+                'total_expense' => $totalExpenseThisMonth,
+                'projected_expense' => $projectedExpense,
+                'month_progress_pct' => $daysInMonth > 0 ? round(($daysElapsed / $daysInMonth) * 100) : 0,
+                'days_elapsed' => $daysElapsed,
+                'days_in_month' => $daysInMonth,
+                'status' => $status,
+            ];
         }
 
         return response()->json([
@@ -163,10 +214,11 @@ class DashboardController extends Controller
                 'user' => new UserResource($user),
                 'role_names' => $roleNames,
                 'permissions' => $permissions,
-                'expenses' => [
-                    'count' => $expenseCount,
-                    'total' => (float) $expenseTotal,
+                'flags' => [
+                    'can_view_expense' => $canViewExpense,
+                    'show_admin_section' => $isAdminView,
                 ],
+                'expenses' => $expenses,
                 'payment_data' => $paymentData,
                 'member_stats' => $memberStats,
                 'all_payments_summary' => $allPaymentsSummary,
@@ -175,6 +227,7 @@ class DashboardController extends Controller
                     'expense_trend' => $expenseTrend,
                     'category_breakdown' => $categoryBreakdown,
                 ],
+                'budget_health' => $budgetHealth,
             ],
         ]);
     }
