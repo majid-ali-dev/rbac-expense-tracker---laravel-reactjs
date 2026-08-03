@@ -14,6 +14,7 @@ import ViewExpenses from './components/expenses/ViewExpenses';
 import Payments from './pages/payments/Payments';
 import AddPayment from './pages/payments/AddPayment';
 import ProtectedRoute from './components/layout/ProtectedRoute';
+import NotificationManagement from './components/dashboard/notification/NotificationManagement';
 
 function App() {
   return (
@@ -33,6 +34,7 @@ function App() {
           <Route path="/expenses/view" element={<ViewExpenses />} />
           <Route path="/payments" element={<Payments />} />
           <Route path="/payments/:id/add" element={<AddPayment />} />
+          <Route path="/notifications" element={<NotificationManagement />} />
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
         </Route>
         <Route path="*" element={<Navigate to="/dashboard" replace />} />

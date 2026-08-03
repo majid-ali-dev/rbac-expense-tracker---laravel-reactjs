@@ -34,10 +34,13 @@ const CloseMonthButton = ({ cycleLabel, onClosed }) => {
         <button
             onClick={handleClose}
             disabled={loading}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-slate-800 text-white text-sm font-bold rounded-xl hover:bg-slate-900 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-slate-800/20"
+            className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition-all"
+            title="Close Current Cycle"
         >
-            <FaLock size={12} />
-            {loading ? 'Closing...' : 'Close Current Cycle'}
+            <FaLock size={18} />
+            {loading && (
+                <span className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full animate-pulse"></span>
+            )}
         </button>
     );
 };

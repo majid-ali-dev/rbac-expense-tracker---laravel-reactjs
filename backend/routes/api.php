@@ -11,6 +11,7 @@ use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\SheetDownloaderController;
 use App\Http\Controllers\BillingCycleController;
+use App\Http\Controllers\NotificationController;
 use Illuminate\Support\Facades\Route;
 
 // Public routes
@@ -96,5 +97,18 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/{id}/add', [PaymentController::class, 'addPayment'])->name('payments.add');
         Route::post('/{id}/pay', [PaymentController::class, 'pay'])->name('payments.pay');
         Route::delete('/{id}', [PaymentController::class, 'destroy'])->name('payments.destroy');
+    });
+
+    // Notification Routes
+    Route::prefix('notifications')->group(function () {
+        Route::get('/', [NotificationController::class, 'index'])->name('notifications.index');
+        Route::post('/', [NotificationController::class, 'store'])->name('notifications.store');
+        Route::get('/unread-count', [NotificationController::class, 'unreadCount'])->name('notifications.unread-count');
+        Route::get('/unread', [NotificationController::class, 'unread'])->name('notifications.unread');
+        Route::get('/read', [NotificationController::class, 'read'])->name('notifications.read');
+        Route::post('/{id}/mark-read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
+        Route::get('/{id}', [NotificationController::class, 'show'])->name('notifications.show');
+        Route::put('/{id}', [NotificationController::class, 'update'])->name('notifications.update');
+        Route::delete('/{id}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
     });
 });

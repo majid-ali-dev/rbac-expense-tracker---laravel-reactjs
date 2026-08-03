@@ -32,6 +32,10 @@ class PermissionSeeder extends Seeder
             // 🔵 MEMBER FEATURES
             'view-own-data',
             'pay-bills',
+
+            // 🔵 NOTIFICATION MANAGEMENT
+            'create-notification',
+            'view-notification',
         ];
 
         foreach (array_unique($permissions) as $permission) {
