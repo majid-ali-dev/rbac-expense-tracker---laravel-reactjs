@@ -160,4 +160,39 @@ class User extends Authenticatable
             'status' => 'unpaid',
         ]);
     }
+
+    // Notification relationship
+    public function notificationReads()
+    {
+        return $this->hasMany(NotificationRead::class);
+    }
+
+    public function unreadNotifications()
+    {
+        return Notification::where('is_active', true)
+            ->whereDoesntHave('reads', function ($q) {
+                $q->where('user_id', $this->id);
+            })
+            ->get();
+    }
+
+    public function unreadNotificationsCount()
+    {
+        return $this->unreadNotifications()->count();
+    }
+
+    public function markNotificationRead(int $notificationId): bool
+    {
+        $read = NotificationRead::firstOrCreate([
+            'notification_id' => $notificationId,
+            'user_id' => $this->id,
+        ]);
+
+        if ($read->wasRecentlyCreated) {
+            $read->update(['read_at' => now()]);
+            return true;
+        }
+
+        return false;
+    }
 }

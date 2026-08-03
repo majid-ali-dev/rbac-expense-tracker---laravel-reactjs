@@ -36,6 +36,7 @@ class RolePermissionSeeder extends Seeder
                 'view-own-data',
                 'view-payment',
                 'pay-bills',
+                'view-notification',
             ])->pluck('id')->all()
         );
     }

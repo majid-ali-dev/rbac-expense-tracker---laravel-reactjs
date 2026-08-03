@@ -1,7 +1,7 @@
 import React from 'react';
 import CloseMonthButton from './CloseMonthButton';
 
-const DashboardHeader = ({ user, billingCycle, isAdmin, onMonthClosed }) => {
+const DashboardHeader = ({ user, billingCycle, isAdmin, onMonthClosed, notificationBell }) => {
     const monthLabel = billingCycle?.label || new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 
     return (
@@ -18,9 +18,12 @@ const DashboardHeader = ({ user, billingCycle, isAdmin, onMonthClosed }) => {
                     <span className="text-sm bg-blue-50 text-blue-700 px-3 py-1.5 rounded-full font-semibold">
                         {monthLabel}
                     </span>
+                    {/* Close button - icon only */}
                     {isAdmin && billingCycle && (
                         <CloseMonthButton cycleLabel={monthLabel} onClosed={onMonthClosed} />
                     )}
+                    {/* Notification Bell */}
+                    {notificationBell}
                 </div>
             </div>
 

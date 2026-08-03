@@ -7,6 +7,7 @@ import ExpenseTrendChart from '../../components/dashboard/charts/ExpenseTrendCha
 import CategoryBreakdownChart from '../../components/dashboard/charts/CategoryBreakdownChart';
 import MemberStatusChart from '../../components/dashboard/charts/MemberStatusChart';
 import BudgetHealthChart from '../../components/dashboard/charts/BudgetHealthChart';
+import NotificationBell from '../../components/dashboard/notification/NotificationBell';
 import { showError } from '../../utils/toast';
 
 const initialState = {
@@ -86,6 +87,7 @@ const Dashboard = () => {
     const { flags } = dashboardData;
     const showExpenseCharts = flags.can_view_expense;
     const showAdminCharts = flags.show_admin_section;
+    const isAdmin = user?.roles?.some(r => r.name === 'manager' || r.name === 'super_admin');
 
     const hasData =
         (dashboardData.expenses && dashboardData.expenses.count > 0) ||
@@ -99,6 +101,7 @@ const Dashboard = () => {
                 billingCycle={dashboardData.billingCycle}
                 isAdmin={showAdminCharts}
                 onMonthClosed={fetchDashboardData}
+                notificationBell={<NotificationBell isAdmin={isAdmin} />}
             />
 
             <DashboardStats
