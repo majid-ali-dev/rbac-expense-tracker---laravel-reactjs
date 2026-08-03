@@ -10,7 +10,7 @@ import {
     ReferenceLine,
     ResponsiveContainer,
 } from 'recharts';
-import { FaWallet, FaCheckCircle, FaExclamationTriangle, FaExclamationCircle } from 'react-icons/fa';
+import { FaWallet, FaCheckCircle, FaExclamationTriangle, FaExclamationCircle, FaHourglassHalf } from 'react-icons/fa';
 import ChartCard from '../ChartCard';
 
 const STATUS_CONFIG = {
@@ -19,21 +19,18 @@ const STATUS_CONFIG = {
         badgeClass: 'bg-green-50 text-green-700 border-green-200',
         lineColor: '#22c55e',
         icon: FaCheckCircle,
-        message: 'Spending pace is healthy compared to income collected this month.',
     },
     caution: {
         label: 'Caution',
         badgeClass: 'bg-yellow-50 text-yellow-700 border-yellow-200',
         lineColor: '#f59e0b',
         icon: FaExclamationTriangle,
-        message: 'Spending pace is approaching this month\u2019s income — keep an eye on it.',
     },
     danger: {
         label: 'Danger Zone',
         badgeClass: 'bg-red-50 text-red-700 border-red-200',
         lineColor: '#ef4444',
         icon: FaExclamationCircle,
-        message: 'At the current pace, expenses are projected to exceed income before month end.',
     },
 };
 
@@ -67,12 +64,32 @@ const BudgetHealthChart = ({ budgetHealth }) => {
 
     const config = STATUS_CONFIG[status] || STATUS_CONFIG.safe;
     const StatusIcon = config.icon;
-    const hasData = trend && trend.length > 0;
+    const hasEnoughPoints = trend && trend.length >= 2;
+    const hasAnyTrend = trend && trend.length > 0;
+
+    const summaryStrip = (
+        <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-gray-100">
+            <div>
+                <p className="text-[10px] text-gray-400 font-semibold uppercase tracking-wide">Income</p>
+                <p className="text-sm font-extrabold text-green-600 mt-0.5">Rs. {totalIncome.toFixed(0)}</p>
+            </div>
+            <div>
+                <p className="text-[10px] text-gray-400 font-semibold uppercase tracking-wide">Spent</p>
+                <p className="text-sm font-extrabold text-gray-900 mt-0.5">Rs. {totalExpense.toFixed(0)}</p>
+            </div>
+            <div>
+                <p className="text-[10px] text-gray-400 font-semibold uppercase tracking-wide">Projected</p>
+                <p className="text-sm font-extrabold mt-0.5" style={{ color: config.lineColor }}>
+                    Rs. {projectedExpense.toFixed(0)}
+                </p>
+            </div>
+        </div>
+    );
 
     return (
         <ChartCard
             title="Budget Health"
-            subtitle={`Day ${daysElapsed}/${daysInMonth} \u00b7 ${monthProgress}% of month`}
+            subtitle={`Day ${daysElapsed}/${daysInMonth} \u00b7 ${monthProgress}% of cycle`}
             icon={FaWallet}
             iconColor="bg-slate-700"
             className="lg:col-span-2"
@@ -85,7 +102,7 @@ const BudgetHealthChart = ({ budgetHealth }) => {
                 </span>
             }
         >
-            {hasData ? (
+            {hasEnoughPoints ? (
                 <>
                     <ResponsiveContainer width="100%" height={200}>
                         <LineChart data={trend} margin={{ top: 5, right: 10, left: -15, bottom: 0 }}>
@@ -97,7 +114,13 @@ const BudgetHealthChart = ({ budgetHealth }) => {
                                 tickLine={false}
                                 interval="preserveStartEnd"
                             />
-                            <YAxis tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} width={40} />
+                            <YAxis
+                                tick={{ fontSize: 10, fill: '#94a3b8' }}
+                                axisLine={false}
+                                tickLine={false}
+                                width={40}
+                                domain={[0, 'auto']}
+                            />
                             <Tooltip content={<CustomTooltip />} />
                             <ReferenceLine y={totalIncome} stroke="#94a3b8" strokeDasharray="4 4" />
                             <Line
@@ -106,8 +129,8 @@ const BudgetHealthChart = ({ budgetHealth }) => {
                                 name="Income"
                                 stroke="#22c55e"
                                 strokeWidth={2.5}
-                                dot={false}
-                                activeDot={{ r: 4, strokeWidth: 2, stroke: '#fff' }}
+                                dot={{ r: 3, fill: '#22c55e', strokeWidth: 2, stroke: '#fff' }}
+                                activeDot={{ r: 5, strokeWidth: 2, stroke: '#fff' }}
                             />
                             <Line
                                 type="monotone"
@@ -115,29 +138,23 @@ const BudgetHealthChart = ({ budgetHealth }) => {
                                 name="Expenses"
                                 stroke={config.lineColor}
                                 strokeWidth={2.5}
-                                dot={false}
-                                activeDot={{ r: 4, strokeWidth: 2, stroke: '#fff' }}
+                                dot={{ r: 3, fill: config.lineColor, strokeWidth: 2, stroke: '#fff' }}
+                                activeDot={{ r: 5, strokeWidth: 2, stroke: '#fff' }}
                             />
                         </LineChart>
                     </ResponsiveContainer>
-
-                    {/* Compact 3-stat summary — fits cleanly in 2/3 width, no overflow */}
-                    <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-gray-100">
-                        <div>
-                            <p className="text-[10px] text-gray-400 font-semibold uppercase tracking-wide">Income</p>
-                            <p className="text-sm font-extrabold text-green-600 mt-0.5">Rs. {totalIncome.toFixed(0)}</p>
+                    {summaryStrip}
+                </>
+            ) : hasAnyTrend ? (
+                <>
+                    <div className="h-[140px] flex flex-col items-center justify-center text-center px-6">
+                        <div className="p-3 bg-slate-50 rounded-full mb-3">
+                            <FaHourglassHalf className="text-slate-500" size={20} />
                         </div>
-                        <div>
-                            <p className="text-[10px] text-gray-400 font-semibold uppercase tracking-wide">Spent</p>
-                            <p className="text-sm font-extrabold text-gray-900 mt-0.5">Rs. {totalExpense.toFixed(0)}</p>
-                        </div>
-                        <div>
-                            <p className="text-[10px] text-gray-400 font-semibold uppercase tracking-wide">Projected</p>
-                            <p className="text-sm font-extrabold mt-0.5" style={{ color: config.lineColor }}>
-                                Rs. {projectedExpense.toFixed(0)}
-                            </p>
-                        </div>
+                        <p className="text-sm font-bold text-gray-700">Cycle just started</p>
+                        <p className="text-xs text-gray-400 mt-1">Chart will build up over the next few days</p>
                     </div>
+                    {summaryStrip}
                 </>
             ) : (
                 <div className="h-[200px] flex items-center justify-center text-sm text-gray-400">

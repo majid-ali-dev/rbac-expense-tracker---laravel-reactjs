@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\Payment\PaymentStoreRequest;
 use App\Http\Resources\PaymentResource;
-use App\Http\Resources\UserResource;
+use App\Models\BillingCycle;
+use App\Models\Payment;
+use App\Models\User;
 use App\Services\PaymentService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -22,57 +24,56 @@ class PaymentController extends Controller
     {
         $user = auth()->user();
 
-        // Check permission
         if (!$user->hasPermission('view-payment')) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Permission denied',
-            ], 403);
+            return response()->json(['success' => false, 'message' => 'Permission denied'], 403);
         }
 
-        // If user is member, show only their own payments
-        if ($user->hasRole('member')) {
-            // Load payments for the member
-            $user->load(['payments' => function ($query) {
-                $query->latest();
-            }]);
+        $cycle = BillingCycle::current();
 
-            // Calculate stats using the accessors
-            $totalPaid = $user->total_paid;
-            $remaining = $user->remaining;
-            $status = $user->payment_status;
+        // ===== MEMBER: own payments only =====
+        if ($user->hasRole('member')) {
+            $user->load(['payments' => fn($q) => $q->where('billing_cycle_id', $cycle->id)->latest()]);
+
+            $amount = $user->currentCycleAmount($cycle->id);
+            $paid = $user->currentCyclePaid($cycle->id);
+            $remaining = $user->currentCycleRemaining($cycle->id);
+            $status = $user->currentCycleStatus($cycle->id);
 
             return response()->json([
                 'success' => true,
                 'data' => [
-                    'users' => [new UserResource($user)],
+                    'users' => [$this->formatUserRow($user, $amount, $paid, $remaining, $status)],
                     'stats' => [
-                        'total_amount' => (float) $user->total_amount,
-                        'total_paid' => (float) $totalPaid,
-                        'total_remaining' => (float) $remaining,
+                        'total_amount' => $amount,
+                        'total_paid' => $paid,
+                        'total_remaining' => $remaining,
                         'paid_count' => $status === 'paid' ? 1 : 0,
                         'partial_count' => $status === 'partial' ? 1 : 0,
                         'unpaid_count' => $status === 'unpaid' ? 1 : 0,
                     ],
                 ],
-                'meta' => [
-                    'current_page' => 1,
-                    'per_page' => 10,
-                    'total' => 1,
-                    'last_page' => 1,
-                ],
+                'meta' => ['current_page' => 1, 'per_page' => 10, 'total' => 1, 'last_page' => 1],
             ]);
         }
 
-        // For Manager and Super Admin - show all members
+        // ===== MANAGER / SUPER ADMIN: all members, all cycle-scoped =====
         $perPage = $request->get('per_page', 10);
         $users = $this->paymentService->getMemberPayments($perPage);
-        $stats = $this->paymentService->getPaymentStats($users);
+        $stats = $this->paymentService->getPaymentStats($users->getCollection());
+
+        $rows = $users->getCollection()->map(function (User $u) use ($cycle) {
+            $amount = $u->currentCycleAmount($cycle->id);
+            $paid = $u->currentCyclePaid($cycle->id);
+            $remaining = $u->currentCycleRemaining($cycle->id);
+            $status = $u->currentCycleStatus($cycle->id);
+
+            return $this->formatUserRow($u, $amount, $paid, $remaining, $status);
+        });
 
         return response()->json([
             'success' => true,
             'data' => [
-                'users' => UserResource::collection($users),
+                'users' => $rows,
                 'stats' => $stats,
             ],
             'meta' => [
@@ -84,11 +85,13 @@ class PaymentController extends Controller
         ]);
     }
 
+    /**
+     * Now allows adding payment even if amount = 0
+     */
     public function addPayment(int $userId): JsonResponse
     {
         $user = auth()->user();
 
-        // Only managers and super admin can add payments for others
         if (!$user->hasRole('manager') && !$user->hasRole('super_admin')) {
             return response()->json([
                 'success' => false,
@@ -96,31 +99,28 @@ class PaymentController extends Controller
             ], 403);
         }
 
-        $targetUser = \App\Models\User::with(['payments' => function ($query) {
-            $query->latest();
-        }])->find($userId);
+        $cycle = BillingCycle::current();
+
+        $targetUser = User::with(['payments' => fn($q) => $q->where('billing_cycle_id', $cycle->id)->latest()])
+            ->find($userId);
 
         if (!$targetUser) {
-            return response()->json([
-                'success' => false,
-                'message' => 'User not found',
-            ], 404);
+            return response()->json(['success' => false, 'message' => 'User not found'], 404);
         }
 
-        if ($targetUser->total_amount <= 0) {
-            return response()->json([
-                'success' => false,
-                'message' => 'This user has no total amount assigned. Please set total amount first.',
-            ], 400);
-        }
+        // Get cycle data - even if amount is 0
+        $amount = $targetUser->currentCycleAmount($cycle->id);
+        $paid = $targetUser->currentCyclePaid($cycle->id);
+        $remaining = $targetUser->currentCycleRemaining($cycle->id);
+        $status = $targetUser->currentCycleStatus($cycle->id);
 
-        // Use accessors
-        $targetUser->total_paid = $targetUser->total_paid;
-        $targetUser->remaining = $targetUser->remaining;
 
         return response()->json([
             'success' => true,
-            'data' => new UserResource($targetUser),
+            'data' => [
+                ...$this->formatUserRow($targetUser, $amount, $paid, $remaining, $status),
+                'payments' => PaymentResource::collection($targetUser->payments),
+            ],
         ]);
     }
 
@@ -128,7 +128,6 @@ class PaymentController extends Controller
     {
         $user = auth()->user();
 
-        // Only managers and super admin can add payments
         if (!$user->hasRole('manager') && !$user->hasRole('super_admin')) {
             return response()->json([
                 'success' => false,
@@ -136,17 +135,24 @@ class PaymentController extends Controller
             ], 403);
         }
 
-        $targetUser = \App\Models\User::find($userId);
+        $targetUser = User::find($userId);
 
         if (!$targetUser) {
-            return response()->json([
-                'success' => false,
-                'message' => 'User not found',
-            ], 404);
+            return response()->json(['success' => false, 'message' => 'User not found'], 404);
         }
 
         try {
-            $payment = $this->paymentService->createPayment($targetUser, $request->paid_amount);
+            $currentCycle = BillingCycle::current();
+
+            $payment = Payment::create([
+                'user_id' => $targetUser->id,
+                'billing_cycle_id' => $currentCycle->id,
+                'paid_amount' => $request->paid_amount,
+                'month' => strtolower(now()->format('M')),
+                'updated_by' => auth()->id(),
+            ]);
+
+            $this->paymentService->updateUserTotals($targetUser);
 
             return response()->json([
                 'success' => true,
@@ -154,10 +160,7 @@ class PaymentController extends Controller
                 'data' => new PaymentResource($payment->load(['user', 'updater'])),
             ], 201);
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-            ], 400);
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
         }
     }
 
@@ -165,7 +168,6 @@ class PaymentController extends Controller
     {
         $user = auth()->user();
 
-        // Only managers and super admin can delete payments
         if (!$user->hasRole('manager') && !$user->hasRole('super_admin')) {
             return response()->json([
                 'success' => false,
@@ -176,24 +178,34 @@ class PaymentController extends Controller
         $payment = $this->paymentService->findPaymentById($paymentId);
 
         if (!$payment) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Payment not found',
-            ], 404);
+            return response()->json(['success' => false, 'message' => 'Payment not found'], 404);
         }
 
         $deleted = $this->paymentService->deletePayment($payment);
 
         if (!$deleted) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to delete payment',
-            ], 500);
+            return response()->json(['success' => false, 'message' => 'Failed to delete payment'], 500);
         }
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Payment deleted successfully',
-        ]);
+        return response()->json(['success' => true, 'message' => 'Payment deleted successfully']);
+    }
+
+    /**
+     * Single source of truth for how a member row looks everywhere in the
+     * Payments module — table rows AND stats now always agree because they
+     * both come from the same cycle-scoped User methods.
+     */
+    private function formatUserRow(User $user, float $amount, float $paid, float $remaining, string $status): array
+    {
+        return [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'phone' => $user->phone,
+            'total_amount' => $amount,
+            'total_paid' => $paid,
+            'remaining' => $remaining,
+            'payment_status' => $status,
+        ];
     }
 }

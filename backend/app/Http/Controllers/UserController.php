@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Http\Requests\User\UserStoreRequest;
 use App\Http\Requests\User\UserTotalUpdateRequest;
 use App\Http\Requests\User\UserUpdateRequest;
-use App\Http\Resources\UserProfileResource;
 use App\Http\Resources\UserResource;
 use App\Services\UserService;
 use Illuminate\Http\JsonResponse;
@@ -41,7 +40,6 @@ class UserController extends Controller
     {
         $user = $this->userService->create($request->validated());
 
-        // Assign roles
         $roleIds = $request->roles ?? [];
         if (empty($roleIds)) {
             $memberRole = $this->userService->getRoles()->where('name', 'member')->first();
@@ -58,11 +56,17 @@ class UserController extends Controller
         ], 201);
     }
 
+    /**
+     * Get single user profile + payment history.
+     * Uses the SAME service method (getUserWithPaymentHistory) that returns
+     * the { user, payment_history } shape the frontend expects — this is the
+     * fix for the "User not found" bug caused by a response-shape mismatch.
+     */
     public function show(int $id): JsonResponse
     {
-        $userData = $this->userService->getUserWithPaymentHistory($id);
+        $result = $this->userService->getUserWithPaymentHistory($id);
 
-        if (!$userData) {
+        if (!$result) {
             return response()->json([
                 'success' => false,
                 'message' => 'User not found',
@@ -71,7 +75,7 @@ class UserController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => new UserProfileResource($userData),
+            'data' => $result,
         ]);
     }
 
@@ -103,7 +107,7 @@ class UserController extends Controller
         if (!$updated) {
             return response()->json([
                 'success' => false,
-                'message' => 'User not found or amount is less than paid amount',
+                'message' => 'User not found',
             ], 400);
         }
 

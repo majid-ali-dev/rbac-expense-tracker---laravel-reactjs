@@ -10,6 +10,7 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\SheetDownloaderController;
+use App\Http\Controllers\BillingCycleController;
 use Illuminate\Support\Facades\Route;
 
 // Public routes
@@ -21,6 +22,13 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
     Route::get('/user', [AuthController::class, 'me'])->name('user.me');
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Billing Cycle Routes
+    Route::prefix('billing-cycle')->group(function () {
+        Route::get('/current', [BillingCycleController::class, 'current']);
+        Route::get('/history', [BillingCycleController::class, 'history']);
+        Route::post('/close', [BillingCycleController::class, 'closeCurrentMonth']);
+    });
 
     // Role Management Routes
     Route::prefix('roles')->group(function () {

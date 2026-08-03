@@ -1,10 +1,5 @@
 import React from 'react';
 
-/**
- * Reusable wrapper for all dashboard charts.
- * Keeps header (title/subtitle/icon) and card chrome consistent everywhere.
- * `headerRight` lets a chart inject something like a status badge into the header row.
- */
 const ChartCard = ({ title, subtitle, icon: Icon, iconColor = 'bg-blue-500', headerRight, children, className = '' }) => {
     return (
         <div

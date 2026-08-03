@@ -8,7 +8,7 @@ import {
     Tooltip,
     ResponsiveContainer,
 } from 'recharts';
-import { FaChartArea } from 'react-icons/fa';
+import { FaChartArea, FaHourglassHalf } from 'react-icons/fa';
 import ChartCard from '../ChartCard';
 
 const CustomTooltip = ({ active, payload, label }) => {
@@ -22,12 +22,17 @@ const CustomTooltip = ({ active, payload, label }) => {
 };
 
 const ExpenseTrendChart = ({ data }) => {
-    const hasData = data && data.length > 0 && data.some((d) => d.amount > 0);
+    const hasAnyValue = data && data.length > 0 && data.some((d) => d.amount > 0);
+    const hasEnoughPoints = data && data.length >= 2;
+    const hasData = hasAnyValue && hasEnoughPoints;
+
+    // Naya cycle abhi shuru hua hai — sirf 1 din ka data hai, line banana possible nahi
+    const todayOnly = hasAnyValue && !hasEnoughPoints ? data[data.length - 1] : null;
 
     return (
         <ChartCard
             title="Expense Trend"
-            subtitle="Daily spending — current month"
+            subtitle="Daily spending — current cycle"
             icon={FaChartArea}
             iconColor="bg-blue-500"
             className="lg:col-span-2"
@@ -54,6 +59,7 @@ const ExpenseTrendChart = ({ data }) => {
                             axisLine={false}
                             tickLine={false}
                             width={45}
+                            domain={[0, 'dataMax + 50']}
                         />
                         <Tooltip content={<CustomTooltip />} />
                         <Area
@@ -66,9 +72,20 @@ const ExpenseTrendChart = ({ data }) => {
                         />
                     </AreaChart>
                 </ResponsiveContainer>
+            ) : todayOnly ? (
+                <div className="h-[260px] flex flex-col items-center justify-center text-center px-6">
+                    <div className="p-3 bg-blue-50 rounded-full mb-3">
+                        <FaHourglassHalf className="text-blue-500" size={20} />
+                    </div>
+                    <p className="text-sm font-bold text-gray-700">Cycle just started</p>
+                    <p className="text-xs text-gray-400 mt-1">
+                        Rs. {todayOnly.amount.toFixed(2)} spent so far ({todayOnly.date})
+                    </p>
+                    <p className="text-xs text-gray-400 mt-1">Trend will build up over the next few days</p>
+                </div>
             ) : (
                 <div className="h-[260px] flex items-center justify-center text-sm text-gray-400">
-                    No expenses recorded yet this month
+                    No expenses recorded yet this cycle
                 </div>
             )}
         </ChartCard>

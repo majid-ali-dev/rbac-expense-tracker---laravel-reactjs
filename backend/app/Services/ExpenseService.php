@@ -4,9 +4,11 @@ namespace App\Services;
 
 use App\Models\Expense;
 use App\Models\ExpenseHistory;
+use App\Models\BillingCycle;
 use App\Repositories\Contracts\ExpenseRepositoryInterface;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
 
 class ExpenseService
 {
@@ -17,10 +19,25 @@ class ExpenseService
         $this->expenseRepository = $expenseRepository;
     }
 
+    /**
+     * FIXED: Only show expenses from CURRENT cycle
+     * Uses cycle start date and TODAY as end date
+     */
     public function getAllPaginated(int $perPage = 10): LengthAwarePaginator
     {
         $user = Auth::user();
+        $cycle = BillingCycle::current();
+
+        // Start from cycle start, end at today
+        $startDate = $cycle->start_date->startOfDay();
+        $endDate = Carbon::now()->endOfDay();
+
         $query = $this->expenseRepository->getExpenseQuery($user);
+        $query->whereBetween('date', [
+            $startDate->format('Y-m-d'),
+            $endDate->format('Y-m-d')
+        ]);
+
         return $query->with(['user', 'category', 'histories.user'])
             ->latest('date')
             ->paginate($perPage);
@@ -37,9 +54,13 @@ class ExpenseService
         $data['user_id'] = Auth::id();
         $data['title'] = $category ? $category->name : '';
 
+        // Ensure date is set (use today if not provided)
+        if (!isset($data['date']) || empty($data['date'])) {
+            $data['date'] = Carbon::now()->format('Y-m-d');
+        }
+
         $expense = $this->expenseRepository->create($data);
 
-        // Create history for creation
         ExpenseHistory::create([
             'expense_id' => $expense->id,
             'user_id' => Auth::id(),
@@ -59,7 +80,6 @@ class ExpenseService
             return false;
         }
 
-        // Get old data before update
         $oldData = $this->getHistoryPayload($expense);
 
         $category = $this->expenseRepository->getCategories()->where('id', $data['category_id'])->first();
@@ -69,14 +89,10 @@ class ExpenseService
         $updated = $this->expenseRepository->update($expense, $data);
 
         if ($updated) {
-            // Refresh expense to get new data
             $expense->refresh();
             $newData = $this->getHistoryPayload($expense);
-
-            // Get changed fields
             $changedFields = $this->getChangedFields($oldData, $newData);
 
-            // Create history for update
             ExpenseHistory::create([
                 'expense_id' => $expense->id,
                 'user_id' => Auth::id(),
@@ -97,7 +113,6 @@ class ExpenseService
             return false;
         }
 
-        // Create history for deletion
         ExpenseHistory::create([
             'expense_id' => $expense->id,
             'user_id' => Auth::id(),
@@ -115,9 +130,6 @@ class ExpenseService
         return $this->expenseRepository->getCategories();
     }
 
-    /**
-     * Get history payload for expense
-     */
     private function getHistoryPayload(Expense $expense): array
     {
         $expense->loadMissing(['user', 'updater']);
@@ -137,9 +149,6 @@ class ExpenseService
         ];
     }
 
-    /**
-     * Get changed fields between old and new data
-     */
     private function getChangedFields(array $oldData, array $newData): array
     {
         $fields = ['title', 'amount', 'date', 'description', 'category_id'];

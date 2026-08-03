@@ -19,8 +19,12 @@ class SheetDownloaderController extends Controller
             ], 403);
         }
 
-        $from = $request->get('from', now()->startOfMonth()->format('Y-m-d'));
-        $to = $request->get('to', now()->endOfMonth()->format('Y-m-d'));
+        // Get current cycle
+        $cycle = \App\Models\BillingCycle::current();
+
+        // Use cycle dates as default
+        $from = $request->get('from', $cycle->start_date->format('Y-m-d'));
+        $to = $request->get('to', $cycle->end_date->format('Y-m-d'));
 
         $expenses = Expense::with(['user', 'category'])
             ->whereBetween('date', [$from, $to])
@@ -29,7 +33,7 @@ class SheetDownloaderController extends Controller
 
         $totalExpenses = $expenses->sum('amount');
 
-        $totalPaid = Payment::whereBetween('created_at', [$from . ' 00:00:00', $to . ' 23:59:59'])
+        $totalPaid = Payment::where('billing_cycle_id', $cycle->id)
             ->sum('paid_amount');
 
         $balance = $totalPaid - $totalExpenses;

@@ -62,7 +62,7 @@ class UserSeeder extends Seeder
                 'phone' => '0301-1111111',
                 'role' => $memberRole,
                 'total_amount' => 0,
-                'status' => 'partial'
+                'status' => 'unpaid'
             ],
             [
                 'name' => 'Naseer Ali',
@@ -70,7 +70,7 @@ class UserSeeder extends Seeder
                 'phone' => '0301-2222222',
                 'role' => $memberRole,
                 'total_amount' => 0,
-                'status' => 'partial'
+                'status' => 'unpaid'
             ],
             [
                 'name' => 'Gaffar Ali',
@@ -86,7 +86,7 @@ class UserSeeder extends Seeder
                 'phone' => '0301-4444444',
                 'role' => $memberRole,
                 'total_amount' => 0,
-                'status' => 'paid'
+                'status' => 'unpaid'
             ],
             [
                 'name' => 'Qamber Ali',
@@ -102,7 +102,7 @@ class UserSeeder extends Seeder
                 'phone' => '0301-6666666',
                 'role' => $memberRole,
                 'total_amount' => 0,
-                'status' => 'partial'
+                'status' => 'unpaid'
             ],
             [
                 'name' => 'Ahsin Raza',
@@ -110,7 +110,7 @@ class UserSeeder extends Seeder
                 'phone' => '0301-7777777',
                 'role' => $memberRole,
                 'total_amount' => 0,
-                'status' => 'paid'
+                'status' => 'unpaid'
             ],
             [
                 'name' => 'Faheem Hussain',
@@ -118,7 +118,7 @@ class UserSeeder extends Seeder
                 'phone' => '0301-8888888',
                 'role' => $memberRole,
                 'total_amount' => 0,
-                'status' => 'partial'
+                'status' => 'unpaid'
             ],
             [
                 'name' => 'Raza Hussain',
@@ -134,7 +134,7 @@ class UserSeeder extends Seeder
                 'phone' => '0302-0000000',
                 'role' => $memberRole,
                 'total_amount' => 0,
-                'status' => 'paid'
+                'status' => 'unpaid'
             ]
         ];
 

@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Models\BillingCycle;
+use App\Models\MemberDue;
 use App\Models\User;
 use App\Repositories\Contracts\UserRepositoryInterface;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -33,13 +35,31 @@ class UserService
         return $this->userRepository->create($data);
     }
 
+    /**
+     * FIXED: Ab agar "Edit User" form se bhi total_amount aata hai,
+     * to current cycle ka MemberDue row bhi sync ho jata hai — warna
+     * currentCycleAmount() hamesha purani (0 wali) MemberDue value hi
+     * padhta rehta, chahe users.total_amount column update ho jaye.
+     */
     public function update(int $id, array $data): bool
     {
         $user = $this->findById($id);
         if (!$user) {
             return false;
         }
-        return $this->userRepository->update($user, $data);
+
+        $updated = $this->userRepository->update($user, $data);
+
+        if ($updated && array_key_exists('total_amount', $data) && $data['total_amount'] !== null) {
+            $cycle = BillingCycle::current();
+
+            MemberDue::updateOrCreate(
+                ['user_id' => $user->id, 'billing_cycle_id' => $cycle->id],
+                ['amount_assigned' => $data['total_amount']]
+            );
+        }
+
+        return $updated;
     }
 
     public function delete(int $id): bool
@@ -57,7 +77,15 @@ class UserService
         if (!$user) {
             return false;
         }
-        return $this->userRepository->updateTotal($user, $amount);
+
+        $cycle = BillingCycle::current();
+
+        MemberDue::updateOrCreate(
+            ['user_id' => $user->id, 'billing_cycle_id' => $cycle->id],
+            ['amount_assigned' => $amount]
+        );
+
+        return $this->userRepository->update($user, ['total_amount' => $amount]);
     }
 
     public function getRoles()
@@ -65,42 +93,47 @@ class UserService
         return $this->userRepository->getRoles();
     }
 
-    /**
-     * Get user with complete payment history
-     */
     public function getUserWithPaymentHistory(int $id): ?array
     {
         $user = $this->userRepository->findById($id);
-        
+
         if (!$user) {
             return null;
         }
 
-        // Load payments with updater
-        $user->load(['payments.updater']);
+        $user->load(['roles', 'payments.updater', 'payments.billingCycle', 'dues.billingCycle']);
 
-        // Calculate totals
-        $totalPaid = $user->payments->sum('paid_amount');
-        $remaining = max(0, (float) $user->total_amount - (float) $totalPaid);
+        $cycle = BillingCycle::current();
+        $amount = $user->currentCycleAmount($cycle->id);
+        $paid = $user->currentCyclePaid($cycle->id);
+        $remaining = $user->currentCycleRemaining($cycle->id);
+        $status = $user->currentCycleStatus($cycle->id);
 
-        // Group payments by month
         $paymentHistory = $this->groupPaymentsByMonth($user->payments);
 
         return [
-            'user' => $user,
-            'total_paid' => (float) $totalPaid,
-            'remaining' => (float) $remaining,
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'phone' => $user->phone,
+                'total_amount' => $amount,
+                'total_paid' => $paid,
+                'remaining' => $remaining,
+                'payment_status' => $status,
+                'roles' => $user->roles->pluck('name'),
+                'joined_at' => $user->created_at?->format('d M Y'),
+            ],
+            'total_paid' => $paid,
+            'remaining' => $remaining,
             'payment_history' => $paymentHistory,
         ];
     }
 
-    /**
-     * Group payments by month
-     */
     private function groupPaymentsByMonth(Collection $payments): Collection
     {
         return $payments->groupBy(function ($payment) {
-            return $payment->created_at->format('F Y');
+            return $payment->billingCycle->label ?? $payment->created_at->format('F Y');
         })->map(function ($monthlyPayments, $month) {
             return [
                 'month' => $month,
@@ -115,5 +148,14 @@ class UserService
                 'total' => (float) $monthlyPayments->sum('paid_amount'),
             ];
         })->values();
+    }
+
+    public function resetAllMemberAmounts(): void
+    {
+        $members = User::whereHas('roles', fn($q) => $q->where('name', 'member'))->get();
+
+        foreach ($members as $member) {
+            $member->update(['total_amount' => 0]);
+        }
     }
 }
