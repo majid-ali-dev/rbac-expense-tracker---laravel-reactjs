@@ -12,14 +12,21 @@ import {
 import { FaChartBar } from 'react-icons/fa';
 import ChartCard from '../ChartCard';
 
-const COLORS = ['#3b82f6', '#22c55e', '#a855f7', '#f59e0b', '#06b6d4', '#ef4444'];
+const GRADIENTS = [
+    ['#60a5fa', '#3b82f6'],
+    ['#4ade80', '#22c55e'],
+    ['#c084fc', '#a855f7'],
+    ['#fbbf24', '#f59e0b'],
+    ['#22d3ee', '#06b6d4'],
+    ['#f87171', '#ef4444'],
+];
 
 const CustomTooltip = ({ active, payload }) => {
     if (!active || !payload || !payload.length) return null;
     return (
-        <div className="bg-gray-900 text-white text-xs rounded-lg px-3 py-2 shadow-xl">
-            <p className="font-semibold mb-0.5">{payload[0].payload.name}</p>
-            <p className="text-blue-300">Rs. {payload[0].value.toFixed(2)}</p>
+        <div className="bg-gray-900/95 backdrop-blur text-white text-xs rounded-xl px-3.5 py-2.5 shadow-2xl border border-white/10">
+            <p className="font-semibold mb-1 text-gray-300">{payload[0].payload.name}</p>
+            <p className="font-bold text-white">Rs. {payload[0].value.toFixed(2)}</p>
         </div>
     );
 };
@@ -35,12 +42,23 @@ const CategoryBreakdownChart = ({ data }) => {
             iconColor="bg-purple-500"
         >
             {hasData ? (
-                <ResponsiveContainer width="100%" height={260}>
-                    <BarChart data={data} layout="vertical" margin={{ top: 5, right: 15, left: 0, bottom: 0 }}>
-                        <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
+                <ResponsiveContainer width="100%" height={270}>
+                    <BarChart data={data} layout="vertical" margin={{ top: 5, right: 20, left: 0, bottom: 0 }} barCategoryGap={14}>
+                        <defs>
+                            {data.map((_, i) => {
+                                const [from, to] = GRADIENTS[i % GRADIENTS.length];
+                                return (
+                                    <linearGradient key={i} id={`catGrad${i}`} x1="0" y1="0" x2="1" y2="0">
+                                        <stop offset="0%" stopColor={from} />
+                                        <stop offset="100%" stopColor={to} />
+                                    </linearGradient>
+                                );
+                            })}
+                        </defs>
+                        <CartesianGrid strokeDasharray="2 6" horizontal={false} stroke="#eef2f6" />
                         <XAxis
                             type="number"
-                            tick={{ fontSize: 11, fill: '#94a3b8' }}
+                            tick={{ fontSize: 11, fill: '#94a3b8', fontWeight: 500 }}
                             axisLine={false}
                             tickLine={false}
                             domain={[0, 'dataMax + 20']}
@@ -48,21 +66,21 @@ const CategoryBreakdownChart = ({ data }) => {
                         <YAxis
                             type="category"
                             dataKey="name"
-                            tick={{ fontSize: 11, fill: '#475569' }}
+                            tick={{ fontSize: 11.5, fill: '#475569', fontWeight: 600 }}
                             axisLine={false}
                             tickLine={false}
-                            width={80}
+                            width={82}
                         />
                         <Tooltip content={<CustomTooltip />} cursor={{ fill: '#f8fafc' }} />
-                        <Bar dataKey="amount" radius={[0, 6, 6, 0]} barSize={18}>
+                        <Bar dataKey="amount" radius={[0, 10, 10, 0]} barSize={20} isAnimationActive animationDuration={800}>
                             {data.map((_, index) => (
-                                <Cell key={index} fill={COLORS[index % COLORS.length]} />
+                                <Cell key={index} fill={`url(#catGrad${index})`} />
                             ))}
                         </Bar>
                     </BarChart>
                 </ResponsiveContainer>
             ) : (
-                <div className="h-[260px] flex items-center justify-center text-sm text-gray-400">
+                <div className="h-[270px] flex items-center justify-center text-sm text-gray-400">
                     No category data available
                 </div>
             )}
