@@ -52,4 +52,11 @@ export const dashboardAPI = {
     getDashboard: (params = '') => api.get(`/dashboard${params}`),
 };
 
+// Billing Cycle API calls - FIXED: use 'api' not 'apiClient'
+export const billingCycleAPI = {
+    getCurrent: () => api.get('/billing-cycle/current'),
+    getHistory: (params = '') => api.get(`/billing-cycle/history${params}`),
+    closeMonth: () => api.post('/billing-cycle/close'),
+};
+
 export default api;

@@ -25,7 +25,7 @@ const CustomTooltip = ({ active, payload }) => {
 };
 
 const CategoryBreakdownChart = ({ data }) => {
-    const hasData = data && data.length > 0;
+    const hasData = data && data.length > 0 && data.some(d => d.amount > 0);
 
     return (
         <ChartCard
@@ -38,7 +38,13 @@ const CategoryBreakdownChart = ({ data }) => {
                 <ResponsiveContainer width="100%" height={260}>
                     <BarChart data={data} layout="vertical" margin={{ top: 5, right: 15, left: 0, bottom: 0 }}>
                         <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
-                        <XAxis type="number" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+                        <XAxis
+                            type="number"
+                            tick={{ fontSize: 11, fill: '#94a3b8' }}
+                            axisLine={false}
+                            tickLine={false}
+                            domain={[0, 'dataMax + 20']}
+                        />
                         <YAxis
                             type="category"
                             dataKey="name"

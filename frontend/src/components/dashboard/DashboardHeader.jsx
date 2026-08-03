@@ -1,7 +1,8 @@
 import React from 'react';
+import CloseMonthButton from './CloseMonthButton';
 
-const DashboardHeader = ({ user }) => {
-    const monthLabel = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+const DashboardHeader = ({ user, billingCycle, isAdmin, onMonthClosed }) => {
+    const monthLabel = billingCycle?.label || new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 
     return (
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
@@ -12,9 +13,15 @@ const DashboardHeader = ({ user }) => {
                         Welcome back, <span className="font-semibold">{user?.name || 'User'}</span>!
                     </p>
                 </div>
-                <span className="text-sm bg-blue-50 text-blue-700 px-3 py-1.5 rounded-full font-semibold">
-                    {monthLabel}
-                </span>
+
+                <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-sm bg-blue-50 text-blue-700 px-3 py-1.5 rounded-full font-semibold">
+                        {monthLabel}
+                    </span>
+                    {isAdmin && billingCycle && (
+                        <CloseMonthButton cycleLabel={monthLabel} onClosed={onMonthClosed} />
+                    )}
+                </div>
             </div>
 
             {user?.roles && user.roles.length > 0 && (

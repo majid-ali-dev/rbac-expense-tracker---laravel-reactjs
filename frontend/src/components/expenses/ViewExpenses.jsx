@@ -22,15 +22,34 @@ const ViewExpenses = () => {
         navigate('/expenses');
     };
 
+    // Fetch current cycle on load
     useEffect(() => {
-        const now = new Date();
-        const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
-        const from = firstDay.toISOString().split('T')[0];
-        const to = now.toISOString().split('T')[0];
-        setFromDate(from);
-        setToDate(to);
-        fetchExpenses(from, to);
+        fetchCurrentCycle();
     }, []);
+
+    const fetchCurrentCycle = async () => {
+        try {
+            const response = await api.get('/billing-cycle/current');
+            const cycle = response.data.data;
+
+            const from = cycle.start_date;
+            const to = cycle.end_date;
+
+            setFromDate(from);
+            setToDate(to);
+            fetchExpenses(from, to);
+        } catch (error) {
+            console.error('Error fetching current cycle:', error);
+            // Fallback to current month if cycle fetch fails
+            const now = new Date();
+            const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+            const from = firstDay.toISOString().split('T')[0];
+            const to = now.toISOString().split('T')[0];
+            setFromDate(from);
+            setToDate(to);
+            fetchExpenses(from, to);
+        }
+    };
 
     const fetchExpenses = async (from, to) => {
         setLoading(true);
@@ -67,15 +86,10 @@ const ViewExpenses = () => {
         }
     };
 
+    // Reset to current cycle
     const handleReset = () => {
-        const now = new Date();
-        const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
-        const from = firstDay.toISOString().split('T')[0];
-        const to = now.toISOString().split('T')[0];
-        setFromDate(from);
-        setToDate(to);
         setSearchTerm('');
-        fetchExpenses(from, to);
+        fetchCurrentCycle();
     };
 
     const handleDownload = async () => {

@@ -10,6 +10,7 @@ import BudgetHealthChart from '../../components/dashboard/charts/BudgetHealthCha
 import { showError } from '../../utils/toast';
 
 const initialState = {
+    billingCycle: null,
     flags: { can_view_expense: false, show_admin_section: false },
     expenses: null,
     paymentData: null,
@@ -39,6 +40,7 @@ const Dashboard = () => {
             const data = response.data.data;
 
             setDashboardData({
+                billingCycle: data.billing_cycle || null,
                 flags: data.flags || { can_view_expense: false, show_admin_section: false },
                 expenses: data.expenses || null,
                 paymentData: data.payment_data || null,
@@ -92,7 +94,12 @@ const Dashboard = () => {
 
     return (
         <div className="space-y-6">
-            <DashboardHeader user={user} />
+            <DashboardHeader
+                user={user}
+                billingCycle={dashboardData.billingCycle}
+                isAdmin={showAdminCharts}
+                onMonthClosed={fetchDashboardData}
+            />
 
             <DashboardStats
                 expenses={dashboardData.expenses}
@@ -101,7 +108,6 @@ const Dashboard = () => {
                 allPaymentsSummary={dashboardData.allPaymentsSummary}
             />
 
-            {/* Row 1: expense charts (staff + admin) — fills all 3 columns exactly */}
             {showExpenseCharts && (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                     <ExpenseTrendChart data={dashboardData.charts.expense_trend} />
@@ -109,7 +115,6 @@ const Dashboard = () => {
                 </div>
             )}
 
-            {/* Row 2: admin-only — Member Status (1/3) + Budget Health (2/3) share the same row, no leftover space */}
             {showAdminCharts && (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                     <MemberStatusChart

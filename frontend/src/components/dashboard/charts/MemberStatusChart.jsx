@@ -65,7 +65,6 @@ const MemberStatusChart = ({ data, total }) => {
                             <Legend content={renderLegend} />
                         </PieChart>
                     </ResponsiveContainer>
-                    {/* Center label overlay */}
                     <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none" style={{ top: '-8%' }}>
                         <span className="text-2xl font-extrabold text-gray-900">{total}</span>
                         <span className="text-[11px] text-gray-400 font-medium">Members</span>

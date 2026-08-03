@@ -35,6 +35,12 @@ class User extends Authenticatable
         return $this->hasMany(Payment::class);
     }
 
+    // ===== NEW: billing-cycle relationships =====
+    public function dues()
+    {
+        return $this->hasMany(MemberDue::class);
+    }
+
     public function roles(): BelongsToMany
     {
         return $this->belongsToMany(Role::class)->withTimestamps();
@@ -47,7 +53,7 @@ class User extends Authenticatable
             ->filter()
             ->unique()
             ->values()
-            ->toArray(); // Convert to array
+            ->toArray();
     }
 
     public function hasRole(string $role): bool
@@ -70,6 +76,56 @@ class User extends Authenticatable
         return $this->roles->pluck('name')->filter()->unique()->values();
     }
 
+    /**
+     * ===== NEW: Cycle-scoped helpers =====
+     * Use these instead of the old lifetime accessors below whenever you mean
+     * "this member's CURRENT month bill", not their all-time history.
+     *
+     * Safe against N+1: if `dues`/`payments` are already eager-loaded
+     * (filtered to the current cycle), it uses the collection in memory.
+     * Otherwise it falls back to a scoped query for single-user use cases.
+     */
+    public function currentCycleAmount(int $billingCycleId): float
+    {
+        $due = $this->relationLoaded('dues')
+            ? $this->dues->firstWhere('billing_cycle_id', $billingCycleId)
+            : $this->dues()->where('billing_cycle_id', $billingCycleId)->first();
+
+        // Fallback to the legacy total_amount column only if no due exists yet
+        // (e.g. very first cycle before any rollover has run).
+        return (float) ($due->amount_assigned ?? $this->total_amount ?? 0);
+    }
+
+    public function currentCyclePaid(int $billingCycleId): float
+    {
+        $payments = $this->relationLoaded('payments')
+            ? $this->payments->where('billing_cycle_id', $billingCycleId)
+            : $this->payments()->where('billing_cycle_id', $billingCycleId)->get();
+
+        return (float) $payments->sum('paid_amount');
+    }
+
+    public function currentCycleRemaining(int $billingCycleId): float
+    {
+        return max(0, $this->currentCycleAmount($billingCycleId) - $this->currentCyclePaid($billingCycleId));
+    }
+
+    public function currentCycleStatus(int $billingCycleId): string
+    {
+        $amount = $this->currentCycleAmount($billingCycleId);
+        $paid = $this->currentCyclePaid($billingCycleId);
+        $remaining = max(0, $amount - $paid);
+
+        if ($amount > 0 && $remaining <= 0) {
+            return 'paid';
+        }
+        if ($paid > 0 && $remaining > 0) {
+            return 'partial';
+        }
+        return 'unpaid';
+    }
+
+    // LEGACY: lifetime accessors (kept for reports/history — NOT for "current month" views)
     public function getTotalPaidAttribute()
     {
         if ($this->relationLoaded('payments')) {
@@ -92,5 +148,16 @@ class User extends Authenticatable
             return 'partial';
         }
         return 'paid';
+    }
+
+    /**
+     * Reset user status for new billing cycle
+     * Sets status to unpaid and resets cycle-specific data
+     */
+    public function resetForNewCycle(): void
+    {
+        $this->update([
+            'status' => 'unpaid',
+        ]);
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\BillingCycle;
 use App\Models\Payment;
 use App\Models\User;
 use App\Repositories\Contracts\PaymentRepositoryInterface;
@@ -19,7 +20,15 @@ class PaymentService
 
     public function getMemberPayments(int $perPage = 10): LengthAwarePaginator
     {
-        return $this->paymentRepository->getMemberPayments($perPage);
+        $paginator = $this->paymentRepository->getMemberPayments($perPage);
+        $cycle = BillingCycle::current();
+
+        $paginator->getCollection()->load([
+            'dues' => fn($q) => $q->where('billing_cycle_id', $cycle->id),
+            'payments' => fn($q) => $q->where('billing_cycle_id', $cycle->id),
+        ]);
+
+        return $paginator;
     }
 
     public function getUserWithPayments(User $user): User
@@ -29,13 +38,16 @@ class PaymentService
 
     public function createPayment(User $user, float $amount): Payment
     {
-        $remaining = $user->remaining;
+        $cycle = BillingCycle::current();
+        $remaining = $user->currentCycleRemaining($cycle->id);
+
         if ($amount > $remaining) {
             throw new \Exception("Payment amount cannot exceed remaining balance of Rs " . number_format($remaining, 2));
         }
 
         $payment = $this->paymentRepository->create([
             'user_id' => $user->id,
+            'billing_cycle_id' => $cycle->id,
             'paid_amount' => $amount,
             'month' => strtolower(now()->format('M')),
             'updated_by' => Auth::id(),
@@ -49,10 +61,11 @@ class PaymentService
     public function deletePayment(Payment $payment): bool
     {
         $user = $payment->user;
+        $cycleId = $payment->billing_cycle_id ?? BillingCycle::current()->id;
         $deleted = $this->paymentRepository->delete($payment);
 
         if ($deleted) {
-            $this->updateUserTotals($user);
+            $this->updateUserStatus($user, $cycleId);
         }
 
         return $deleted;
@@ -61,7 +74,9 @@ class PaymentService
     public function updatePayment(Payment $payment, float $amount): bool
     {
         $user = $payment->user;
-        $allowedLimit = $user->remaining + $payment->paid_amount;
+        $cycleId = $payment->billing_cycle_id ?? BillingCycle::current()->id;
+
+        $allowedLimit = $user->currentCycleRemaining($cycleId) + (float) $payment->paid_amount;
 
         if ($amount > $allowedLimit) {
             throw new \Exception("Updated amount cannot exceed the remaining balance for this user.");
@@ -73,37 +88,47 @@ class PaymentService
         ]);
 
         if ($updated) {
-            $this->updateUserTotals($user);
+            $this->updateUserStatus($user, $cycleId);
         }
 
         return $updated;
     }
 
-    private function updateUserTotals(User $user): void
+    /**
+     * ✅ NEW: Update user totals and status
+     * Called after payment create/update/delete
+     */
+    public function updateUserTotals(User $user): void
     {
-        $totalPaid = $user->payments()->sum('paid_amount');
-        $remaining = $user->total_amount - $totalPaid;
-
-        $status = 'unpaid';
-        if ($remaining <= 0) {
-            $status = 'paid';
-        } elseif ($totalPaid > 0 && $remaining > 0) {
-            $status = 'partial';
-        }
+        $cycle = BillingCycle::current();
+        $status = $user->currentCycleStatus($cycle->id);
 
         $user->update([
             'status' => $status,
         ]);
     }
 
+    /**
+     * Keeps the legacy `status` column in sync for the CURRENT cycle
+     * (still used by simple listing tables/badges elsewhere in the app).
+     */
+    private function updateUserStatus(User $user, int $billingCycleId): void
+    {
+        $user->update([
+            'status' => $user->currentCycleStatus($billingCycleId),
+        ]);
+    }
+
     public function getPaymentStats($users): array
     {
-        $totalAmount = $users->sum(fn(User $user) => (float) $user->total_amount);
-        $totalPaid = $users->sum(fn(User $user) => (float) $user->total_paid);
-        $totalRemaining = $users->sum(fn(User $user) => (float) $user->remaining);
-        $paidCount = $users->where('payment_status', 'paid')->count();
-        $partialCount = $users->where('payment_status', 'partial')->count();
-        $unpaidCount = $users->where('payment_status', 'unpaid')->count();
+        $cycle = BillingCycle::current();
+
+        $totalAmount = $users->sum(fn(User $u) => $u->currentCycleAmount($cycle->id));
+        $totalPaid = $users->sum(fn(User $u) => $u->currentCyclePaid($cycle->id));
+        $totalRemaining = $users->sum(fn(User $u) => $u->currentCycleRemaining($cycle->id));
+        $paidCount = $users->filter(fn(User $u) => $u->currentCycleStatus($cycle->id) === 'paid')->count();
+        $partialCount = $users->filter(fn(User $u) => $u->currentCycleStatus($cycle->id) === 'partial')->count();
+        $unpaidCount = $users->filter(fn(User $u) => $u->currentCycleStatus($cycle->id) === 'unpaid')->count();
 
         return [
             'total_amount' => $totalAmount,

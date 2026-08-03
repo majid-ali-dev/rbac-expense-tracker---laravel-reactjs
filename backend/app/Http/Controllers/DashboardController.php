@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\BillingCycle;
 use App\Models\Expense;
 use App\Models\Payment;
 use App\Models\User;
@@ -21,12 +22,14 @@ class DashboardController extends Controller
         $isAdminView = $user->hasRole('manager') || $user->hasRole('super_admin');
         $canViewExpense = $user->hasPermission('view-expense');
 
-        // Current month date range
-        $from = Carbon::now()->startOfMonth();
-        $to = Carbon::now()->endOfMonth();
+        $cycle = BillingCycle::current();
+        $from = $cycle->start_date;
+        $to = $cycle->end_date;
         $trendEnd = Carbon::now()->lessThan($to) ? Carbon::now() : $to->copy();
-        $daysInMonth = $to->daysInMonth;
-        $daysElapsed = $trendEnd->day;
+
+        // ===== DATES =====
+        $daysInMonth = max(1, $from->diffInDays($to) + 1);
+        $daysElapsed = $from->diffInDays($trendEnd) + 1;
 
         // ===== EXPENSE STATS =====
         $expenseQuery = Expense::query()->whereBetween('date', [$from->format('Y-m-d'), $to->format('Y-m-d')]);
@@ -37,12 +40,9 @@ class DashboardController extends Controller
 
         $expenseCount = $canViewExpense ? (clone $expenseQuery)->count() : 0;
         $expenseTotal = $canViewExpense ? (float) (clone $expenseQuery)->sum('amount') : 0;
-
-        // Only send the expense block if the user is actually allowed to see it,
-        // so the frontend can hide the cards entirely instead of showing zeros.
         $expenses = $canViewExpense ? ['count' => $expenseCount, 'total' => $expenseTotal] : null;
 
-        // ===== EXPENSE TREND (daily, for area chart) =====
+        // ===== EXPENSE TREND + CATEGORY BREAKDOWN =====
         $expenseTrend = [];
         $categoryBreakdown = [];
         if ($canViewExpense) {
@@ -69,36 +69,35 @@ class DashboardController extends Controller
                 ->values();
         }
 
-        // ===== RECENT EXPENSES =====
         $recentExpenses = $canViewExpense
             ? (clone $expenseQuery)->with(['user', 'category'])->latest('date')->limit(5)->get()
             : collect();
 
-        // ===== USER PAYMENT DATA (member's own payment card) =====
+        // ===== "MY PAYMENTS" — strictly scoped to the CURRENT cycle =====
         $paymentData = null;
-        if ($user->total_amount > 0) {
-            $paymentsInRange = $user->payments()
-                ->whereBetween('created_at', [$from->format('Y-m-d 00:00:00'), $to->format('Y-m-d 23:59:59')])
-                ->get();
-
+        $myAmount = $user->currentCycleAmount($cycle->id);
+        if ($myAmount > 0) {
+            $myPaid = $user->currentCyclePaid($cycle->id);
             $paymentData = [
-                'total_amount' => (float) $user->total_amount,
-                'total_paid' => (float) $user->total_paid,
-                'total_paid_in_range' => (float) $paymentsInRange->sum('paid_amount'),
-                'remaining' => (float) $user->remaining,
-                'payment_status' => $user->payment_status,
-                'payment_count' => $user->payments()->count(),
+                'total_amount' => $myAmount,
+                'total_paid' => $myPaid,
+                'remaining' => max(0, $myAmount - $myPaid),
+                'payment_status' => $user->currentCycleStatus($cycle->id),
+                'payment_count' => $user->payments()->where('billing_cycle_id', $cycle->id)->count(),
             ];
         }
 
-        // ===== ADMIN-ONLY SECTIONS =====
+        // ===== ADMIN-ONLY SECTIONS — all cycle-scoped =====
         $memberStats = null;
         $allPaymentsSummary = null;
         $budgetHealth = null;
 
         if ($isAdminView) {
             $allMembers = User::whereHas('roles', fn($q) => $q->where('name', 'member'))
-                ->with('payments')
+                ->with([
+                    'dues' => fn($q) => $q->where('billing_cycle_id', $cycle->id),
+                    'payments' => fn($q) => $q->where('billing_cycle_id', $cycle->id),
+                ])
                 ->get();
 
             $totalMembers = $allMembers->count();
@@ -111,27 +110,21 @@ class DashboardController extends Controller
             $totalRemainingAll = 0;
 
             foreach ($allMembers as $member) {
-                if ((float) $member->total_amount > 0) {
-                    $assignedMembers++;
-                } else {
-                    $unassignedMembers++;
-                }
+                $amount = $member->currentCycleAmount($cycle->id);
+                $paid = $member->currentCyclePaid($cycle->id);
+                $remaining = max(0, $amount - $paid);
 
-                match ($member->payment_status) {
+                $amount > 0 ? $assignedMembers++ : $unassignedMembers++;
+
+                match ($member->currentCycleStatus($cycle->id)) {
                     'paid' => $paidMembers++,
                     'partial' => $partialMembers++,
                     default => $unpaidMembers++,
                 };
 
-                $paidInRange = $member->payments
-                    ->filter(fn($p) => $p->created_at->between($from->copy()->startOfDay(), $to->copy()->endOfDay()))
-                    ->sum('paid_amount');
-
-                $totalPaidAll += $paidInRange;
-
-                $remainingForMember = $member->total_amount - $paidInRange;
-                if ($remainingForMember > 0) {
-                    $totalRemainingAll += $remainingForMember;
+                $totalPaidAll += $paid;
+                if ($remaining > 0) {
+                    $totalRemainingAll += $remaining;
                 }
             }
 
@@ -154,16 +147,13 @@ class DashboardController extends Controller
                 'total_remaining' => (float) $totalRemainingAll,
             ];
 
-            // ===== BUDGET HEALTH (burn-rate) =====
+            // ===== BUDGET HEALTH (burn-rate), scoped to current cycle =====
             $dailyExpenseTotals = (clone $expenseQuery)
                 ->selectRaw('date, SUM(amount) as total')
                 ->groupBy('date')
                 ->pluck('total', 'date');
 
-            $dailyPaymentTotals = Payment::whereBetween('created_at', [
-                $from->format('Y-m-d 00:00:00'),
-                $trendEnd->format('Y-m-d 23:59:59'),
-            ])
+            $dailyPaymentTotals = Payment::where('billing_cycle_id', $cycle->id)
                 ->selectRaw('DATE(created_at) as day, SUM(paid_amount) as total')
                 ->groupBy('day')
                 ->pluck('total', 'day');
@@ -214,6 +204,13 @@ class DashboardController extends Controller
                 'user' => new UserResource($user),
                 'role_names' => $roleNames,
                 'permissions' => $permissions,
+                'billing_cycle' => [
+                    'id' => $cycle->id,
+                    'label' => $cycle->label,
+                    'start_date' => $cycle->start_date->format('Y-m-d'),
+                    'end_date' => $cycle->end_date->format('Y-m-d'),
+                    'status' => $cycle->status,
+                ],
                 'flags' => [
                     'can_view_expense' => $canViewExpense,
                     'show_admin_section' => $isAdminView,
