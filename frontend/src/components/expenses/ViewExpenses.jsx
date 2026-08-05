@@ -31,9 +31,13 @@ const ViewExpenses = () => {
         try {
             const response = await api.get('/billing-cycle/current');
             const cycle = response.data.data;
+            const today = new Date().toISOString().split('T')[0];
 
-            const from = cycle.start_date;
-            const to = cycle.end_date;
+            // From = where the current cycle starts, To = today — the same window
+            // the dashboard uses, so newly added expenses always show up here
+            // (and never an inverted range when a fresh cycle starts in the future).
+            const from = cycle.start_date > today ? today : cycle.start_date;
+            const to = today;
 
             setFromDate(from);
             setToDate(to);

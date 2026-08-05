@@ -22,9 +22,11 @@ class SheetDownloaderController extends Controller
         // Get current cycle
         $cycle = \App\Models\BillingCycle::current();
 
-        // Use cycle dates as default
+        // Use cycle start as default "from", and TODAY as default "to"
+        // (not the cycle end date) so the sheet matches the dashboard and the
+        // expenses list even when the open cycle is overdue for closing.
         $from = $request->get('from', $cycle->start_date->format('Y-m-d'));
-        $to = $request->get('to', $cycle->end_date->format('Y-m-d'));
+        $to = $request->get('to', Carbon::now()->format('Y-m-d'));
 
         $expenses = Expense::with(['user', 'category'])
             ->whereBetween('date', [$from, $to])
