@@ -24,15 +24,20 @@ class DashboardController extends Controller
 
         $cycle = BillingCycle::current();
         $from = $cycle->start_date;
-        $to = $cycle->end_date;
-        $trendEnd = Carbon::now()->lessThan($to) ? Carbon::now() : $to->copy();
+
+        // Expense window ends TODAY, matching the Expenses list page (which uses
+        // [cycle start -> today]). The old code ended the window at the open
+        // cycle's end_date, so newer expenses were missing from the dashboard.
+        $expenseEnd = Carbon::now();
+        $trendEnd = $expenseEnd;
 
         // ===== DATES =====
-        $daysInMonth = max(1, $from->diffInDays($to) + 1);
+        // Budget projections still use the cycle's real length.
+        $daysInMonth = max(1, $from->diffInDays($cycle->end_date) + 1);
         $daysElapsed = $from->diffInDays($trendEnd) + 1;
 
         // ===== EXPENSE STATS =====
-        $expenseQuery = Expense::query()->whereBetween('date', [$from->format('Y-m-d'), $to->format('Y-m-d')]);
+        $expenseQuery = Expense::query()->whereBetween('date', [$from->format('Y-m-d'), $expenseEnd->format('Y-m-d')]);
 
         if (!$isAdminView && !$user->hasPermission('view-all-expenses')) {
             $expenseQuery->where('user_id', $user->id);
