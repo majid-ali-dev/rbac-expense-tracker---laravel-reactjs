@@ -9,26 +9,59 @@ const STATUS_GRADIENTS = {
     Unpaid: ['#f87171', '#dc2626'],
 };
 
-const CustomTooltip = ({ active, payload }) => {
+const RADIAN = Math.PI / 180;
+
+// Renders the percentage (45%, 30%, ...) inside each donut segment,
+// matching the requested Budget/Member Payment Status design.
+const renderPieLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, value }) => {
+    if (!value) return null;
+    const radius = innerRadius + (outerRadius - innerRadius) / 2;
+    const x = cx + radius * Math.cos(-midAngle * RADIAN);
+    const y = cy + radius * Math.sin(-midAngle * RADIAN);
+    return (
+        <text
+            x={x}
+            y={y}
+            fill="#ffffff"
+            textAnchor="middle"
+            dominantBaseline="central"
+            fontSize="12"
+            fontWeight="700"
+            style={{ textShadow: '0 1px 2px rgba(0,0,0,0.25)', pointerEvents: 'none' }}
+        >
+            {`${Math.round(percent * 100)}%`}
+        </text>
+    );
+};
+
+const CustomTooltip = ({ active, payload, total }) => {
     if (!active || !payload || !payload.length) return null;
     const item = payload[0];
+    const pct = total > 0 ? Math.round((item.value / total) * 100) : 0;
     return (
         <div className="bg-gray-900/95 backdrop-blur text-white text-xs rounded-xl px-3.5 py-2.5 shadow-2xl border border-white/10">
-            <p className="font-semibold">{item.name}: <span className="font-bold">{item.value}</span> member{item.value !== 1 ? 's' : ''}</p>
+            <p className="font-semibold">
+                {item.name}: <span className="font-bold">{item.value}</span> member{item.value !== 1 ? 's' : ''}
+                <span className="font-bold text-gray-300"> · {pct}%</span>
+            </p>
         </div>
     );
 };
 
-const renderLegend = (props) => {
+const renderLegend = (props, total) => {
     const { payload } = props;
     return (
         <div className="flex justify-center gap-5 mt-4 flex-wrap">
-            {payload.map((entry, index) => (
-                <div key={index} className="flex items-center gap-1.5 text-xs text-gray-600 font-semibold">
-                    <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: entry.color }} />
-                    {entry.value}
-                </div>
-            ))}
+            {payload.map((entry, index) => {
+                const pct = total > 0 ? Math.round(((entry.payload?.value || 0) / total) * 100) : 0;
+                return (
+                    <div key={index} className="flex items-center gap-1.5 text-xs text-gray-600 font-semibold">
+                        <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: entry.color }} />
+                        {entry.value}
+                        <span className="text-gray-900 font-extrabold">{pct}%</span>
+                    </div>
+                );
+            })}
         </div>
     );
 };
@@ -68,6 +101,8 @@ const MemberStatusChart = ({ data, total }) => {
                                 outerRadius={92}
                                 paddingAngle={4}
                                 cornerRadius={6}
+                                label={renderPieLabel}
+                                labelLine={false}
                                 isAnimationActive
                                 animationDuration={800}
                             >
@@ -75,8 +110,8 @@ const MemberStatusChart = ({ data, total }) => {
                                     <Cell key={index} fill={`url(#statusGrad${index})`} stroke="none" />
                                 ))}
                             </Pie>
-                            <Tooltip content={<CustomTooltip />} />
-                            <Legend content={renderLegend} />
+                            <Tooltip content={<CustomTooltip total={total} />} />
+                            <Legend content={(props) => renderLegend(props, total)} />
                         </PieChart>
                     </ResponsiveContainer>
                     <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none" style={{ top: '-10%' }}>

@@ -74,21 +74,27 @@ const DashboardStats = ({ expenses, paymentData, memberStats, allPaymentsSummary
             icon: FaUserMinus,
             color: 'bg-gray-500',
         });
+        const pctOf = (count) =>
+            memberStats.total > 0 ? Math.round(((count || 0) / memberStats.total) * 100) : null;
+
         statItems.push({
             label: 'Paid',
             value: memberStats.paid || 0,
+            percent: pctOf(memberStats.paid),
             icon: FaUserCheck,
             color: 'bg-green-500',
         });
         statItems.push({
             label: 'Partial',
             value: memberStats.partial || 0,
+            percent: pctOf(memberStats.partial),
             icon: FaUserClock,
             color: 'bg-yellow-500',
         });
         statItems.push({
             label: 'Unpaid',
             value: memberStats.unpaid || 0,
+            percent: pctOf(memberStats.unpaid),
             icon: FaUserTimes,
             color: 'bg-red-500',
         });
@@ -132,9 +138,16 @@ const DashboardStats = ({ expenses, paymentData, memberStats, allPaymentsSummary
                                 <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">
                                     {item.label}
                                 </p>
-                                <p className="text-xl font-extrabold text-gray-900 mt-1">
-                                    {item.value}
-                                </p>
+                                <div className="flex items-center gap-2 mt-1">
+                                    <p className="text-xl font-extrabold text-gray-900 leading-none">
+                                        {item.value}
+                                    </p>
+                                    {item.percent != null && (
+                                        <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
+                                            {item.percent}%
+                                        </span>
+                                    )}
+                                </div>
                             </div>
                             <div className={`${item.color} p-3 rounded-xl text-white shadow-lg`}>
                                 <Icon size={20} />
