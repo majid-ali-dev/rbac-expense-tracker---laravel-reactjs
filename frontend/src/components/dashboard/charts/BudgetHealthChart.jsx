@@ -1,13 +1,12 @@
 import React from 'react';
 import {
-    LineChart,
-    Line,
+    BarChart,
+    Bar,
     XAxis,
     YAxis,
     CartesianGrid,
     Tooltip,
     Legend,
-    ReferenceLine,
     ResponsiveContainer,
 } from 'recharts';
 import { FaWallet, FaCheckCircle, FaExclamationTriangle, FaExclamationCircle, FaHourglassHalf } from 'react-icons/fa';
@@ -38,7 +37,7 @@ const CustomTooltip = ({ active, payload, label }) => {
     if (!active || !payload || !payload.length) return null;
     return (
         <div className="bg-gray-900 text-white text-xs rounded-lg px-3 py-2 shadow-xl space-y-1">
-            <p className="font-semibold mb-1">{label}</p>
+            <p className="font-semibold mb-1">Day {label}</p>
             {payload.map((p, i) => (
                 <p key={i} style={{ color: p.color }}>
                     {p.name}: Rs. {p.value.toFixed(2)}
@@ -66,6 +65,12 @@ const BudgetHealthChart = ({ budgetHealth }) => {
     const StatusIcon = config.icon;
     const hasEnoughPoints = trend && trend.length >= 2;
     const hasAnyTrend = trend && trend.length > 0;
+
+    // Day-wise x-axis: every day (1,2,3...) when few days,
+    // alternate days (1,3,5...) when the cycle gets longer.
+    const tickInterval = hasAnyTrend
+        ? trend.length > 25 ? 2 : trend.length > 12 ? 1 : 0
+        : 0;
 
     const summaryStrip = (
         <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-gray-100">
@@ -105,14 +110,29 @@ const BudgetHealthChart = ({ budgetHealth }) => {
             {hasEnoughPoints ? (
                 <>
                     <ResponsiveContainer width="100%" height={200}>
-                        <LineChart data={trend} margin={{ top: 5, right: 10, left: -15, bottom: 0 }}>
+                        <BarChart
+                            data={trend}
+                            margin={{ top: 5, right: 10, left: -15, bottom: 0 }}
+                            barGap={2}
+                            barCategoryGap="30%"
+                        >
+                            <defs>
+                                <linearGradient id="bhIncomeGrad" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stopColor="#4ade80" />
+                                    <stop offset="100%" stopColor="#16a34a" />
+                                </linearGradient>
+                                <linearGradient id="bhExpenseGrad" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stopColor={config.lineColor} />
+                                    <stop offset="100%" stopColor={config.lineColor} stopOpacity={0.55} />
+                                </linearGradient>
+                            </defs>
                             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                             <XAxis
-                                dataKey="date"
+                                dataKey="day"
                                 tick={{ fontSize: 10, fill: '#94a3b8' }}
                                 axisLine={false}
                                 tickLine={false}
-                                interval="preserveStartEnd"
+                                interval={tickInterval}
                             />
                             <YAxis
                                 tick={{ fontSize: 10, fill: '#94a3b8' }}
@@ -121,27 +141,27 @@ const BudgetHealthChart = ({ budgetHealth }) => {
                                 width={40}
                                 domain={[0, 'auto']}
                             />
-                            <Tooltip content={<CustomTooltip />} />
-                            <ReferenceLine y={totalIncome} stroke="#94a3b8" strokeDasharray="4 4" />
-                            <Line
-                                type="monotone"
+                            <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(148, 163, 184, 0.08)' }} />
+                            <Legend
+                                wrapperStyle={{ fontSize: 11, fontWeight: 600, paddingTop: 4 }}
+                                iconType="circle"
+                                iconSize={8}
+                            />
+                            <Bar
                                 dataKey="income"
                                 name="Income"
-                                stroke="#22c55e"
-                                strokeWidth={2.5}
-                                dot={{ r: 3, fill: '#22c55e', strokeWidth: 2, stroke: '#fff' }}
-                                activeDot={{ r: 5, strokeWidth: 2, stroke: '#fff' }}
+                                fill="url(#bhIncomeGrad)"
+                                radius={[5, 5, 0, 0]}
+                                maxBarSize={16}
                             />
-                            <Line
-                                type="monotone"
+                            <Bar
                                 dataKey="expenses"
                                 name="Expenses"
-                                stroke={config.lineColor}
-                                strokeWidth={2.5}
-                                dot={{ r: 3, fill: config.lineColor, strokeWidth: 2, stroke: '#fff' }}
-                                activeDot={{ r: 5, strokeWidth: 2, stroke: '#fff' }}
+                                fill="url(#bhExpenseGrad)"
+                                radius={[5, 5, 0, 0]}
+                                maxBarSize={16}
                             />
-                        </LineChart>
+                        </BarChart>
                     </ResponsiveContainer>
                     {summaryStrip}
                 </>

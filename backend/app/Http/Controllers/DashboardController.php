@@ -166,17 +166,23 @@ class DashboardController extends Controller
             $cumulativeExpense = 0;
             $cumulativeIncome = 0;
             $budgetTrend = [];
+            $dayNumber = 1;
 
             foreach (CarbonPeriod::create($from, $trendEnd) as $day) {
                 $key = $day->format('Y-m-d');
-                $cumulativeExpense += (float) ($dailyExpenseTotals[$key] ?? 0);
-                $cumulativeIncome += (float) ($dailyPaymentTotals[$key] ?? 0);
+                $dailyExpense = (float) ($dailyExpenseTotals[$key] ?? 0);
+                $dailyIncome = (float) ($dailyPaymentTotals[$key] ?? 0);
+                $cumulativeExpense += $dailyExpense;
+                $cumulativeIncome += $dailyIncome;
 
                 $budgetTrend[] = [
+                    'day' => $dayNumber, // Day of the cycle (1, 2, 3, ...)
                     'date' => $day->format('d M'),
-                    'expenses' => round($cumulativeExpense, 2),
-                    'income' => round($cumulativeIncome, 2),
+                    'expenses' => round($dailyExpense, 2),
+                    'income' => round($dailyIncome, 2),
                 ];
+
+                $dayNumber++;
             }
 
             $totalIncomeThisMonth = round($totalPaidAll, 2);
