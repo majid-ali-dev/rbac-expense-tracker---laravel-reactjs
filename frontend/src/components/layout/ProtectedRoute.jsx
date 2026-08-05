@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import useAuthStore from '../../store/authStore';
 import Sidebar from './Sidebar';
+import Footer from './Footer';
 
 const ProtectedRoute = () => {
     const { isAuthenticated, fetchUser, user, token } = useAuthStore();
@@ -65,10 +66,13 @@ const ProtectedRoute = () => {
     return (
         <div className="flex min-h-screen bg-gray-50">
             <Sidebar />
-            <main className="flex-1 lg:ml-0 p-4 lg:p-8 min-h-screen overflow-y-auto">
-                <div className="max-w-7xl mx-auto">
-                    <Outlet />
+            <main className="flex-1 lg:ml-0 min-h-screen flex flex-col">
+                <div className="flex-1 p-4 lg:p-8">
+                    <div className="max-w-7xl mx-auto">
+                        <Outlet />
+                    </div>
                 </div>
+                <Footer />
             </main>
         </div>
     );
