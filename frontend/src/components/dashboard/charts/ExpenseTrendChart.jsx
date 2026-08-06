@@ -10,6 +10,7 @@ import {
 } from 'recharts';
 import { FaChartArea, FaHourglassHalf } from 'react-icons/fa';
 import ChartCard from '../ChartCard';
+import useThemeStore from '../../../store/themeStore';
 
 const CustomTooltip = ({ active, payload, label }) => {
     if (!active || !payload || !payload.length) return null;
@@ -22,6 +23,8 @@ const CustomTooltip = ({ active, payload, label }) => {
 };
 
 const ExpenseTrendChart = ({ data }) => {
+    const { theme } = useThemeStore();
+    const isDark = theme === 'dark';
     const hasAnyValue = data && data.length > 0 && data.some((d) => d.amount > 0);
     const hasEnoughPoints = data && data.length >= 2;
     const hasData = hasAnyValue && hasEnoughPoints;
@@ -46,7 +49,7 @@ const ExpenseTrendChart = ({ data }) => {
                                 <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
                             </linearGradient>
                         </defs>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={isDark ? '#3a4150' : '#f1f5f9'} />
                         <XAxis
                             dataKey="date"
                             tick={{ fontSize: 11, fill: '#94a3b8' }}

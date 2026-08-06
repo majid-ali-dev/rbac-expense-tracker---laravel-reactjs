@@ -5,7 +5,7 @@ const DashboardHeader = ({ user, billingCycle, isAdmin, onMonthClosed, notificat
     const monthLabel = billingCycle?.label || new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 
     return (
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 pr-16 lg:pr-6">
             <div className="flex items-center justify-between flex-wrap gap-3">
                 <div>
                     <h1 className="text-2xl font-extrabold text-gray-900">Dashboard</h1>
