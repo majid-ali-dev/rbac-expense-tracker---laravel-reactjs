@@ -211,3 +211,320 @@ body {
     transform: translateY(-4px);
     box-shadow: 0 20px 40px rgba(15, 23, 42, 0.1);
 }
+
+/* ============================================================
+   DARK MODE — react.dev-inspired palette
+   The `.dark` class is toggled on <html> by the theme store.
+   ============================================================ */
+html.dark {
+    color-scheme: dark;
+}
+
+.dark body {
+    background: #23272f;
+    color: #e5e7eb;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* ---------- Scrollbar ---------- */
+.dark ::-webkit-scrollbar-track {
+    background: #2a2f38;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+    background: #4a5263;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+    background: #5a6475;
+}
+
+/* ---------- Native form controls ---------- */
+.dark input,
+.dark select,
+.dark textarea {
+    background-color: #2a2f38;
+    color: #e5e7eb;
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+    color: #8a91a0;
+}
+
+.dark select option {
+    background-color: #2b303a;
+    color: #e5e7eb;
+}
+
+/* ---------- Surfaces ---------- */
+.dark .bg-white {
+    background-color: #343a46;
+}
+
+.dark .bg-gray-50 {
+    background-color: #2a2f38;
+}
+
+.dark .bg-gray-50\/80 {
+    background-color: rgba(42, 47, 56, 0.8);
+}
+
+.dark .bg-gray-50\/50 {
+    background-color: rgba(42, 47, 56, 0.5);
+}
+
+.dark .bg-gray-100 {
+    background-color: #383e49;
+}
+
+.dark .bg-gray-200 {
+    background-color: #454c58;
+}
+
+.dark .bg-gray-300 {
+    background-color: #525a68;
+}
+
+.dark .bg-slate-50 {
+    background-color: #2a2f38;
+}
+
+.dark .bg-slate-100 {
+    background-color: #383e49;
+}
+
+/* ---------- Colored tint chips ---------- */
+.dark .bg-blue-50 {
+    background-color: #1d2a45;
+}
+
+.dark .bg-blue-100 {
+    background-color: #24324f;
+}
+
+.dark .bg-green-50 {
+    background-color: #17301f;
+}
+
+.dark .bg-green-100 {
+    background-color: #1b3a26;
+}
+
+.dark .bg-yellow-50 {
+    background-color: #33290f;
+}
+
+.dark .bg-yellow-100 {
+    background-color: #3d3013;
+}
+
+.dark .bg-red-50 {
+    background-color: #35191b;
+}
+
+.dark .bg-red-100 {
+    background-color: #3f1e20;
+}
+
+.dark .bg-purple-50 {
+    background-color: #2a1f3d;
+}
+
+/* ---------- Text ---------- */
+.dark .text-gray-900 {
+    color: #f7f8fa;
+}
+
+.dark .text-gray-800 {
+    color: #e8eaef;
+}
+
+.dark .text-gray-700 {
+    color: #d5d9e0;
+}
+
+.dark .text-gray-600 {
+    color: #b6bcc8;
+}
+
+.dark .text-gray-500 {
+    color: #9aa1ae;
+}
+
+.dark .text-gray-400 {
+    color: #8a91a0;
+}
+
+.dark .text-slate-600 {
+    color: #b6bcc8;
+}
+
+.dark .text-blue-600 {
+    color: #60a5fa;
+}
+
+.dark .text-blue-700 {
+    color: #93c5fd;
+}
+
+.dark .text-green-600 {
+    color: #4ade80;
+}
+
+.dark .text-green-700 {
+    color: #86efac;
+}
+
+.dark .text-yellow-600 {
+    color: #facc15;
+}
+
+.dark .text-yellow-700 {
+    color: #fde047;
+}
+
+.dark .text-red-600 {
+    color: #f87171;
+}
+
+.dark .text-red-700 {
+    color: #fca5a5;
+}
+
+.dark .text-purple-600 {
+    color: #c084fc;
+}
+
+/* ---------- Borders ---------- */
+.dark .border-gray-100 {
+    border-color: #3a4049;
+}
+
+.dark .border-gray-200 {
+    border-color: #424a55;
+}
+
+.dark .border-gray-300 {
+    border-color: #555e6b;
+}
+
+.dark .border-slate-200 {
+    border-color: #424a55;
+}
+
+.dark .border-blue-100 {
+    border-color: #2a3f66;
+}
+
+.dark .border-green-200 {
+    border-color: #2a5c3f;
+}
+
+.dark .border-yellow-200 {
+    border-color: #5a4a1f;
+}
+
+.dark .border-red-200 {
+    border-color: #5c2a2e;
+}
+
+/* ---------- Hover states ---------- */
+.dark .hover\:bg-gray-50:hover {
+    background-color: #2a2f38;
+}
+
+.dark .hover\:bg-gray-50\/50:hover {
+    background-color: rgba(42, 47, 56, 0.5);
+}
+
+.dark .hover\:bg-gray-100:hover {
+    background-color: #383e49;
+}
+
+.dark .hover\:bg-gray-300:hover {
+    background-color: #525a68;
+}
+
+.dark .hover\:bg-blue-50:hover {
+    background-color: #1d2a45;
+}
+
+.dark .hover\:bg-purple-50:hover {
+    background-color: #2a1f3d;
+}
+
+.dark .hover\:bg-red-50:hover {
+    background-color: #35191b;
+}
+
+/* ---------- Notification badge ring ---------- */
+.dark .ring-white {
+    --tw-ring-color: #2a2f38;
+}
+
+/* ---------- Global component classes ---------- */
+.dark .card {
+    background: rgba(52, 58, 70, 0.8);
+    border-color: #3a4049;
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+}
+
+.dark .form-control {
+    color: #e5e7eb;
+    background-color: #2a2f38;
+    border-color: #555e6b;
+}
+
+.dark .form-control:focus {
+    color: #e5e7eb;
+    background-color: #2a2f38;
+    border-color: #60a5fa;
+    box-shadow: 0 0 0 0.25rem rgba(59, 130, 246, 0.25);
+}
+
+.dark .btn-outline-secondary {
+    color: #b6bcc8;
+    border-color: #555e6b;
+}
+
+.dark .btn-outline-secondary:hover {
+    color: #f7f8fa;
+    background-color: #2a2f38;
+    border-color: #9aa1ae;
+}
+
+.dark .table thead th {
+    color: #9aa1ae;
+    border-bottom-color: #424a55;
+}
+
+.dark .table tbody td {
+    border-bottom-color: #383e49;
+}
+
+.dark .table tbody tr:hover {
+    background-color: rgba(255, 255, 255, 0.03);
+}
+
+/* ---------- SweetAlert2 ---------- */
+.dark .swal2-popup {
+    background: #343a46;
+}
+
+.dark .swal2-title,
+.dark .swal2-html-container {
+    color: #e5e7eb;
+}
+
+.dark .swal2-popup.swal2-toast {
+    background: #2b303a;
+}
+
+.dark .swal2-toast .swal2-title {
+    color: #e5e7eb;
+}
+
+.dark .swal2-timer-progress-bar {
+    background: #60a5fa;
+}

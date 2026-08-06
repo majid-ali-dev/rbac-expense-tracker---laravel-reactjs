@@ -15,10 +15,12 @@ import Payments from './pages/payments/Payments';
 import AddPayment from './pages/payments/AddPayment';
 import ProtectedRoute from './components/layout/ProtectedRoute';
 import NotificationManagement from './components/dashboard/notification/NotificationManagement';
+import ThemeToggle from './components/layout/ThemeToggle';
 
 function App() {
   return (
     <Router>
+      <ThemeToggle />
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />

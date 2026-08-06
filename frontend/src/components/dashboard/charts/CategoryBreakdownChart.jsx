@@ -11,6 +11,7 @@ import {
 } from 'recharts';
 import { FaChartBar } from 'react-icons/fa';
 import ChartCard from '../ChartCard';
+import useThemeStore from '../../../store/themeStore';
 
 const GRADIENTS = [
     ['#60a5fa', '#3b82f6'],
@@ -32,6 +33,8 @@ const CustomTooltip = ({ active, payload }) => {
 };
 
 const CategoryBreakdownChart = ({ data }) => {
+    const { theme } = useThemeStore();
+    const isDark = theme === 'dark';
     const hasData = data && data.length > 0 && data.some(d => d.amount > 0);
 
     return (
@@ -55,7 +58,7 @@ const CategoryBreakdownChart = ({ data }) => {
                                 );
                             })}
                         </defs>
-                        <CartesianGrid strokeDasharray="2 6" horizontal={false} stroke="#eef2f6" />
+                        <CartesianGrid strokeDasharray="2 6" horizontal={false} stroke={isDark ? '#3a4150' : '#eef2f6'} />
                         <XAxis
                             type="number"
                             tick={{ fontSize: 11, fill: '#94a3b8', fontWeight: 500 }}
@@ -66,12 +69,12 @@ const CategoryBreakdownChart = ({ data }) => {
                         <YAxis
                             type="category"
                             dataKey="name"
-                            tick={{ fontSize: 11.5, fill: '#475569', fontWeight: 600 }}
+                            tick={{ fontSize: 11.5, fill: isDark ? '#cbd5e1' : '#475569', fontWeight: 600 }}
                             axisLine={false}
                             tickLine={false}
                             width={82}
                         />
-                        <Tooltip content={<CustomTooltip />} cursor={{ fill: '#f8fafc' }} />
+                        <Tooltip content={<CustomTooltip />} cursor={{ fill: isDark ? 'rgba(148,163,184,0.08)' : '#f8fafc' }} />
                         <Bar dataKey="amount" radius={[0, 10, 10, 0]} barSize={20} isAnimationActive animationDuration={800}>
                             {data.map((_, index) => (
                                 <Cell key={index} fill={`url(#catGrad${index})`} />

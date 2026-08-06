@@ -11,6 +11,7 @@ import {
 } from 'recharts';
 import { FaWallet, FaCheckCircle, FaExclamationTriangle, FaExclamationCircle, FaHourglassHalf } from 'react-icons/fa';
 import ChartCard from '../ChartCard';
+import useThemeStore from '../../../store/themeStore';
 
 const STATUS_CONFIG = {
     safe: {
@@ -48,6 +49,8 @@ const CustomTooltip = ({ active, payload, label }) => {
 };
 
 const BudgetHealthChart = ({ budgetHealth }) => {
+    const { theme } = useThemeStore();
+    const isDark = theme === 'dark';
     if (!budgetHealth) return null;
 
     const {
@@ -126,7 +129,7 @@ const BudgetHealthChart = ({ budgetHealth }) => {
                                     <stop offset="100%" stopColor={config.lineColor} stopOpacity={0.55} />
                                 </linearGradient>
                             </defs>
-                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={isDark ? '#3a4150' : '#f1f5f9'} />
                             <XAxis
                                 dataKey="day"
                                 tick={{ fontSize: 10, fill: '#94a3b8' }}
