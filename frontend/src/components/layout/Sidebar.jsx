@@ -143,15 +143,23 @@ const Sidebar = () => {
                                         to={item.path}
                                         onClick={closeMobileSidebar}
                                         className={`
-                                            flex items-center gap-3 px-4 py-2.5 rounded-2xl transition-all
+                                            flex items-center gap-3 px-4 py-2.5 rounded-2xl transition-all duration-200
                                             ${isActive
-                                                ? 'bg-blue-600/20 text-white border-l-4 border-blue-600 translate-x-1'
+                                                ? 'bg-gradient-to-r from-blue-600/30 to-blue-600/10 text-white border-l-4 border-blue-500 shadow-lg shadow-blue-500/10'
                                                 : 'text-gray-300 hover:bg-white/5 hover:text-white hover:translate-x-1'
                                             }
                                         `}
                                     >
-                                        <Icon size={18} />
-                                        <span className="text-sm font-semibold">{item.title}</span>
+                                        <Icon
+                                            size={18}
+                                            className={isActive ? 'text-blue-400' : ''}
+                                        />
+                                        <span className={`text-sm font-semibold ${isActive ? 'tracking-wide' : ''}`}>
+                                            {item.title}
+                                        </span>
+                                        {isActive && (
+                                            <span className="ml-auto w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse" />
+                                        )}
                                     </Link>
                                 </li>
                             );
