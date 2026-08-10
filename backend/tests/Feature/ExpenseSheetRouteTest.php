@@ -12,9 +12,9 @@ class ExpenseSheetRouteTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_expenses_sheet_route_returns_expense_report_data_for_users_with_view_permission(): void
+    public function test_expenses_sheet_route_returns_expense_report_data_for_users_with_export_permission(): void
     {
-        $permission = Permission::create(['name' => 'view-expense']);
+        $permission = Permission::create(['name' => 'expenses.export']);
         $role = Role::create(['name' => 'staff']);
         $role->permissions()->attach($permission);
 

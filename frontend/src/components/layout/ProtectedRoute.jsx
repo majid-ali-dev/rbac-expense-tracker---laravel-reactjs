@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { Navigate, Outlet } from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import useAuthStore from '../../store/authStore';
+import { canAccessModule } from '../../utils/permissions';
 import Sidebar from './Sidebar';
 import Footer from './Footer';
+import AccessDenied from '../common/AccessDenied';
 
 const ProtectedRoute = () => {
+    const location = useLocation();
     const { isAuthenticated, fetchUser, user, token } = useAuthStore();
     const [loading, setLoading] = useState(true);
     const [authChecked, setAuthChecked] = useState(false);
@@ -55,13 +58,10 @@ const ProtectedRoute = () => {
         return <Navigate to="/login" replace />;
     }
 
-    // Debug: Log user data
-    console.log('User data in ProtectedRoute:', {
-        name: user?.name,
-        roles: user?.roles?.map(r => r.name),
-        permissions: user?.permissions,
-        permissionsType: Array.isArray(user?.permissions) ? 'array' : typeof user?.permissions,
-    });
+    // Check module/page access permission (database-driven)
+    if (!canAccessModule(user, location.pathname)) {
+        return <AccessDenied />;
+    }
 
     return (
         <div className="flex min-h-screen bg-gray-50">

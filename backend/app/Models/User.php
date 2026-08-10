@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -69,6 +70,35 @@ class User extends Authenticatable
     public function hasAnyPermission(array $permissions): bool
     {
         return !empty(array_intersect($permissions, $this->permissions()));
+    }
+
+    /**
+     * Restrict a query to the user's own records unless they hold the
+     * given "view/edit/delete all" permission.
+     */
+    public function applyOwnAllScope(Builder $query, string $allPermission, string $ownerColumn = 'user_id'): Builder
+    {
+        if ($this->hasPermission($allPermission)) {
+            return $query;
+        }
+
+        return $query->where($ownerColumn, $this->id);
+    }
+
+    /**
+     * Whether the user may act on a record owned by $ownerId.
+     * The "all" permission grants access to any record; otherwise the
+     * "own" permission only covers the user's own records.
+     */
+    public function canModify(string $ownPermission, string $allPermission, ?int $ownerId): bool
+    {
+        if ($this->hasPermission($allPermission)) {
+            return true;
+        }
+
+        return $ownerId !== null
+            && (int) $ownerId === (int) $this->id
+            && $this->hasPermission($ownPermission);
     }
 
     public function roleNames(): Collection

@@ -25,10 +25,10 @@ class UserResource extends JsonResource
             'remaining' => (float) $this->currentCycleRemaining($cycle->id),
             'payment_status' => $this->currentCycleStatus($cycle->id),
 
-            // Relationships
-            'roles' => RoleResource::collection($this->whenLoaded('roles')),
+            // Relationships (deduped: a user may only be assigned a role once)
+            'roles' => RoleResource::collection($this->roles->unique('id')->values()),
             'permissions' => $this->permissions(),
-            'role_names' => $this->roles->pluck('name'),
+            'role_names' => $this->roles->pluck('name')->unique()->values(),
             'payments' => PaymentResource::collection($this->whenLoaded('payments')),
 
             // User info

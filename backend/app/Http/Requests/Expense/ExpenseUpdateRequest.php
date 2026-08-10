@@ -9,7 +9,7 @@ class ExpenseUpdateRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return auth()->user()->hasPermission('edit-expense');
+        return auth()->user()->hasAnyPermission(['expenses.edit', 'expenses.edit-all']);
     }
 
     public function rules(): array

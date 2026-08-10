@@ -9,7 +9,7 @@ class RoleStoreRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return auth()->user()->hasPermission('assign-roles');
+        return auth()->user()->hasPermission('roles.create');
     }
 
     public function rules(): array

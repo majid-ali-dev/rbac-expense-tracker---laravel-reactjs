@@ -8,7 +8,7 @@ class ExpenseStoreRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return auth()->user()->hasPermission('create-expense');
+        return auth()->user()->hasPermission('expenses.create');
     }
 
     public function rules(): array

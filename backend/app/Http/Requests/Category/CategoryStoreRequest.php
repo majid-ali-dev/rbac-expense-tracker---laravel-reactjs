@@ -8,7 +8,7 @@ class CategoryStoreRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return auth()->user()->hasPermission('manage-categories');
+        return auth()->user()->hasPermission('categories.create');
     }
 
     public function rules(): array

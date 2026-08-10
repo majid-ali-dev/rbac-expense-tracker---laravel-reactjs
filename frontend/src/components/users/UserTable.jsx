@@ -1,8 +1,10 @@
 import React from 'react';
 import { FaEdit, FaTrash, FaEye } from 'react-icons/fa';
 import DataTable from '../common/DataTable';
+import usePermission from '../../hooks/usePermission';
 
 const UserTable = ({ users = [], pagination, onEdit, onDelete, onView, onCreate, onPageChange }) => {
+    const { can } = usePermission();
     const columns = [
         {
             id: 'id',
@@ -115,31 +117,39 @@ const UserTable = ({ users = [], pagination, onEdit, onDelete, onView, onCreate,
             id: 'actions',
             header: 'Actions',
             accessorFn: (row) => row.id,
-            cell: ({ row }) => (
-                <div className="flex items-center justify-center gap-2">
-                    <button
-                        onClick={() => onView(row.original)}
-                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-xl transition-all hover:scale-105"
-                        title="View"
-                    >
-                        <FaEye size={16} />
-                    </button>
-                    <button
-                        onClick={() => onEdit(row.original)}
-                        className="p-2 text-purple-600 hover:bg-purple-50 rounded-xl transition-all hover:scale-105"
-                        title="Edit"
-                    >
-                        <FaEdit size={16} />
-                    </button>
-                    <button
-                        onClick={() => onDelete(row.original)}
-                        className="p-2 text-red-600 hover:bg-red-50 rounded-xl transition-all hover:scale-105"
-                        title="Delete"
-                    >
-                        <FaTrash size={16} />
-                    </button>
-                </div>
-            ),
+            cell: ({ row }) => {
+                const userData = row.original;
+
+                return (
+                    <div className="flex items-center justify-center gap-2">
+                        <button
+                            onClick={() => onView(userData)}
+                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-xl transition-all hover:scale-105"
+                            title="View"
+                        >
+                            <FaEye size={16} />
+                        </button>
+                        {can('users.edit') && (
+                            <button
+                                onClick={() => onEdit(userData)}
+                                className="p-2 text-purple-600 hover:bg-purple-50 rounded-xl transition-all hover:scale-105"
+                                title="Edit"
+                            >
+                                <FaEdit size={16} />
+                            </button>
+                        )}
+                        {can('users.delete') && (
+                            <button
+                                onClick={() => onDelete(userData)}
+                                className="p-2 text-red-600 hover:bg-red-50 rounded-xl transition-all hover:scale-105"
+                                title="Delete"
+                            >
+                                <FaTrash size={16} />
+                            </button>
+                        )}
+                    </div>
+                );
+            },
             enableSorting: false,
         },
     ];
@@ -150,7 +160,7 @@ const UserTable = ({ users = [], pagination, onEdit, onDelete, onView, onCreate,
             columns={columns}
             title="Users List"
             createButtonText="Add New User"
-            onCreate={onCreate}
+            onCreate={can('users.create') ? onCreate : null}
             searchPlaceholder="Search by ID, Name, Email..."
             itemsPerPage={pagination?.per_page || 10}
             currentPage={pagination?.current_page || 1}

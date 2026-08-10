@@ -1,10 +1,17 @@
 import React, { useState } from 'react';
 import { FaLock } from 'react-icons/fa';
 import { billingCycleAPI } from '../../services/api';
+import usePermission from '../../hooks/usePermission';
 import { showDeleteConfirm, showDeletedSuccess, showError } from '../../utils/toast';
 
 const CloseMonthButton = ({ cycleLabel, onClosed }) => {
     const [loading, setLoading] = useState(false);
+    const { can } = usePermission();
+
+    // Only users with the database permission may close the cycle
+    if (!can('billing-cycle.close')) {
+        return null;
+    }
 
     const handleClose = async () => {
         const result = await showDeleteConfirm(

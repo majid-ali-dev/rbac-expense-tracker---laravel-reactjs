@@ -8,6 +8,7 @@ import CategoryBreakdownChart from '../../components/dashboard/charts/CategoryBr
 import MemberStatusChart from '../../components/dashboard/charts/MemberStatusChart';
 import BudgetHealthChart from '../../components/dashboard/charts/BudgetHealthChart';
 import NotificationBell from '../../components/dashboard/notification/NotificationBell';
+import usePermission from '../../hooks/usePermission';
 import { showError } from '../../utils/toast';
 
 const initialState = {
@@ -23,6 +24,7 @@ const initialState = {
 
 const Dashboard = () => {
     const { user, isAuthenticated } = useAuthStore();
+    const { can, canAny } = usePermission();
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [dashboardData, setDashboardData] = useState(initialState);
@@ -87,7 +89,8 @@ const Dashboard = () => {
     const { flags } = dashboardData;
     const showExpenseCharts = flags.can_view_expense;
     const showAdminCharts = flags.show_admin_section;
-    const isAdmin = user?.roles?.some(r => r.name === 'manager' || r.name === 'super_admin');
+    const canManageNotifications = canAny('notifications.create', 'notifications.edit', 'notifications.delete');
+    const canViewNotifications = can('notifications.view');
 
     const hasData =
         (dashboardData.expenses && dashboardData.expenses.count > 0) ||
@@ -101,7 +104,7 @@ const Dashboard = () => {
                 billingCycle={dashboardData.billingCycle}
                 isAdmin={showAdminCharts}
                 onMonthClosed={fetchDashboardData}
-                notificationBell={<NotificationBell isAdmin={isAdmin} />}
+                notificationBell={canViewNotifications ? <NotificationBell isAdmin={canManageNotifications} /> : null}
             />
 
             <DashboardStats

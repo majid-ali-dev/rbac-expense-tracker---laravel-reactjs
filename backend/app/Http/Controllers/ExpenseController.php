@@ -48,6 +48,7 @@ class ExpenseController extends Controller
 
     public function show(int $id): JsonResponse
     {
+        $user = auth()->user();
         $expense = $this->expenseService->findById($id);
 
         if (!$expense) {
@@ -55,6 +56,13 @@ class ExpenseController extends Controller
                 'success' => false,
                 'message' => 'Expense not found',
             ], 404);
+        }
+
+        if (!$user->canModify('expenses.view', 'expenses.view-all', $expense->user_id)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You do not have permission to view this expense.',
+            ], 403);
         }
 
         // Load histories with user for detailed view
@@ -68,6 +76,22 @@ class ExpenseController extends Controller
 
     public function update(ExpenseUpdateRequest $request, int $id): JsonResponse
     {
+        $expense = $this->expenseService->findById($id);
+
+        if (!$expense) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Expense not found',
+            ], 404);
+        }
+
+        if (!auth()->user()->canModify('expenses.edit', 'expenses.edit-all', $expense->user_id)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You do not have permission to edit this expense.',
+            ], 403);
+        }
+
         $updated = $this->expenseService->update($id, $request->validated());
 
         if (!$updated) {
@@ -88,6 +112,22 @@ class ExpenseController extends Controller
 
     public function destroy(int $id): JsonResponse
     {
+        $expense = $this->expenseService->findById($id);
+
+        if (!$expense) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Expense not found',
+            ], 404);
+        }
+
+        if (!auth()->user()->canModify('expenses.delete', 'expenses.delete-all', $expense->user_id)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You do not have permission to delete this expense.',
+            ], 403);
+        }
+
         $deleted = $this->expenseService->delete($id);
 
         if (!$deleted) {

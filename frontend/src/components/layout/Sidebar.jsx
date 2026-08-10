@@ -14,6 +14,7 @@ import {
     FaTimes
 } from 'react-icons/fa';
 import useAuthStore from '../../store/authStore';
+import { canAccessModule } from '../../utils/permissions';
 
 const Sidebar = () => {
     const location = useLocation();
@@ -40,21 +41,17 @@ const Sidebar = () => {
     }, [isMobileOpen]);
 
     const menuItems = [
-        { title: 'Dashboard', icon: FaHome, path: '/dashboard', permission: null },
-        { title: 'Roles', icon: FaUserShield, path: '/roles', permission: 'assign-roles' },
-        { title: 'Permissions', icon: FaKey, path: '/permissions', permission: 'assign-roles' },
-        { title: 'Roles & Permissions', icon: FaLayerGroup, path: '/role-permissions', permission: 'assign-roles' },
-        { title: 'Manage Users', icon: FaUsers, path: '/users', permission: 'manage-users' },
-        { title: 'Categories', icon: FaShoppingCart, path: '/categories', permission: 'manage-categories' },
-        { title: 'Expenses', icon: FaMoneyBillWave, path: '/expenses', permission: 'view-expense' },
-        { title: 'Payments', icon: FaWallet, path: '/payments', permission: 'view-payment' },
+        { title: 'Dashboard', icon: FaHome, path: '/dashboard' },
+        { title: 'Roles', icon: FaUserShield, path: '/roles' },
+        { title: 'Permissions', icon: FaKey, path: '/permissions' },
+        { title: 'Roles & Permissions', icon: FaLayerGroup, path: '/role-permissions' },
+        { title: 'Manage Users', icon: FaUsers, path: '/users' },
+        { title: 'Categories', icon: FaShoppingCart, path: '/categories' },
+        { title: 'Expenses', icon: FaMoneyBillWave, path: '/expenses' },
+        { title: 'Payments', icon: FaWallet, path: '/payments' },
     ];
 
-    const filteredMenuItems = menuItems.filter(item => {
-        if (item.permission === null) return true;
-        const permissions = user?.permissions || [];
-        return permissions.includes(item.permission) || permissions.includes('super_admin');
-    });
+    const filteredMenuItems = menuItems.filter(item => canAccessModule(user, item.path));
 
     const handleLogout = async () => {
         setIsLoggingOut(true);
@@ -178,7 +175,7 @@ const Sidebar = () => {
                                 {user?.name || 'User'}
                             </p>
                             <p className="text-xs text-gray-400 truncate">
-                                {user?.roles?.map(r => r.name).join(', ') || 'User'}
+                                {[...new Set((user?.roles || []).map(r => r.name).filter(Boolean))].join(', ') || 'User'}
                             </p>
                         </div>
                         <button
