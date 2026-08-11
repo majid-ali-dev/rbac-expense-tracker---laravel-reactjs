@@ -4,6 +4,7 @@ import useAuthStore from '../../store/authStore';
 import { canAccessModule } from '../../utils/permissions';
 import Sidebar from './Sidebar';
 import Footer from './Footer';
+import Breadcrumb from './Breadcrumb';
 import AccessDenied from '../common/AccessDenied';
 
 const ProtectedRoute = () => {
@@ -69,6 +70,11 @@ const ProtectedRoute = () => {
             <main className="flex-1 lg:ml-0 min-h-screen flex flex-col">
                 <div className="flex-1 p-4 lg:p-8">
                     <div className="max-w-7xl mx-auto">
+                        <Breadcrumb
+                            labelMap={{
+                                'role-permissions': 'Roles & Permissions',
+                            }}
+                        />
                         <Outlet />
                     </div>
                 </div>
