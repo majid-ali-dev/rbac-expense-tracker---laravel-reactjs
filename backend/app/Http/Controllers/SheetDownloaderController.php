@@ -12,12 +12,7 @@ class SheetDownloaderController extends Controller
 {
     public function index(Request $request)
     {
-        if (!Auth::user()->hasAnyPermission(['download-expense', 'view-expense'])) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Permission denied'
-            ], 403);
-        }
+        $user = Auth::user();
 
         // Get current cycle
         $cycle = \App\Models\BillingCycle::current();
@@ -28,14 +23,15 @@ class SheetDownloaderController extends Controller
         $from = $request->get('from', $cycle->start_date->format('Y-m-d'));
         $to = $request->get('to', Carbon::now()->format('Y-m-d'));
 
-        $expenses = Expense::with(['user', 'category'])
+        $expenses = $user->applyOwnAllScope(Expense::with(['user', 'category']), 'expenses.view-all')
             ->whereBetween('date', [$from, $to])
             ->latest('date')
             ->get();
 
         $totalExpenses = $expenses->sum('amount');
 
-        $totalPaid = Payment::where('billing_cycle_id', $cycle->id)
+        $totalPaid = $user->applyOwnAllScope(Payment::query(), 'payments.view-all')
+            ->where('billing_cycle_id', $cycle->id)
             ->sum('paid_amount');
 
         $balance = $totalPaid - $totalExpenses;
@@ -58,23 +54,19 @@ class SheetDownloaderController extends Controller
 
     public function download(Request $request)
     {
-        if (!Auth::user()->hasAnyPermission(['download-expense', 'view-expense'])) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Permission denied'
-            ], 403);
-        }
+        $user = Auth::user();
 
         $from = $request->get('from', now()->startOfMonth()->format('Y-m-d'));
         $to = $request->get('to', now()->endOfMonth()->format('Y-m-d'));
 
-        $expenses = Expense::with(['user', 'category'])
+        $expenses = $user->applyOwnAllScope(Expense::with(['user', 'category']), 'expenses.view-all')
             ->whereBetween('date', [$from, $to])
             ->get();
 
         $totalExpenses = $expenses->sum('amount');
 
-        $totalPaid = Payment::whereBetween('created_at', [$from . ' 00:00:00', $to . ' 23:59:59'])
+        $totalPaid = $user->applyOwnAllScope(Payment::query(), 'payments.view-all')
+            ->whereBetween('created_at', [$from . ' 00:00:00', $to . ' 23:59:59'])
             ->sum('paid_amount');
 
         $balance = $totalPaid - $totalExpenses;

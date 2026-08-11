@@ -9,7 +9,7 @@ class CategoryUpdateRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return auth()->user()->hasPermission('manage-categories');
+        return auth()->user()->hasPermission('categories.edit');
     }
 
     public function rules(): array

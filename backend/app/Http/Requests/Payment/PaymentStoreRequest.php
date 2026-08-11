@@ -8,7 +8,7 @@ class PaymentStoreRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return auth()->user()->hasPermission('create-payment');
+        return auth()->user()->hasPermission('payments.create');
     }
 
     public function rules(): array

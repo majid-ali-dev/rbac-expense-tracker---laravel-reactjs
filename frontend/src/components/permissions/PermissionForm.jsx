@@ -53,8 +53,8 @@ const PermissionForm = ({ permission, onSubmit, onCancel, loading }) => {
                             minLength: { value: 2, message: 'Permission name must be at least 2 characters' },
                             maxLength: { value: 255, message: 'Permission name must not exceed 255 characters' },
                             pattern: {
-                                value: /^[a-z0-9-]+$/,
-                                message: 'Use lowercase letters and hyphens only',
+                                value: /^[a-z0-9.-]+$/,
+                                message: 'Use lowercase letters, numbers, dots and hyphens only',
                             },
                         })}
                         className={`
@@ -65,14 +65,14 @@ const PermissionForm = ({ permission, onSubmit, onCancel, loading }) => {
                             }
                             focus:outline-none focus:ring-2 focus:border-transparent
                         `}
-                        placeholder="Enter permission name (e.g., manage-users)"
+                        placeholder="Enter permission name (e.g., roles.view)"
                         disabled={loading || isSubmitting}
                     />
                     {errors.name && (
                         <p className="mt-1.5 text-sm text-red-600">{errors.name.message}</p>
                     )}
                     <p className="mt-1.5 text-xs text-gray-500">
-                        Use lowercase letters and hyphens only (e.g., view-expense, create-payment)
+                        Use module.action format (e.g., expenses.view, expenses.create)
                     </p>
                 </div>
 

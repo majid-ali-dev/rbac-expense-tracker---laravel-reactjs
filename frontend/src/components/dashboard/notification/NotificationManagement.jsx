@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { FaPlus, FaEdit, FaTrash, FaBell, FaTimes, FaCheck, FaClock, FaEye, FaUser } from 'react-icons/fa';
 import useNotificationStore from '../../../store/notificationStore';
+import usePermission from '../../../hooks/usePermission';
 import { showDeleteConfirm, showDeletedSuccess, showError } from '../../../utils/toast';
 
 const NotificationManagement = () => {
+    const { can } = usePermission();
     const [showForm, setShowForm] = useState(false);
     const [editingNotification, setEditingNotification] = useState(null);
     const [formData, setFormData] = useState({ title: '', content: '' });
@@ -117,13 +119,15 @@ const NotificationManagement = () => {
                         <p className="text-sm text-gray-500 mt-0.5">Manage system notifications</p>
                     </div>
                 </div>
-                <button
-                    onClick={handleCreate}
-                    className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white font-bold rounded-2xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20"
-                >
-                    <FaPlus size={14} />
-                    Create Notification
-                </button>
+                {can('notifications.create') && (
+                    <button
+                        onClick={handleCreate}
+                        className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white font-bold rounded-2xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20"
+                    >
+                        <FaPlus size={14} />
+                        Create Notification
+                    </button>
+                )}
             </div>
 
             {/* Form */}
@@ -257,20 +261,24 @@ const NotificationManagement = () => {
                                                     >
                                                         <FaEye size={15} />
                                                     </button>
-                                                    <button
-                                                        onClick={() => handleEdit(notification)}
-                                                        className="p-2 text-purple-600 hover:bg-purple-50 rounded-xl transition-all hover:scale-105"
-                                                        title="Edit"
-                                                    >
-                                                        <FaEdit size={15} />
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleDelete(notification)}
-                                                        className="p-2 text-red-600 hover:bg-red-50 rounded-xl transition-all hover:scale-105"
-                                                        title="Delete"
-                                                    >
-                                                        <FaTrash size={15} />
-                                                    </button>
+                                                    {can('notifications.edit') && (
+                                                        <button
+                                                            onClick={() => handleEdit(notification)}
+                                                            className="p-2 text-purple-600 hover:bg-purple-50 rounded-xl transition-all hover:scale-105"
+                                                            title="Edit"
+                                                        >
+                                                            <FaEdit size={15} />
+                                                        </button>
+                                                    )}
+                                                    {can('notifications.delete') && (
+                                                        <button
+                                                            onClick={() => handleDelete(notification)}
+                                                            className="p-2 text-red-600 hover:bg-red-50 rounded-xl transition-all hover:scale-105"
+                                                            title="Delete"
+                                                        >
+                                                            <FaTrash size={15} />
+                                                        </button>
+                                                    )}
                                                 </div>
                                             </td>
                                         </tr>

@@ -8,7 +8,7 @@ class NotificationStoreRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return auth()->user()->hasPermission('create-notification');
+        return auth()->user()->hasPermission('notifications.create');
     }
 
     public function rules(): array

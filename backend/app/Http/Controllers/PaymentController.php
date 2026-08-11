@@ -23,15 +23,10 @@ class PaymentController extends Controller
     public function index(Request $request): JsonResponse
     {
         $user = auth()->user();
-
-        if (!$user->hasPermission('view-payment')) {
-            return response()->json(['success' => false, 'message' => 'Permission denied'], 403);
-        }
-
         $cycle = BillingCycle::current();
 
-        // ===== MEMBER: own payments only =====
-        if ($user->hasRole('member')) {
+        // ===== OWN SCOPE: only the user's own payments =====
+        if (!$user->hasPermission('payments.view-all')) {
             $user->load(['payments' => fn($q) => $q->where('billing_cycle_id', $cycle->id)->latest()]);
 
             $amount = $user->currentCycleAmount($cycle->id);
@@ -90,15 +85,6 @@ class PaymentController extends Controller
      */
     public function addPayment(int $userId): JsonResponse
     {
-        $user = auth()->user();
-
-        if (!$user->hasRole('manager') && !$user->hasRole('super_admin')) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Permission denied. Only managers can add payments.',
-            ], 403);
-        }
-
         $cycle = BillingCycle::current();
 
         $targetUser = User::with(['payments' => fn($q) => $q->where('billing_cycle_id', $cycle->id)->latest()])
@@ -126,15 +112,6 @@ class PaymentController extends Controller
 
     public function pay(PaymentStoreRequest $request, int $userId): JsonResponse
     {
-        $user = auth()->user();
-
-        if (!$user->hasRole('manager') && !$user->hasRole('super_admin')) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Permission denied. Only managers can add payments.',
-            ], 403);
-        }
-
         $targetUser = User::find($userId);
 
         if (!$targetUser) {
@@ -166,15 +143,6 @@ class PaymentController extends Controller
 
     public function destroy(int $paymentId): JsonResponse
     {
-        $user = auth()->user();
-
-        if (!$user->hasRole('manager') && !$user->hasRole('super_admin')) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Permission denied. Only managers can delete payments.',
-            ], 403);
-        }
-
         $payment = $this->paymentService->findPaymentById($paymentId);
 
         if (!$payment) {

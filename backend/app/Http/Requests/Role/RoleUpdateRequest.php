@@ -9,7 +9,7 @@ class RoleUpdateRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return auth()->user()->hasPermission('assign-roles');
+        return auth()->user()->hasPermission('roles.edit');
     }
 
     public function rules(): array

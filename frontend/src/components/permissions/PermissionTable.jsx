@@ -1,8 +1,11 @@
 import React from 'react';
 import { FaEdit, FaTrash } from 'react-icons/fa';
 import DataTable from '../common/DataTable';
+import usePermission from '../../hooks/usePermission';
 
 const PermissionTable = ({ permissions = [], pagination, onEdit, onDelete, onCreate, onPageChange }) => {
+    const { can } = usePermission();
+
     // Define columns for DataTable with proper accessor functions
     const columns = [
         {
@@ -51,30 +54,36 @@ const PermissionTable = ({ permissions = [], pagination, onEdit, onDelete, onCre
             id: 'actions',
             header: 'Actions',
             accessorFn: (row) => row.id,
-            cell: ({ row }) => (
-                <div className="flex items-center justify-center gap-2">
-                    <button
-                        onClick={() => onEdit(row.original)}
-                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-xl transition-all hover:scale-105"
-                        title="Edit"
-                    >
-                        <FaEdit size={16} />
-                    </button>
-                    <button
-                        onClick={() => onDelete(row.original)}
-                        className="p-2 text-red-600 hover:bg-red-50 rounded-xl transition-all hover:scale-105"
-                        title="Delete"
-                    >
-                        <FaTrash size={16} />
-                    </button>
-                </div>
-            ),
+            cell: ({ row }) => {
+                const permission = row.original;
+
+                return (
+                    <div className="flex items-center justify-center gap-2">
+                        {can('permissions.edit') && (
+                            <button
+                                onClick={() => onEdit(permission)}
+                                className="p-2 text-blue-600 hover:bg-blue-50 rounded-xl transition-all hover:scale-105"
+                                title="Edit"
+                            >
+                                <FaEdit size={16} />
+                            </button>
+                        )}
+                        {can('permissions.delete') && (
+                            <button
+                                onClick={() => onDelete(permission)}
+                                className="p-2 text-red-600 hover:bg-red-50 rounded-xl transition-all hover:scale-105"
+                                title="Delete"
+                            >
+                                <FaTrash size={16} />
+                            </button>
+                        )}
+                    </div>
+                );
+            },
             enableSorting: false,
         },
     ];
 
-    // Debug: Log the data
-    console.log('PermissionTable data:', permissions);
 
     return (
         <DataTable
@@ -82,7 +91,7 @@ const PermissionTable = ({ permissions = [], pagination, onEdit, onDelete, onCre
             columns={columns}
             title="Permissions"
             createButtonText="Create Permission"
-            onCreate={onCreate}
+            onCreate={can('permissions.create') ? onCreate : null}
             searchPlaceholder="Search by ID, Name..."
             itemsPerPage={pagination?.per_page || 10}
             currentPage={pagination?.current_page || 1}

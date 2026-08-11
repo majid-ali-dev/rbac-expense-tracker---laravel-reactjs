@@ -1,8 +1,11 @@
 import React from 'react';
 import { FaEdit } from 'react-icons/fa';
 import DataTable from '../common/DataTable';
+import usePermission from '../../hooks/usePermission';
 
 const RolePermissionTable = ({ roles = [], pagination, onEdit, onPageChange }) => {
+    const { can } = usePermission();
+
     const columns = [
         {
             id: 'id',
@@ -65,17 +68,23 @@ const RolePermissionTable = ({ roles = [], pagination, onEdit, onPageChange }) =
             id: 'actions',
             header: 'Actions',
             accessorFn: (row) => row.id,
-            cell: ({ row }) => (
-                <div className="flex items-center justify-center gap-2">
-                    <button
-                        onClick={() => onEdit(row.original)}
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-2xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20 text-sm font-medium"
-                    >
-                        <FaEdit size={14} />
-                        Assign Permissions
-                    </button>
-                </div>
-            ),
+            cell: ({ row }) => {
+                const role = row.original;
+
+                return (
+                    <div className="flex items-center justify-center gap-2">
+                        {can('role-permissions.update') && (
+                            <button
+                                onClick={() => onEdit(role)}
+                                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-2xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20 text-sm font-medium"
+                            >
+                                <FaEdit size={14} />
+                                Assign Permissions
+                            </button>
+                        )}
+                    </div>
+                );
+            },
             enableSorting: false,
         },
     ];

@@ -1,11 +1,10 @@
 import React from 'react';
 import { FaPlusCircle, FaEye } from 'react-icons/fa';
 import DataTable from '../common/DataTable';
-import useAuthStore from '../../store/authStore';
+import usePermission from '../../hooks/usePermission';
 
 const PaymentTable = ({ users = [], pagination, stats, onAddPayment, onPageChange }) => {
-    const { user } = useAuthStore();
-    const isManagerOrAdmin = user?.roles?.some(r => r.name === 'manager' || r.name === 'super_admin');
+    const { can } = usePermission();
 
     const columns = [
         {
@@ -81,8 +80,8 @@ const PaymentTable = ({ users = [], pagination, stats, onAddPayment, onPageChang
                 const userData = row.original;
                 const isPaid = userData.payment_status === 'paid';
 
-                // Only show action buttons for managers/admins
-                if (!isManagerOrAdmin) {
+                // Only users with payments.create may add/view payment records
+                if (!can('payments.create')) {
                     return <span className="text-gray-400 text-sm">-</span>;
                 }
 

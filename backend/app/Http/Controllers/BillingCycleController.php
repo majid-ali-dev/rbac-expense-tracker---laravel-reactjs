@@ -39,16 +39,7 @@ class BillingCycleController extends Controller
      */
     public function closeCurrentMonth(MonthlyRolloverService $service): JsonResponse
     {
-        $user = auth()->user();
-
-        if (!$user->hasRole('manager') && !$user->hasRole('super_admin')) {
-            return response()->json([
-                'success' => false,
-                'message' => 'You are not authorized to close the billing month.',
-            ], 403);
-        }
-
-        $newCycle = $service->closeCurrentAndStartNext($user->id);
+        $newCycle = $service->closeCurrentAndStartNext(auth()->id());
 
         return response()->json([
             'success' => true,

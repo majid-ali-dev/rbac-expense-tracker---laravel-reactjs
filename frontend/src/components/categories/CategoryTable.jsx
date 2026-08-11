@@ -1,8 +1,11 @@
 import React from 'react';
 import { FaEdit, FaTrash } from 'react-icons/fa';
 import DataTable from '../common/DataTable';
+import usePermission from '../../hooks/usePermission';
 
 const CategoryTable = ({ categories = [], pagination, onEdit, onDelete, onCreate, onPageChange }) => {
+    const { can } = usePermission();
+
     const columns = [
         {
             id: 'id',
@@ -37,24 +40,32 @@ const CategoryTable = ({ categories = [], pagination, onEdit, onDelete, onCreate
             id: 'actions',
             header: 'Actions',
             accessorFn: (row) => row.id,
-            cell: ({ row }) => (
-                <div className="flex items-center justify-center gap-2">
-                    <button
-                        onClick={() => onEdit(row.original)}
-                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-xl transition-all hover:scale-105"
-                        title="Edit"
-                    >
-                        <FaEdit size={16} />
-                    </button>
-                    <button
-                        onClick={() => onDelete(row.original)}
-                        className="p-2 text-red-600 hover:bg-red-50 rounded-xl transition-all hover:scale-105"
-                        title="Delete"
-                    >
-                        <FaTrash size={16} />
-                    </button>
-                </div>
-            ),
+            cell: ({ row }) => {
+                const category = row.original;
+
+                return (
+                    <div className="flex items-center justify-center gap-2">
+                        {can('categories.edit') && (
+                            <button
+                                onClick={() => onEdit(category)}
+                                className="p-2 text-blue-600 hover:bg-blue-50 rounded-xl transition-all hover:scale-105"
+                                title="Edit"
+                            >
+                                <FaEdit size={16} />
+                            </button>
+                        )}
+                        {can('categories.delete') && (
+                            <button
+                                onClick={() => onDelete(category)}
+                                className="p-2 text-red-600 hover:bg-red-50 rounded-xl transition-all hover:scale-105"
+                                title="Delete"
+                            >
+                                <FaTrash size={16} />
+                            </button>
+                        )}
+                    </div>
+                );
+            },
             enableSorting: false,
         },
     ];
@@ -65,7 +76,7 @@ const CategoryTable = ({ categories = [], pagination, onEdit, onDelete, onCreate
             columns={columns}
             title="Manage Categories"
             createButtonText="Add Category"
-            onCreate={onCreate}
+            onCreate={can('categories.create') ? onCreate : null}
             searchPlaceholder="Search by ID, Name..."
             itemsPerPage={pagination?.per_page || 10}
             currentPage={pagination?.current_page || 1}

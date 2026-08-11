@@ -2,11 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import usePaymentStore from '../../store/paymentStore';
 import AddPaymentForm from '../../components/payments/AddPaymentForm';
+import AccessDenied from '../../components/common/AccessDenied';
+import usePermission from '../../hooks/usePermission';
 import { showDeleteConfirm, showDeletedSuccess } from '../../utils/toast';
 
 const AddPayment = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const { can } = usePermission();
     const {
         user,
         loading,
@@ -19,11 +22,16 @@ const AddPayment = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
-        if (id) {
+        if (id && can('payments.create')) {
             fetchAddPayment(id);
         }
         return () => clearUser();
     }, [id]);
+
+    // Action-level guard: only users with payments.create may add payments.
+    if (!can('payments.create')) {
+        return <AccessDenied />;
+    }
 
     const handleSubmit = async (amount) => {
         setIsSubmitting(true);
@@ -53,6 +61,7 @@ const AddPayment = () => {
             user={user}
             onSubmit={handleSubmit}
             loading={isSubmitting || loading}
+            onPaymentDeleted={() => id && fetchAddPayment(id)}
         />
     );
 };

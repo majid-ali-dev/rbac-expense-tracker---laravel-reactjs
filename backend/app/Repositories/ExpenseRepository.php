@@ -43,12 +43,6 @@ class ExpenseRepository implements ExpenseRepositoryInterface
 
     public function getExpenseQuery($user)
     {
-        $query = Expense::query();
-
-        if (!$user->hasRole('manager') && !$user->hasRole('super_admin') && !$user->hasPermission('view-all-expenses')) {
-            $query->where('user_id', $user->id);
-        }
-
-        return $query;
+        return $user->applyOwnAllScope(Expense::query(), 'expenses.view-all');
     }
 }

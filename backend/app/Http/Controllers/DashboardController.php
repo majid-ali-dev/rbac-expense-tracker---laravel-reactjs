@@ -19,8 +19,8 @@ class DashboardController extends Controller
         $permissions = $user->permissions();
         $roleNames = $user->roleNames();
 
-        $isAdminView = $user->hasRole('manager') || $user->hasRole('super_admin');
-        $canViewExpense = $user->hasPermission('view-expense');
+        $isAdminView = $user->hasPermission('payments.view-all');
+        $canViewExpense = $user->hasAnyPermission(['expenses.view', 'expenses.view-all']);
 
         $cycle = BillingCycle::current();
         $from = $cycle->start_date;
@@ -37,11 +37,10 @@ class DashboardController extends Controller
         $daysElapsed = $from->diffInDays($trendEnd) + 1;
 
         // ===== EXPENSE STATS =====
-        $expenseQuery = Expense::query()->whereBetween('date', [$from->format('Y-m-d'), $expenseEnd->format('Y-m-d')]);
-
-        if (!$isAdminView && !$user->hasPermission('view-all-expenses')) {
-            $expenseQuery->where('user_id', $user->id);
-        }
+        $expenseQuery = $user->applyOwnAllScope(
+            Expense::query(),
+            'expenses.view-all'
+        )->whereBetween('date', [$from->format('Y-m-d'), $expenseEnd->format('Y-m-d')]);
 
         $expenseCount = $canViewExpense ? (clone $expenseQuery)->count() : 0;
         $expenseTotal = $canViewExpense ? (float) (clone $expenseQuery)->sum('amount') : 0;
@@ -81,7 +80,7 @@ class DashboardController extends Controller
         // ===== "MY PAYMENTS" — strictly scoped to the CURRENT cycle =====
         $paymentData = null;
         $myAmount = $user->currentCycleAmount($cycle->id);
-        if ($myAmount > 0) {
+        if (($user->hasAnyPermission(['payments.view', 'payments.view-all'])) && $myAmount > 0) {
             $myPaid = $user->currentCyclePaid($cycle->id);
             $paymentData = [
                 'total_amount' => $myAmount,

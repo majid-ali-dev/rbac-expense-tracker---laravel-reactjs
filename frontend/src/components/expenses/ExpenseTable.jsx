@@ -2,9 +2,11 @@ import React from 'react';
 import { FaEye, FaEdit, FaTrash, FaFileAlt } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import DataTable from '../common/DataTable';
+import usePermission from '../../hooks/usePermission';
 
 const ExpenseTable = ({ expenses = [], pagination, onView, onEdit, onDelete, onCreate, onPageChange }) => {
     const navigate = useNavigate();
+    const { can, canActOn } = usePermission();
 
     const handleViewExpenses = () => {
         navigate('/expenses/view');
@@ -62,31 +64,41 @@ const ExpenseTable = ({ expenses = [], pagination, onView, onEdit, onDelete, onC
             id: 'actions',
             header: 'Actions',
             accessorFn: (row) => row.id,
-            cell: ({ row }) => (
-                <div className="flex items-center justify-center gap-2">
-                    <button
-                        onClick={() => onView(row.original)}
-                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-xl transition-all hover:scale-105"
-                        title="View"
-                    >
-                        <FaEye size={16} />
-                    </button>
-                    <button
-                        onClick={() => onEdit(row.original)}
-                        className="p-2 text-purple-600 hover:bg-purple-50 rounded-xl transition-all hover:scale-105"
-                        title="Edit"
-                    >
-                        <FaEdit size={16} />
-                    </button>
-                    <button
-                        onClick={() => onDelete(row.original)}
-                        className="p-2 text-red-600 hover:bg-red-50 rounded-xl transition-all hover:scale-105"
-                        title="Delete"
-                    >
-                        <FaTrash size={16} />
-                    </button>
-                </div>
-            ),
+            cell: ({ row }) => {
+                const expense = row.original;
+                const canEdit = canActOn('expenses.edit', 'expenses.edit-all', expense.user_id);
+                const canDelete = canActOn('expenses.delete', 'expenses.delete-all', expense.user_id);
+
+                return (
+                    <div className="flex items-center justify-center gap-2">
+                        <button
+                            onClick={() => onView(expense)}
+                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-xl transition-all hover:scale-105"
+                            title="View"
+                        >
+                            <FaEye size={16} />
+                        </button>
+                        {canEdit && (
+                            <button
+                                onClick={() => onEdit(expense)}
+                                className="p-2 text-purple-600 hover:bg-purple-50 rounded-xl transition-all hover:scale-105"
+                                title="Edit"
+                            >
+                                <FaEdit size={16} />
+                            </button>
+                        )}
+                        {canDelete && (
+                            <button
+                                onClick={() => onDelete(expense)}
+                                className="p-2 text-red-600 hover:bg-red-50 rounded-xl transition-all hover:scale-105"
+                                title="Delete"
+                            >
+                                <FaTrash size={16} />
+                            </button>
+                        )}
+                    </div>
+                );
+            },
             enableSorting: false,
         },
     ];
@@ -96,22 +108,26 @@ const ExpenseTable = ({ expenses = [], pagination, onView, onEdit, onDelete, onC
             {/* Header Buttons - Left: Add Expense, Right: View Expenses */}
             <div className="flex items-center justify-between flex-wrap gap-4">
                 <div className="flex items-center gap-3">
-                    <button
-                        onClick={onCreate}
-                        className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white font-bold rounded-2xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20"
-                    >
-                        <span className="text-lg font-bold">+</span>
-                        Add Expense
-                    </button>
+                    {can('expenses.create') && (
+                        <button
+                            onClick={onCreate}
+                            className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white font-bold rounded-2xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20"
+                        >
+                            <span className="text-lg font-bold">+</span>
+                            Add Expense
+                        </button>
+                    )}
                 </div>
                 <div className="flex items-center gap-3">
-                    <button
-                        onClick={handleViewExpenses}
-                        className="inline-flex items-center gap-2 px-4 py-2.5 bg-purple-600 text-white font-bold rounded-2xl hover:bg-purple-700 transition-all shadow-lg shadow-purple-600/20"
-                    >
-                        <FaFileAlt size={16} />
-                        View Expenses
-                    </button>
+                    {can('expenses.export') && (
+                        <button
+                            onClick={handleViewExpenses}
+                            className="inline-flex items-center gap-2 px-4 py-2.5 bg-purple-600 text-white font-bold rounded-2xl hover:bg-purple-700 transition-all shadow-lg shadow-purple-600/20"
+                        >
+                            <FaFileAlt size={16} />
+                            View Expenses
+                        </button>
+                    )}
                 </div>
             </div>
 

@@ -1,9 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { FaArrowLeft, FaUser, FaEnvelope, FaPhone, FaWallet, FaMoneyBillWave, FaCheckCircle } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
+import usePaymentStore from '../../store/paymentStore';
+import usePermission from '../../hooks/usePermission';
 
-const AddPaymentForm = ({ user, onSubmit, onCancel, loading }) => {
+const AddPaymentForm = ({ user, onSubmit, onCancel, loading, onPaymentDeleted }) => {
     const navigate = useNavigate();
+    const { deletePayment } = usePaymentStore();
+    const { can } = usePermission();
     const [amount, setAmount] = useState('');
     const [error, setError] = useState('');
 
@@ -43,6 +47,15 @@ const AddPaymentForm = ({ user, onSubmit, onCancel, loading }) => {
 
     const handleBack = () => {
         navigate('/payments');
+    };
+
+    const handleDeletePayment = async (payment) => {
+        if (!window.confirm('Are you sure you want to delete this payment record?')) return;
+
+        const result = await deletePayment(payment.id);
+        if (result.success) {
+            onPaymentDeleted?.();
+        }
     };
 
     return (
@@ -219,19 +232,17 @@ const AddPaymentForm = ({ user, onSubmit, onCancel, loading }) => {
                                                 Rs {parseFloat(payment.paid_amount || 0).toFixed(2)}
                                             </td>
                                             <td className="py-2.5 px-4">
-                                                <button
-                                                    onClick={() => {
-                                                        if (window.confirm('Are you sure you want to delete this payment record?')) {
-                                                            // Delete logic
-                                                        }
-                                                    }}
-                                                    className="p-2 text-red-600 hover:bg-red-50 rounded-xl transition-all hover:scale-105"
-                                                    title="Delete"
-                                                >
-                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                    </svg>
-                                                </button>
+                                                {can('payments.delete') && (
+                                                    <button
+                                                        onClick={() => handleDeletePayment(payment)}
+                                                        className="p-2 text-red-600 hover:bg-red-50 rounded-xl transition-all hover:scale-105"
+                                                        title="Delete"
+                                                    >
+                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                        </svg>
+                                                    </button>
+                                                )}
                                             </td>
                                         </tr>
                                     ))}

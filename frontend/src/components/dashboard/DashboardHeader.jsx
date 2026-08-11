@@ -29,9 +29,9 @@ const DashboardHeader = ({ user, billingCycle, isAdmin, onMonthClosed, notificat
 
             {user?.roles && user.roles.length > 0 && (
                 <div className="mt-3 flex flex-wrap gap-1.5">
-                    {user.roles.map((r, i) => (
+                    {[...new Set(user.roles.map(r => r.name).filter(Boolean))].map((name, i) => (
                         <span key={i} className="text-xs bg-blue-100 text-blue-800 px-2.5 py-1 rounded-full font-semibold">
-                            {r.name}
+                            {name}
                         </span>
                     ))}
                 </div>
