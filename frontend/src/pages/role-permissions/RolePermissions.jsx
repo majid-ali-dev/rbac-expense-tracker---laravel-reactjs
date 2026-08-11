@@ -1,17 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import useRolePermissionStore from '../../store/rolePermissionStore';
 import RolePermissionTable from '../../components/role-permissions/RolePermissionTable';
 import RolePermissionForm from '../../components/role-permissions/RolePermissionForm';
-import { showDeleteConfirm } from '../../utils/toast';
+import RolePermissionViewModal from '../../components/role-permissions/RolePermissionViewModal';
 
 const RolePermissions = () => {
-    const navigate = useNavigate();
     const {
         roles,
         role,
         allPermissions,
         loading,
+        error,
         pagination,
         fetchRoles,
         fetchRolePermissions,
@@ -21,6 +20,8 @@ const RolePermissions = () => {
     } = useRolePermissionStore();
 
     const [showForm, setShowForm] = useState(false);
+    const [showView, setShowView] = useState(false);
+    const [viewRole, setViewRole] = useState(null);
     const [editingRole, setEditingRole] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -33,6 +34,18 @@ const RolePermissions = () => {
         setEditingRole(role);
         setShowForm(true);
         fetchRolePermissions(role.id);
+    };
+
+    const handleViewPermissions = (role) => {
+        setViewRole(role);
+        setShowView(true);
+        fetchRolePermissions(role.id);
+    };
+
+    const handleCloseView = () => {
+        setShowView(false);
+        setViewRole(null);
+        clearRole();
     };
 
     const handleFormSubmit = async (permissionIds) => {
@@ -87,7 +100,18 @@ const RolePermissions = () => {
                     roles={roles}
                     pagination={pagination}
                     onEdit={handleEdit}
+                    onViewPermissions={handleViewPermissions}
                     onPageChange={handlePageChange}
+                />
+            )}
+
+            {showView && (
+                <RolePermissionViewModal
+                    role={role || viewRole}
+                    allPermissions={allPermissions}
+                    loading={loading}
+                    error={error}
+                    onClose={handleCloseView}
                 />
             )}
         </div>
