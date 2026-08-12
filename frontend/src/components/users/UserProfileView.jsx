@@ -3,7 +3,7 @@ import { FaArrowLeft, FaDownload, FaWallet, FaCalendar, FaPhone, FaEnvelope, FaU
 import { generateUserProfilePDF } from '../../utils/pdfExport';
 import { showError } from '../../utils/toast';
 
-const UserProfileView = ({ user, paymentHistory, onBack }) => {
+const UserProfileView = ({ user, paymentHistory, cycle, onBack }) => {
     if (!user) return null;
 
     const handleDownloadPDF = () => {
@@ -61,6 +61,11 @@ const UserProfileView = ({ user, paymentHistory, onBack }) => {
                     <div>
                         <h1 className="text-2xl font-extrabold text-gray-900">User Profile</h1>
                         <p className="text-sm text-gray-500">Complete user information and payment history</p>
+                        {cycle && (
+                            <span className="inline-flex mt-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700">
+                                {cycle.label}{cycle.status === 'closed' ? ' (Closed)' : ''}
+                            </span>
+                        )}
                     </div>
                 </div>
                 <button

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\Category\CategoryStoreRequest;
 use App\Http\Requests\Category\CategoryUpdateRequest;
 use App\Http\Resources\CategoryResource;
+use App\Models\BillingCycle;
 use App\Services\CategoryService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -21,7 +22,13 @@ class CategoryController extends Controller
     public function index(Request $request): JsonResponse
     {
         $perPage = $request->get('per_page', 10);
-        $categories = $this->categoryService->getAllPaginated($perPage);
+
+        // Optional cycle context: category rows stay as master records, but
+        // each row is augmented with that cycle's expense count + total.
+        $cycleId = $request->integer('cycle_id') ?: null;
+        $cycle = $cycleId ? BillingCycle::find($cycleId) : BillingCycle::current();
+
+        $categories = $this->categoryService->getAllPaginated($perPage, $cycle);
 
         return response()->json([
             'success' => true,

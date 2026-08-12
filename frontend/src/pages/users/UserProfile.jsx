@@ -1,19 +1,26 @@
 import React, { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import useUserProfileStore from '../../store/userProfileStore';
+import useCycleStore from '../../store/cycleStore';
 import UserProfileView from '../../components/users/UserProfileView';
 
 const UserProfile = () => {
     const navigate = useNavigate();
     const { id } = useParams();
-    const { user, paymentHistory, loading, fetchUserProfile, clearProfile } = useUserProfileStore();
+    const { user, paymentHistory, cycle, loading, fetchUserProfile, clearProfile } = useUserProfileStore();
+    const cycleId = useCycleStore((s) => s.getSelectedId('users'));
+
+    // Child page: inherits the cycle selected on the Manage Users index.
+    useEffect(() => {
+        useCycleStore.getState().fetchCycles();
+    }, []);
 
     useEffect(() => {
         if (id) {
-            fetchUserProfile(id);
+            fetchUserProfile(id, cycleId);
         }
         return () => clearProfile();
-    }, [id]);
+    }, [id, cycleId]);
 
     const handleBack = () => {
         navigate('/users');
@@ -50,6 +57,7 @@ const UserProfile = () => {
         <UserProfileView
             user={user}
             paymentHistory={paymentHistory}
+            cycle={cycle}
             onBack={handleBack}
         />
     );

@@ -12,6 +12,9 @@ class CategoryResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
+            // Per-cycle stats (only present when the index query aggregates them)
+            'expense_count' => isset($this->expense_count) ? (int) $this->expense_count : null,
+            'total_expense' => isset($this->total_expense) ? (float) $this->total_expense : null,
             'created_at' => $this->created_at?->toISOString(),
             'updated_at' => $this->updated_at?->toISOString(),
         ];

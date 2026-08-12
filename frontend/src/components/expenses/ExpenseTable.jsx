@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import DataTable from '../common/DataTable';
 import usePermission from '../../hooks/usePermission';
 
-const ExpenseTable = ({ expenses = [], pagination, onView, onEdit, onDelete, onCreate, onPageChange }) => {
+const ExpenseTable = ({ expenses = [], pagination, cycleFilter, onView, onEdit, onDelete, onCreate, onPageChange }) => {
     const navigate = useNavigate();
     const { can, canActOn } = usePermission();
 
@@ -119,6 +119,7 @@ const ExpenseTable = ({ expenses = [], pagination, onView, onEdit, onDelete, onC
                     )}
                 </div>
                 <div className="flex items-center gap-3">
+                    {cycleFilter}
                     {can('expenses.export') && (
                         <button
                             onClick={handleViewExpenses}

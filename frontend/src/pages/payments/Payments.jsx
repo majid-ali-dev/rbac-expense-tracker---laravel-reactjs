@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import usePaymentStore from '../../store/paymentStore';
+import useCycleStore from '../../store/cycleStore';
+import CycleFilter from '../../components/common/CycleFilter';
 import PaymentTable from '../../components/payments/PaymentTable';
 
 const Payments = () => {
@@ -13,11 +15,22 @@ const Payments = () => {
         fetchPayments,
         clearError,
     } = usePaymentStore();
+    const cycles = useCycleStore((s) => s.cycles);
+    const cycleId = useCycleStore((s) => s.getSelectedId('payments'));
+    const fetchCycles = useCycleStore((s) => s.fetchCycles);
+    const selectedCycle = cycles.find((c) => c.id === cycleId) || null;
+    const readOnly = selectedCycle?.status === 'closed';
 
     useEffect(() => {
-        fetchPayments(1, 10);
+        fetchCycles();
         return () => clearError();
-    }, []);
+    }, [fetchCycles]);
+
+    // null cycleId falls back to the current cycle on the backend, so the page
+    // still works even if the cycle list fails to load.
+    useEffect(() => {
+        fetchPayments(1, 10, cycleId);
+    }, [cycleId]);
 
     const handleAddPayment = (user) => {
         navigate(`/payments/${user.id}/add`);
@@ -46,6 +59,8 @@ const Payments = () => {
                 users={users}
                 pagination={pagination}
                 stats={stats}
+                cycleFilter={<CycleFilter moduleKey="payments" />}
+                readOnly={readOnly}
                 onAddPayment={handleAddPayment}
                 onPageChange={handlePageChange}
             />

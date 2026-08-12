@@ -2,15 +2,20 @@
 
 namespace App\Repositories;
 
+use App\Models\BillingCycle;
 use App\Models\Category;
 use App\Repositories\Contracts\CategoryRepositoryInterface;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class CategoryRepository implements CategoryRepositoryInterface
 {
-    public function getAllPaginated(int $perPage = 10): LengthAwarePaginator
+    public function getAllPaginated(int $perPage = 10, ?BillingCycle $cycle = null): LengthAwarePaginator
     {
-        return Category::latest()->paginate($perPage);
+        return Category::query()
+            ->withCount(['expenses as expense_count' => fn($q) => $cycle ? $q->inCycle($cycle) : $q])
+            ->withSum(['expenses as total_expense' => fn($q) => $cycle ? $q->inCycle($cycle) : $q], 'amount')
+            ->latest()
+            ->paginate($perPage);
     }
 
     public function findById(int $id): ?Category

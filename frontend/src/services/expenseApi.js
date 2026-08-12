@@ -1,8 +1,8 @@
 import api from './api';
 
 export const expenseAPI = {
-    getExpenses: (page = 1, perPage = 10) =>
-        api.get(`/expenses?page=${page}&per_page=${perPage}`),
+    getExpenses: (page = 1, perPage = 10, cycleId = null) =>
+        api.get(`/expenses?page=${page}&per_page=${perPage}${cycleId ? `&cycle_id=${cycleId}` : ''}`),
 
     getExpense: (id) => api.get(`/expenses/${id}`),
 

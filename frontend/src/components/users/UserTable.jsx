@@ -3,7 +3,7 @@ import { FaEdit, FaTrash, FaEye } from 'react-icons/fa';
 import DataTable from '../common/DataTable';
 import usePermission from '../../hooks/usePermission';
 
-const UserTable = ({ users = [], pagination, onEdit, onDelete, onView, onCreate, onPageChange }) => {
+const UserTable = ({ users = [], pagination, cycleFilter, onEdit, onDelete, onView, onCreate, onPageChange }) => {
     const { can } = usePermission();
     const columns = [
         {
@@ -155,8 +155,14 @@ const UserTable = ({ users = [], pagination, onEdit, onDelete, onView, onCreate,
     ];
 
     return (
-        <DataTable
-            data={users}
+        <>
+            {cycleFilter && (
+                <div className="flex items-center justify-end mb-4">
+                    {cycleFilter}
+                </div>
+            )}
+            <DataTable
+                data={users}
             columns={columns}
             title="Users List"
             createButtonText="Add New User"
@@ -166,7 +172,8 @@ const UserTable = ({ users = [], pagination, onEdit, onDelete, onView, onCreate,
             currentPage={pagination?.current_page || 1}
             onPageChange={onPageChange}
             pageCount={pagination?.last_page || 1}
-        />
+            />
+        </>
     );
 };
 

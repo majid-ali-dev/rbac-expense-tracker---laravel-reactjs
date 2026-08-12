@@ -12,6 +12,7 @@ class ExpenseResource extends JsonResource
         return [
             'id' => $this->id,
             'user_id' => $this->user_id,
+            'billing_cycle_id' => $this->billing_cycle_id,
             'user' => new UserResource($this->whenLoaded('user')),
             'category_id' => $this->category_id,
             'category' => new CategoryResource($this->whenLoaded('category')),

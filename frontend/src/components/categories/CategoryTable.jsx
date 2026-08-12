@@ -3,7 +3,7 @@ import { FaEdit, FaTrash } from 'react-icons/fa';
 import DataTable from '../common/DataTable';
 import usePermission from '../../hooks/usePermission';
 
-const CategoryTable = ({ categories = [], pagination, onEdit, onDelete, onCreate, onPageChange }) => {
+const CategoryTable = ({ categories = [], pagination, cycleFilter, onEdit, onDelete, onCreate, onPageChange }) => {
     const { can } = usePermission();
 
     const columns = [
@@ -23,6 +23,31 @@ const CategoryTable = ({ categories = [], pagination, onEdit, onDelete, onCreate
             cell: ({ getValue }) => (
                 <span className="font-semibold text-gray-900">{getValue() || '-'}</span>
             ),
+            enableSorting: true,
+        },
+        {
+            id: 'expense_count',
+            header: 'Expenses (Cycle)',
+            accessorFn: (row) => row.expense_count ?? '-',
+            cell: ({ getValue }) => (
+                <span className="text-gray-700 font-medium">{getValue()}</span>
+            ),
+            enableSorting: true,
+        },
+        {
+            id: 'total_expense',
+            header: 'Spent (Cycle)',
+            accessorFn: (row) => row.total_expense ?? '-',
+            cell: ({ getValue }) => {
+                const value = getValue();
+                return value === '-' || value == null ? (
+                    <span className="text-gray-400">-</span>
+                ) : (
+                    <span className="font-bold text-blue-600">
+                        Rs. {parseFloat(value).toFixed(2)}
+                    </span>
+                );
+            },
             enableSorting: true,
         },
         {
@@ -71,8 +96,14 @@ const CategoryTable = ({ categories = [], pagination, onEdit, onDelete, onCreate
     ];
 
     return (
-        <DataTable
-            data={categories}
+        <>
+            {cycleFilter && (
+                <div className="flex items-center justify-end mb-4">
+                    {cycleFilter}
+                </div>
+            )}
+            <DataTable
+                data={categories}
             columns={columns}
             title="Manage Categories"
             createButtonText="Add Category"
@@ -82,7 +113,8 @@ const CategoryTable = ({ categories = [], pagination, onEdit, onDelete, onCreate
             currentPage={pagination?.current_page || 1}
             onPageChange={onPageChange}
             pageCount={pagination?.last_page || 1}
-        />
+            />
+        </>
     );
 };
 

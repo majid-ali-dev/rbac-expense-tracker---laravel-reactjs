@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import useCategoryStore from '../../store/categoryStore';
+import useCycleStore from '../../store/cycleStore';
+import CycleFilter from '../../components/common/CycleFilter';
 import CategoryTable from '../../components/categories/CategoryTable';
 import CategoryForm from '../../components/categories/CategoryForm';
 import { showDeleteConfirm, showDeletedSuccess } from '../../utils/toast';
@@ -20,11 +22,18 @@ const Categories = () => {
     const [showForm, setShowForm] = useState(false);
     const [editingCategory, setEditingCategory] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const cycleId = useCycleStore((s) => s.getSelectedId('categories'));
+    const fetchCycles = useCycleStore((s) => s.fetchCycles);
 
     useEffect(() => {
-        fetchCategories(1, 10);
+        fetchCycles();
         return () => clearError();
-    }, []);
+    }, [fetchCycles]);
+
+    // Reload category stats whenever the selected cycle changes
+    useEffect(() => {
+        fetchCategories(1, 10, cycleId);
+    }, [cycleId]);
 
     const handleCreate = () => {
         setEditingCategory(null);
@@ -43,7 +52,7 @@ const Categories = () => {
         );
 
         if (result.isConfirmed) {
-            const response = await deleteCategory(category.id);
+            const response = await deleteCategory(category.id, cycleId);
             if (response.success) {
                 await showDeletedSuccess('Deleted!', 'Category has been deleted successfully.');
             }
@@ -55,9 +64,9 @@ const Categories = () => {
         try {
             let result;
             if (editingCategory) {
-                result = await updateCategory(editingCategory.id, data);
+                result = await updateCategory(editingCategory.id, data, cycleId);
             } else {
-                result = await createCategory(data);
+                result = await createCategory(data, cycleId);
             }
 
             if (result.success) {
@@ -106,6 +115,7 @@ const Categories = () => {
                 <CategoryTable
                     categories={categories}
                     pagination={pagination}
+                    cycleFilter={<CycleFilter moduleKey="categories" />}
                     onEdit={handleEdit}
                     onDelete={handleDelete}
                     onCreate={handleCreate}

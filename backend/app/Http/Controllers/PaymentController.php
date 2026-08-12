@@ -23,9 +23,17 @@ class PaymentController extends Controller
     public function index(Request $request): JsonResponse
     {
         $user = auth()->user();
-        $cycle = BillingCycle::current();
+        $cycleId = $request->integer('cycle_id') ?: null;
+        $cycle = $cycleId ? BillingCycle::find($cycleId) : BillingCycle::current();
 
-        // ===== OWN SCOPE: only the user's own payments =====
+        if (!$cycle) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Billing cycle not found.',
+            ], 404);
+        }
+
+        // ===== OWN SCOPE: only the user's own payments for this cycle =====
         if (!$user->hasPermission('payments.view-all')) {
             $user->load(['payments' => fn($q) => $q->where('billing_cycle_id', $cycle->id)->latest()]);
 
@@ -37,6 +45,7 @@ class PaymentController extends Controller
             return response()->json([
                 'success' => true,
                 'data' => [
+                    'cycle' => $this->cyclePayload($cycle),
                     'users' => [$this->formatUserRow($user, $amount, $paid, $remaining, $status)],
                     'stats' => [
                         'total_amount' => $amount,
@@ -53,8 +62,8 @@ class PaymentController extends Controller
 
         // ===== MANAGER / SUPER ADMIN: all members, all cycle-scoped =====
         $perPage = $request->get('per_page', 10);
-        $users = $this->paymentService->getMemberPayments($perPage);
-        $stats = $this->paymentService->getPaymentStats($users->getCollection());
+        $users = $this->paymentService->getMemberPayments($perPage, $cycle->id);
+        $stats = $this->paymentService->getPaymentStats($users->getCollection(), $cycle->id);
 
         $rows = $users->getCollection()->map(function (User $u) use ($cycle) {
             $amount = $u->currentCycleAmount($cycle->id);
@@ -68,6 +77,7 @@ class PaymentController extends Controller
         return response()->json([
             'success' => true,
             'data' => [
+                'cycle' => $this->cyclePayload($cycle),
                 'users' => $rows,
                 'stats' => $stats,
             ],
@@ -81,11 +91,24 @@ class PaymentController extends Controller
     }
 
     /**
-     * Now allows adding payment even if amount = 0
+     * Add-payment page data. Closed cycles are read-only — payments can only
+     * be recorded into the current open cycle.
      */
-    public function addPayment(int $userId): JsonResponse
+    public function addPayment(int $userId, Request $request): JsonResponse
     {
-        $cycle = BillingCycle::current();
+        $cycleId = $request->integer('cycle_id') ?: null;
+        $cycle = $cycleId ? BillingCycle::find($cycleId) : BillingCycle::current();
+
+        if (!$cycle) {
+            return response()->json(['success' => false, 'message' => 'Billing cycle not found.'], 404);
+        }
+
+        if ($cycle->status === 'closed') {
+            return response()->json([
+                'success' => false,
+                'message' => 'This cycle is closed and read-only. Payments can only be recorded in the current open cycle.',
+            ], 409);
+        }
 
         $targetUser = User::with(['payments' => fn($q) => $q->where('billing_cycle_id', $cycle->id)->latest()])
             ->find($userId);
@@ -100,7 +123,6 @@ class PaymentController extends Controller
         $remaining = $targetUser->currentCycleRemaining($cycle->id);
         $status = $targetUser->currentCycleStatus($cycle->id);
 
-
         return response()->json([
             'success' => true,
             'data' => [
@@ -110,6 +132,10 @@ class PaymentController extends Controller
         ]);
     }
 
+    /**
+     * Record a payment. Always written to the CURRENT open cycle — closed
+     * cycles are immutable.
+     */
     public function pay(PaymentStoreRequest $request, int $userId): JsonResponse
     {
         $targetUser = User::find($userId);
@@ -119,7 +145,14 @@ class PaymentController extends Controller
         }
 
         try {
-            $currentCycle = BillingCycle::current();
+            $currentCycle = BillingCycle::where('status', 'open')->latest('start_date')->first();
+
+            if (!$currentCycle) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No active billing cycle. Please create or reopen a cycle first.',
+                ], 409);
+            }
 
             $payment = Payment::create([
                 'user_id' => $targetUser->id,
@@ -129,7 +162,8 @@ class PaymentController extends Controller
                 'updated_by' => auth()->id(),
             ]);
 
-            $this->paymentService->updateUserTotals($targetUser);
+            $this->paymentService->syncMemberDue($targetUser, $currentCycle->id);
+            $this->paymentService->updateUserTotals($targetUser, $currentCycle->id);
 
             return response()->json([
                 'success' => true,
@@ -174,6 +208,17 @@ class PaymentController extends Controller
             'total_paid' => $paid,
             'remaining' => $remaining,
             'payment_status' => $status,
+        ];
+    }
+
+    private function cyclePayload(BillingCycle $cycle): array
+    {
+        return [
+            'id' => $cycle->id,
+            'label' => $cycle->label,
+            'start_date' => $cycle->start_date->format('Y-m-d'),
+            'end_date' => $cycle->end_date->format('Y-m-d'),
+            'status' => $cycle->status,
         ];
     }
 }

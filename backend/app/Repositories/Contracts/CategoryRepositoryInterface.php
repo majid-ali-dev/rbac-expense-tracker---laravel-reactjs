@@ -7,7 +7,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 interface CategoryRepositoryInterface
 {
-    public function getAllPaginated(int $perPage = 10): LengthAwarePaginator;
+    public function getAllPaginated(int $perPage = 10, ?\App\Models\BillingCycle $cycle = null): LengthAwarePaginator;
     public function findById(int $id): ?Category;
     public function findByName(string $name): ?Category;
     public function create(array $data): Category;

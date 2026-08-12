@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import useExpenseStore from '../../store/expenseStore';
+import useCycleStore from '../../store/cycleStore';
+import CycleFilter from '../../components/common/CycleFilter';
 import ExpenseTable from '../../components/expenses/ExpenseTable';
 import ExpenseForm from '../../components/expenses/ExpenseForm';
 import ExpenseView from '../../components/expenses/ExpenseView';
@@ -25,12 +27,19 @@ const Expenses = () => {
     const [editingExpense, setEditingExpense] = useState(null);
     const [viewingExpense, setViewingExpense] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const cycleId = useCycleStore((s) => s.getSelectedId('expenses'));
+    const fetchCycles = useCycleStore((s) => s.fetchCycles);
 
     useEffect(() => {
-        fetchExpenses(1, 10);
-        fetchCategories();
+        fetchCycles();
         return () => clearError();
-    }, []);
+    }, [fetchCycles]);
+
+    // Reload the list whenever the selected cycle changes (default: current)
+    useEffect(() => {
+        fetchExpenses(1, 10, cycleId);
+        fetchCategories();
+    }, [cycleId]);
 
     const handleCreate = () => {
         setEditingExpense(null);
@@ -57,7 +66,7 @@ const Expenses = () => {
         );
 
         if (result.isConfirmed) {
-            const response = await deleteExpense(expense.id);
+            const response = await deleteExpense(expense.id, cycleId);
             if (response.success) {
                 await showDeletedSuccess('Deleted!', 'Expense has been deleted successfully.');
             }
@@ -69,9 +78,9 @@ const Expenses = () => {
         try {
             let result;
             if (editingExpense) {
-                result = await updateExpense(editingExpense.id, data);
+                result = await updateExpense(editingExpense.id, data, cycleId);
             } else {
-                result = await createExpense(data);
+                result = await createExpense(data, cycleId);
             }
 
             if (result.success) {
@@ -128,6 +137,7 @@ const Expenses = () => {
                 <ExpenseTable
                     expenses={expenses}
                     pagination={pagination}
+                    cycleFilter={<CycleFilter moduleKey="expenses" />}
                     onView={handleView}
                     onEdit={handleEdit}
                     onDelete={handleDelete}

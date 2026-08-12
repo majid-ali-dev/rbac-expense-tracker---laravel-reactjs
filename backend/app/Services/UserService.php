@@ -19,9 +19,9 @@ class UserService
         $this->userRepository = $userRepository;
     }
 
-    public function getAllMembers(int $perPage = 10): LengthAwarePaginator
+    public function getAllMembers(int $perPage = 10, ?int $cycleId = null): LengthAwarePaginator
     {
-        return $this->userRepository->getAllMembers($perPage);
+        return $this->userRepository->getAllMembers($perPage, $cycleId);
     }
 
     public function findById(int $id): ?User
@@ -93,7 +93,11 @@ class UserService
         return $this->userRepository->getRoles();
     }
 
-    public function getUserWithPaymentHistory(int $id): ?array
+    /**
+     * User profile + payment history for a specific billing cycle
+     * (defaults to the current open cycle).
+     */
+    public function getUserWithPaymentHistory(int $id, ?int $cycleId = null): ?array
     {
         $user = $this->userRepository->findById($id);
 
@@ -101,13 +105,20 @@ class UserService
             return null;
         }
 
-        $user->load(['roles', 'payments.updater', 'payments.billingCycle', 'dues.billingCycle']);
+        $cycle = $cycleId ? BillingCycle::find($cycleId) : null;
+        $cycle = $cycle ?: BillingCycle::current();
+        $resolvedCycleId = $cycle->id;
 
-        $cycle = BillingCycle::current();
-        $amount = $user->currentCycleAmount($cycle->id);
-        $paid = $user->currentCyclePaid($cycle->id);
-        $remaining = $user->currentCycleRemaining($cycle->id);
-        $status = $user->currentCycleStatus($cycle->id);
+        $user->load([
+            'roles',
+            'payments' => fn($q) => $q->where('billing_cycle_id', $resolvedCycleId)->with(['updater', 'billingCycle']),
+            'dues' => fn($q) => $q->where('billing_cycle_id', $resolvedCycleId)->with('billingCycle'),
+        ]);
+
+        $amount = $user->currentCycleAmount($resolvedCycleId);
+        $paid = $user->currentCyclePaid($resolvedCycleId);
+        $remaining = $user->currentCycleRemaining($resolvedCycleId);
+        $status = $user->currentCycleStatus($resolvedCycleId);
 
         $paymentHistory = $this->groupPaymentsByMonth($user->payments);
 
@@ -126,6 +137,13 @@ class UserService
             ],
             'total_paid' => $paid,
             'remaining' => $remaining,
+            'cycle' => $cycle ? [
+                'id' => $cycle->id,
+                'label' => $cycle->label,
+                'start_date' => $cycle->start_date->format('Y-m-d'),
+                'end_date' => $cycle->end_date->format('Y-m-d'),
+                'status' => $cycle->status,
+            ] : null,
             'payment_history' => $paymentHistory,
         ];
     }

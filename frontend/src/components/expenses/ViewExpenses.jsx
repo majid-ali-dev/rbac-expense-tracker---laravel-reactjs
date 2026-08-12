@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 import axios from 'axios';
 import usePermission from '../../hooks/usePermission';
+import useCycleStore from '../../store/cycleStore';
 
 const ViewExpenses = () => {
     const navigate = useNavigate();
@@ -19,49 +20,53 @@ const ViewExpenses = () => {
     const [remainingBalance, setRemainingBalance] = useState(0);
     const [extraBalance, setExtraBalance] = useState(0);
     const [downloading, setDownloading] = useState(false);
+    // When the user explicitly changes the date inputs, the filter overrides
+    // the module cycle context (no cycle_id is sent to the backend).
+    const [isManualFilter, setIsManualFilter] = useState(false);
+
+    // Cycle context: this page inherits the cycle selected on the Expenses
+    // index. Its own date filter can still override the range explicitly.
+    const cycles = useCycleStore((s) => s.cycles);
+    const cycleId = useCycleStore((s) => s.getSelectedId('expenses'));
+    const fetchCycles = useCycleStore((s) => s.fetchCycles);
+    const cycle = cycles.find((c) => c.id === cycleId) || null;
 
     const handleBack = () => {
         navigate('/expenses');
     };
 
-    // Fetch current cycle on load
+    // Load cycles once; apply the selected cycle's range when it is known.
     useEffect(() => {
-        fetchCurrentCycle();
-    }, []);
+        fetchCycles();
+    }, [fetchCycles]);
 
-    const fetchCurrentCycle = async () => {
-        try {
-            const response = await api.get('/billing-cycle/current');
-            const cycle = response.data.data;
-            const today = new Date().toISOString().split('T')[0];
-
-            // From = where the current cycle starts, To = today — the same window
-            // the dashboard uses, so newly added expenses always show up here
-            // (and never an inverted range when a fresh cycle starts in the future).
-            const from = cycle.start_date > today ? today : cycle.start_date;
-            const to = today;
-
-            setFromDate(from);
-            setToDate(to);
-            fetchExpenses(from, to);
-        } catch (error) {
-            console.error('Error fetching current cycle:', error);
-            // Fallback to current month if cycle fetch fails
-            const now = new Date();
-            const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
-            const from = firstDay.toISOString().split('T')[0];
-            const to = now.toISOString().split('T')[0];
-            setFromDate(from);
-            setToDate(to);
-            fetchExpenses(from, to);
+    useEffect(() => {
+        if (cycle) {
+            applyCycleRange(cycle);
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [cycleId]);
+
+    const applyCycleRange = (cyc) => {
+        const today = new Date().toISOString().split('T')[0];
+        const isClosed = cyc.status === 'closed';
+
+        // Open cycle: [start -> today]; closed cycle: its exact sealed range.
+        const from = cyc.start_date > today && !isClosed ? today : cyc.start_date.slice(0, 10);
+        const to = isClosed ? cyc.end_date.slice(0, 10) : today;
+
+        setFromDate(from);
+        setToDate(to);
+        setIsManualFilter(false);
+        fetchExpenses(from, to, cyc.id);
     };
 
-    const fetchExpenses = async (from, to) => {
+    const fetchExpenses = async (from, to, cycleIdParam = cycle?.id || null) => {
         setLoading(true);
         setError(null);
         try {
-            const response = await api.get(`/expenses/sheet?from=${from}&to=${to}`);
+            const cycleQuery = cycleIdParam ? `&cycle_id=${cycleIdParam}` : '';
+            const response = await api.get(`/expenses/sheet?from=${from}&to=${to}${cycleQuery}`);
 
             if (response.data.success) {
                 const data = response.data.data;
@@ -88,14 +93,24 @@ const ViewExpenses = () => {
 
     const handleFilter = () => {
         if (fromDate && toDate) {
-            fetchExpenses(fromDate, toDate);
+            // Explicit dates override the selected cycle
+            fetchExpenses(fromDate, toDate, null);
         }
     };
 
-    // Reset to current cycle
+    // Reset to the selected cycle's default range (manual date filter cleared)
     const handleReset = () => {
         setSearchTerm('');
-        fetchCurrentCycle();
+        if (cycle) {
+            applyCycleRange(cycle);
+        } else {
+            fetchCycles();
+        }
+    };
+
+    const handleDateChange = (setter) => (e) => {
+        setter(e.target.value);
+        setIsManualFilter(true);
     };
 
     const handleDownload = async () => {
@@ -104,10 +119,13 @@ const ViewExpenses = () => {
             const token = localStorage.getItem('token');
             const downloadFrom = fromDate || new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
             const downloadTo = toDate || new Date().toISOString().split('T')[0];
+            // Downloads mirror the current view: cycle-scoped by default,
+            // pure date-range when the user has overridden the dates.
+            const cycleQuery = !isManualFilter && cycleId ? `&cycle_id=${cycleId}` : '';
 
             const response = await axios({
                 method: 'GET',
-                url: `${api.defaults.baseURL}/expenses/download-sheet?from=${downloadFrom}&to=${downloadTo}`,
+                url: `${api.defaults.baseURL}/expenses/download-sheet?from=${downloadFrom}&to=${downloadTo}${cycleQuery}`,
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Accept': 'text/csv',
@@ -224,22 +242,20 @@ const ViewExpenses = () => {
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
                 <div className="flex flex-wrap items-end gap-4">
                     <div>
-                        <label className="block text-sm font-bold text-gray-700 mb-1.5">From</label>
-                        <input
-                            type="date"
-                            value={fromDate}
-                            onChange={(e) => setFromDate(e.target.value)}
-                            className="px-4 py-2.5 rounded-2xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        />
+                        <label className="block text-sm font-bold text-gray-700 mb-1.5">From</label>                            <input
+                                type="date"
+                                value={fromDate}
+                                onChange={handleDateChange(setFromDate)}
+                                className="px-4 py-2.5 rounded-2xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
                     </div>
                     <div>
-                        <label className="block text-sm font-bold text-gray-700 mb-1.5">To</label>
-                        <input
-                            type="date"
-                            value={toDate}
-                            onChange={(e) => setToDate(e.target.value)}
-                            className="px-4 py-2.5 rounded-2xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        />
+                        <label className="block text-sm font-bold text-gray-700 mb-1.5">To</label>                            <input
+                                type="date"
+                                value={toDate}
+                                onChange={handleDateChange(setToDate)}
+                                className="px-4 py-2.5 rounded-2xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
                     </div>
                     <button
                         onClick={handleFilter}

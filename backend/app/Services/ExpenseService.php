@@ -20,23 +20,20 @@ class ExpenseService
     }
 
     /**
-     * FIXED: Only show expenses from CURRENT cycle
-     * Uses cycle start date and TODAY as end date
+     * Show expenses for the given billing cycle (defaults to the current one).
+     * The cycle is resolved via the permanent billing_cycle_id attribution;
+     * the unassigned-by-date safety net is handled by Expense::scopeInCycle.
      */
-    public function getAllPaginated(int $perPage = 10): LengthAwarePaginator
+    public function getAllPaginated(int $perPage = 10, ?int $cycleId = null): LengthAwarePaginator
     {
         $user = Auth::user();
-        $cycle = BillingCycle::current();
-
-        // Start from cycle start, end at today
-        $startDate = $cycle->start_date->startOfDay();
-        $endDate = Carbon::now()->endOfDay();
+        $cycle = $cycleId ? BillingCycle::find($cycleId) : BillingCycle::current();
 
         $query = $this->expenseRepository->getExpenseQuery($user);
-        $query->whereBetween('date', [
-            $startDate->format('Y-m-d'),
-            $endDate->format('Y-m-d')
-        ]);
+
+        if ($cycle) {
+            $query->inCycle($cycle);
+        }
 
         return $query->with(['user', 'category', 'histories.user'])
             ->latest('date')
@@ -58,6 +55,10 @@ class ExpenseService
         if (!isset($data['date']) || empty($data['date'])) {
             $data['date'] = Carbon::now()->format('Y-m-d');
         }
+
+        // Attach the expense to the cycle whose date range contains its date,
+        // so it is permanently traceable to the correct billing cycle.
+        $data['billing_cycle_id'] = $this->resolveCycleIdForDate($data['date']);
 
         $expense = $this->expenseRepository->create($data);
 
@@ -85,6 +86,11 @@ class ExpenseService
         $category = $this->expenseRepository->getCategories()->where('id', $data['category_id'])->first();
         $data['title'] = $category ? $category->name : '';
         $data['updated_by'] = Auth::id();
+
+        // If the expense date changed, re-attach it to the correct cycle.
+        if (isset($data['date']) && $data['date'] && $expense->date?->format('Y-m-d') !== $data['date']) {
+            $data['billing_cycle_id'] = $this->resolveCycleIdForDate($data['date']);
+        }
 
         $updated = $this->expenseRepository->update($expense, $data);
 
@@ -128,6 +134,19 @@ class ExpenseService
     public function getCategories()
     {
         return $this->expenseRepository->getCategories();
+    }
+
+    /**
+     * Resolve the billing cycle that contains the given date.
+     * Returns null when no cycle range covers the date (e.g. before the
+     * first cycle ever started).
+     */
+    private function resolveCycleIdForDate(string $date): ?int
+    {
+        return BillingCycle::where('start_date', '<=', $date)
+            ->where('end_date', '>=', $date)
+            ->latest('start_date')
+            ->value('id');
     }
 
     private function getHistoryPayload(Expense $expense): array
