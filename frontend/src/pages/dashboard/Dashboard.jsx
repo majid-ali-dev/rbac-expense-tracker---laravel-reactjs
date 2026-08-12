@@ -9,6 +9,7 @@ import MemberStatusChart from '../../components/dashboard/charts/MemberStatusCha
 import BudgetHealthChart from '../../components/dashboard/charts/BudgetHealthChart';
 import NotificationBell from '../../components/dashboard/notification/NotificationBell';
 import usePermission from '../../hooks/usePermission';
+import useCycleStore from '../../store/cycleStore';
 import { showError } from '../../utils/toast';
 
 const initialState = {
@@ -28,18 +29,25 @@ const Dashboard = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [dashboardData, setDashboardData] = useState(initialState);
+    const cycleId = useCycleStore((s) => s.getSelectedId('dashboard'));
+    const fetchCycles = useCycleStore((s) => s.fetchCycles);
+
+    useEffect(() => {
+        // Ensure the cycle dropdown is populated (for the close flow + filter)
+        fetchCycles();
+    }, [fetchCycles]);
 
     useEffect(() => {
         if (isAuthenticated && user) {
             fetchDashboardData();
         }
-    }, [isAuthenticated, user]);
+    }, [isAuthenticated, user, cycleId]);
 
     const fetchDashboardData = async () => {
         setLoading(true);
         setError(null);
         try {
-            const response = await dashboardAPI.getDashboard();
+            const response = await dashboardAPI.getDashboard(cycleId);
             const data = response.data.data;
 
             setDashboardData({
@@ -74,13 +82,48 @@ const Dashboard = () => {
     }
 
     if (error) {
+        // Raw database errors aren't helpful on screen — translate them into a
+        // clear action for the user (e.g. "run migrations").
+        const isDbError = /SQLSTATE|SQL/i.test(error);
+        const displayMessage = isDbError
+            ? 'The dashboard could not load because the database is not set up correctly. Please make sure the database migrations have been run and try again.'
+            : error;
+
         return (
             <div className="flex items-center justify-center min-h-[60vh]">
                 <div className="text-center">
-                    <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                    <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded max-w-md">
                         <p className="font-bold">Error Loading Dashboard</p>
-                        <p className="text-sm mt-2">{error}</p>
+                        <p className="text-sm mt-2">{displayMessage}</p>
                     </div>
+                    <button
+                        onClick={fetchDashboardData}
+                        className="mt-4 inline-flex items-center gap-2 px-6 py-2.5 bg-blue-600 text-white font-bold rounded-2xl hover:bg-blue-700 transition-all"
+                    >
+                        Try Again
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    // No billing cycle exists yet — show a friendly state instead of an error.
+    if (!dashboardData.billingCycle) {
+        return (
+            <div className="flex items-center justify-center min-h-[60vh]">
+                <div className="text-center bg-white rounded-2xl shadow-sm border border-gray-100 p-10 max-w-md">
+                    <div className="text-5xl mb-4">📅</div>
+                    <h2 className="text-xl font-extrabold text-gray-900">No Billing Cycle</h2>
+                    <p className="text-gray-500 text-sm mt-2">
+                        No billing cycle is available right now. Please refresh or ask an
+                        administrator to create one.
+                    </p>
+                    <button
+                        onClick={fetchDashboardData}
+                        className="mt-5 inline-flex items-center gap-2 px-6 py-2.5 bg-blue-600 text-white font-bold rounded-2xl hover:bg-blue-700 transition-all"
+                    >
+                        Refresh
+                    </button>
                 </div>
             </div>
         );

@@ -21,7 +21,8 @@ class ExpenseController extends Controller
     public function index(Request $request): JsonResponse
     {
         $perPage = $request->get('per_page', 10);
-        $expenses = $this->expenseService->getAllPaginated($perPage);
+        $cycleId = $request->integer('cycle_id') ?: null;
+        $expenses = $this->expenseService->getAllPaginated($perPage, $cycleId);
 
         return response()->json([
             'success' => true,

@@ -7,7 +7,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 interface UserRepositoryInterface
 {
-    public function getAllMembers(int $perPage = 10): LengthAwarePaginator;
+    public function getAllMembers(int $perPage = 10, ?int $cycleId = null): LengthAwarePaginator;
     public function findById(int $id): ?User;
     public function findByEmail(string $email): ?User;
     public function create(array $data): User;

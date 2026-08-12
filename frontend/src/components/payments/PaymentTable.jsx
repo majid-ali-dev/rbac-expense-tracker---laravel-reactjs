@@ -3,7 +3,7 @@ import { FaPlusCircle, FaEye } from 'react-icons/fa';
 import DataTable from '../common/DataTable';
 import usePermission from '../../hooks/usePermission';
 
-const PaymentTable = ({ users = [], pagination, stats, onAddPayment, onPageChange }) => {
+const PaymentTable = ({ users = [], pagination, stats, cycleFilter, readOnly = false, onAddPayment, onPageChange }) => {
     const { can } = usePermission();
 
     const columns = [
@@ -80,9 +80,14 @@ const PaymentTable = ({ users = [], pagination, stats, onAddPayment, onPageChang
                 const userData = row.original;
                 const isPaid = userData.payment_status === 'paid';
 
-                // Only users with payments.create may add/view payment records
-                if (!can('payments.create')) {
-                    return <span className="text-gray-400 text-sm">-</span>;
+                // Only users with payments.create may add/view payment records;
+                // closed (historical) cycles are read-only.
+                if (!can('payments.create') || readOnly) {
+                    return readOnly ? (
+                        <span className="inline-flex px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-500">Closed</span>
+                    ) : (
+                        <span className="text-gray-400 text-sm">-</span>
+                    );
                 }
 
                 return (
@@ -133,6 +138,16 @@ const PaymentTable = ({ users = [], pagination, stats, onAddPayment, onPageChang
 
     return (
         <div>
+            {cycleFilter && (
+                <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
+                    <p className="text-sm text-gray-500">
+                        {readOnly
+                            ? 'This cycle is closed and read-only. Payments can only be recorded in the current open cycle.'
+                            : 'Select a cycle to view its member payments'}
+                    </p>
+                    <div>{cycleFilter}</div>
+                </div>
+            )}
             <DataTable
                 data={users}
                 columns={columns}

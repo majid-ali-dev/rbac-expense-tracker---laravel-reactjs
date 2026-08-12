@@ -1,9 +1,9 @@
 import api from './api';
 
 export const userAPI = {
-    // Get all users
-    getUsers: (page = 1, perPage = 10) =>
-        api.get(`/users?page=${page}&per_page=${perPage}`),
+    // Get all users (scoped to a billing cycle)
+    getUsers: (page = 1, perPage = 10, cycleId = null) =>
+        api.get(`/users?page=${page}&per_page=${perPage}${cycleId ? `&cycle_id=${cycleId}` : ''}`),
 
     // Get single user
     getUser: (id) => api.get(`/users/${id}`),
@@ -23,6 +23,7 @@ export const userAPI = {
     // Get all roles
     getRoles: () => api.get('/users/roles'),
 
-    // Get user with payment history
-    getUserWithPayments: (id) => api.get(`/users/${id}`),
+    // Get user with payment history (scoped to a billing cycle)
+    getUserWithPayments: (id, cycleId = null) =>
+        api.get(`/users/${id}${cycleId ? `?cycle_id=${cycleId}` : ''}`),
 };

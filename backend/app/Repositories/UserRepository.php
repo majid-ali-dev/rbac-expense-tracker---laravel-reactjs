@@ -9,9 +9,13 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 class UserRepository implements UserRepositoryInterface
 {
-    public function getAllMembers(int $perPage = 10): LengthAwarePaginator
+    public function getAllMembers(int $perPage = 10, ?int $cycleId = null): LengthAwarePaginator
     {
-        return User::with(['roles', 'payments'])
+        return User::with([
+            'roles',
+            'payments' => fn($q) => $q->where('billing_cycle_id', $cycleId),
+            'dues' => fn($q) => $q->where('billing_cycle_id', $cycleId),
+        ])
             ->where('id', '!=', auth()->id())
             ->whereHas('roles', function ($q) {
                 $q->where('name', 'member');

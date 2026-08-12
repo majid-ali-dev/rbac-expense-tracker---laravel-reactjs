@@ -31,6 +31,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     // Billing Cycle Routes
     Route::prefix('billing-cycle')->group(function () {
         Route::get('/current', [BillingCycleController::class, 'current']);
+        Route::get('/all', [BillingCycleController::class, 'all']);
         Route::get('/history', [BillingCycleController::class, 'history']);
         Route::post('/close', [BillingCycleController::class, 'closeCurrentMonth'])
             ->middleware('permission:billing-cycle.close');

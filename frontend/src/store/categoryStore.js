@@ -14,10 +14,10 @@ const useCategoryStore = create((set, get) => ({
         last_page: 1,
     },
 
-    fetchCategories: async (page = 1, perPage = 10) => {
+    fetchCategories: async (page = 1, perPage = 10, cycleId = null) => {
         set({ loading: true, error: null });
         try {
-            const response = await categoryAPI.getCategories(page, perPage);
+            const response = await categoryAPI.getCategories(page, perPage, cycleId);
             const { data, meta } = response.data;
 
             set({
@@ -54,14 +54,14 @@ const useCategoryStore = create((set, get) => ({
         }
     },
 
-    createCategory: async (categoryData) => {
+    createCategory: async (categoryData, cycleId = null) => {
         set({ loading: true, error: null });
         try {
             const response = await categoryAPI.createCategory(categoryData);
             const category = response.data.data;
             showSuccess('Category created successfully');
 
-            await get().fetchCategories(1, get().pagination.per_page);
+            await get().fetchCategories(1, get().pagination.per_page, cycleId);
             set({ loading: false });
             return { success: true, category };
         } catch (error) {
@@ -74,14 +74,14 @@ const useCategoryStore = create((set, get) => ({
         }
     },
 
-    updateCategory: async (id, categoryData) => {
+    updateCategory: async (id, categoryData, cycleId = null) => {
         set({ loading: true, error: null });
         try {
             const response = await categoryAPI.updateCategory(id, categoryData);
             const category = response.data.data;
             showSuccess('Category updated successfully');
 
-            await get().fetchCategories(get().pagination.current_page, get().pagination.per_page);
+            await get().fetchCategories(get().pagination.current_page, get().pagination.per_page, cycleId);
             set({ loading: false });
             return { success: true, category };
         } catch (error) {
@@ -94,13 +94,13 @@ const useCategoryStore = create((set, get) => ({
         }
     },
 
-    deleteCategory: async (id) => {
+    deleteCategory: async (id, cycleId = null) => {
         set({ loading: true, error: null });
         try {
             await categoryAPI.deleteCategory(id);
             showSuccess('Category deleted successfully');
 
-            await get().fetchCategories(get().pagination.current_page, get().pagination.per_page);
+            await get().fetchCategories(get().pagination.current_page, get().pagination.per_page, cycleId);
             set({ loading: false });
             return { success: true };
         } catch (error) {

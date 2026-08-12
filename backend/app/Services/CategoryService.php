@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\BillingCycle;
 use App\Models\Category;
 use App\Repositories\Contracts\CategoryRepositoryInterface;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -16,9 +17,9 @@ class CategoryService
         $this->categoryRepository = $categoryRepository;
     }
 
-    public function getAllPaginated(int $perPage = 10): LengthAwarePaginator
+    public function getAllPaginated(int $perPage = 10, ?BillingCycle $cycle = null): LengthAwarePaginator
     {
-        return $this->categoryRepository->getAllPaginated($perPage);
+        return $this->categoryRepository->getAllPaginated($perPage, $cycle);
     }
 
     public function findById(int $id): ?Category

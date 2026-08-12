@@ -10,8 +10,9 @@ class UserResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
-        // Get current billing cycle
-        $cycle = BillingCycle::current();
+        // Use the cycle selected for the request (stashed by controllers that
+        // resolve it), falling back to the current open cycle.
+        $cycle = $request->attributes->get('billing_cycle') ?? BillingCycle::current();
 
         return [
             'id' => $this->id,

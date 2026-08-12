@@ -15,10 +15,10 @@ const useExpenseStore = create((set, get) => ({
         last_page: 1,
     },
 
-    fetchExpenses: async (page = 1, perPage = 10) => {
+    fetchExpenses: async (page = 1, perPage = 10, cycleId = null) => {
         set({ loading: true, error: null });
         try {
-            const response = await expenseAPI.getExpenses(page, perPage);
+            const response = await expenseAPI.getExpenses(page, perPage, cycleId);
             const { data, meta } = response.data;
 
             set({
@@ -68,14 +68,14 @@ const useExpenseStore = create((set, get) => ({
         }
     },
 
-    createExpense: async (expenseData) => {
+    createExpense: async (expenseData, cycleId = null) => {
         set({ loading: true, error: null });
         try {
             const response = await expenseAPI.createExpense(expenseData);
             const expense = response.data.data;
             showSuccess('Expense added successfully');
 
-            await get().fetchExpenses(1, get().pagination.per_page);
+            await get().fetchExpenses(1, get().pagination.per_page, cycleId);
             set({ loading: false });
             return { success: true, expense };
         } catch (error) {
@@ -93,14 +93,14 @@ const useExpenseStore = create((set, get) => ({
         }
     },
 
-    updateExpense: async (id, expenseData) => {
+    updateExpense: async (id, expenseData, cycleId = null) => {
         set({ loading: true, error: null });
         try {
             const response = await expenseAPI.updateExpense(id, expenseData);
             const expense = response.data.data;
             showSuccess('Expense updated successfully');
 
-            await get().fetchExpenses(get().pagination.current_page, get().pagination.per_page);
+            await get().fetchExpenses(get().pagination.current_page, get().pagination.per_page, cycleId);
             set({ loading: false });
             return { success: true, expense };
         } catch (error) {
@@ -118,13 +118,13 @@ const useExpenseStore = create((set, get) => ({
         }
     },
 
-    deleteExpense: async (id) => {
+    deleteExpense: async (id, cycleId = null) => {
         set({ loading: true, error: null });
         try {
             await expenseAPI.deleteExpense(id);
             showSuccess('Expense deleted successfully');
 
-            await get().fetchExpenses(get().pagination.current_page, get().pagination.per_page);
+            await get().fetchExpenses(get().pagination.current_page, get().pagination.per_page, cycleId);
             set({ loading: false });
             return { success: true };
         } catch (error) {

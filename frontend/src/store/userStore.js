@@ -15,10 +15,10 @@ const useUserStore = create((set, get) => ({
         last_page: 1,
     },
 
-    fetchUsers: async (page = 1, perPage = 10) => {
+    fetchUsers: async (page = 1, perPage = 10, cycleId = null) => {
         set({ loading: true, error: null });
         try {
-            const response = await userAPI.getUsers(page, perPage);
+            const response = await userAPI.getUsers(page, perPage, cycleId);
             const { data, meta } = response.data;
 
             set({
@@ -68,14 +68,14 @@ const useUserStore = create((set, get) => ({
         }
     },
 
-    createUser: async (userData) => {
+    createUser: async (userData, cycleId = null) => {
         set({ loading: true, error: null });
         try {
             const response = await userAPI.createUser(userData);
             const user = response.data.data;
             showSuccess('User created successfully');
 
-            await get().fetchUsers(1, get().pagination.per_page);
+            await get().fetchUsers(1, get().pagination.per_page, cycleId);
             set({ loading: false });
             return { success: true, user };
         } catch (error) {
@@ -93,14 +93,14 @@ const useUserStore = create((set, get) => ({
         }
     },
 
-    updateUser: async (id, userData) => {
+    updateUser: async (id, userData, cycleId = null) => {
         set({ loading: true, error: null });
         try {
             const response = await userAPI.updateUser(id, userData);
             const user = response.data.data;
             showSuccess('User updated successfully');
 
-            await get().fetchUsers(get().pagination.current_page, get().pagination.per_page);
+            await get().fetchUsers(get().pagination.current_page, get().pagination.per_page, cycleId);
             set({ loading: false });
             return { success: true, user };
         } catch (error) {
@@ -118,14 +118,14 @@ const useUserStore = create((set, get) => ({
         }
     },
 
-    updateTotal: async (id, totalAmount) => {
+    updateTotal: async (id, totalAmount, cycleId = null) => {
         set({ loading: true, error: null });
         try {
             const response = await userAPI.updateTotal(id, totalAmount);
             const user = response.data.data;
             showSuccess('Total amount updated successfully');
 
-            await get().fetchUsers(get().pagination.current_page, get().pagination.per_page);
+            await get().fetchUsers(get().pagination.current_page, get().pagination.per_page, cycleId);
             set({ loading: false });
             return { success: true, user };
         } catch (error) {
@@ -136,13 +136,13 @@ const useUserStore = create((set, get) => ({
         }
     },
 
-    deleteUser: async (id) => {
+    deleteUser: async (id, cycleId = null) => {
         set({ loading: true, error: null });
         try {
             await userAPI.deleteUser(id);
             showSuccess('User deleted successfully');
 
-            await get().fetchUsers(get().pagination.current_page, get().pagination.per_page);
+            await get().fetchUsers(get().pagination.current_page, get().pagination.per_page, cycleId);
             set({ loading: false });
             return { success: true };
         } catch (error) {

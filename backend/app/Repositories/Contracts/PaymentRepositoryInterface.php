@@ -8,7 +8,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 interface PaymentRepositoryInterface
 {
-    public function getMemberPayments(int $perPage = 10): LengthAwarePaginator;
+    public function getMemberPayments(int $perPage = 10, ?int $cycleId = null): LengthAwarePaginator;
     public function getUserWithPayments(User $user): User;
     public function create(array $data): Payment;
     public function delete(Payment $payment): bool;

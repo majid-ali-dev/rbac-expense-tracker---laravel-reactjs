@@ -8,12 +8,29 @@ use App\Models\Payment;
 use App\Models\User;
 use App\Http\Resources\UserResource;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 
 class DashboardController extends Controller
 {
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
+    {
+        try {
+            return $this->buildDashboardResponse($request);
+        } catch (\Illuminate\Database\QueryException $e) {
+            // Database not ready (e.g. migrations missing) — give a readable
+            // message instead of a raw SQL dump.
+            report($e);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Dashboard data is unavailable. Please make sure the database is set up correctly and try again.',
+            ], 500);
+        }
+    }
+
+    private function buildDashboardResponse(Request $request): JsonResponse
     {
         $user = auth()->user();
         $permissions = $user->permissions();
@@ -22,13 +39,28 @@ class DashboardController extends Controller
         $isAdminView = $user->hasPermission('payments.view-all');
         $canViewExpense = $user->hasAnyPermission(['expenses.view', 'expenses.view-all']);
 
-        $cycle = BillingCycle::current();
+        // Selected cycle (default: current open cycle). A historical/closed
+        // cycle shows its exact sealed range; the open cycle shows [start -> today].
+        $cycleId = $request->integer('cycle_id') ?: null;
+        $cycle = $cycleId ? BillingCycle::find($cycleId) : BillingCycle::current();
+
+        if (!$cycle) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Billing cycle not found.',
+            ], 404);
+        }
+
+        // Stash so nested resources (e.g. UserResource) serialize the selected
+        // cycle instead of always falling back to the current one.
+        $request->attributes->set('billing_cycle', $cycle);
+
         $from = $cycle->start_date;
 
-        // Expense window ends TODAY, matching the Expenses list page (which uses
-        // [cycle start -> today]). The old code ended the window at the open
-        // cycle's end_date, so newer expenses were missing from the dashboard.
-        $expenseEnd = Carbon::now();
+        // Expense window: for a CLOSED cycle it is the exact sealed range; for
+        // the OPEN cycle it ends TODAY (matching the Expenses list page, so
+        // newly added expenses always show up).
+        $expenseEnd = $cycle->status === 'closed' ? $cycle->end_date : Carbon::now();
         $trendEnd = $expenseEnd;
 
         // ===== DATES =====
@@ -40,7 +72,7 @@ class DashboardController extends Controller
         $expenseQuery = $user->applyOwnAllScope(
             Expense::query(),
             'expenses.view-all'
-        )->whereBetween('date', [$from->format('Y-m-d'), $expenseEnd->format('Y-m-d')]);
+        )->inCycle($cycle);
 
         $expenseCount = $canViewExpense ? (clone $expenseQuery)->count() : 0;
         $expenseTotal = $canViewExpense ? (float) (clone $expenseQuery)->sum('amount') : 0;

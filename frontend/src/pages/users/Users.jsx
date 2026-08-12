@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useUserStore from '../../store/userStore';
+import useCycleStore from '../../store/cycleStore';
+import CycleFilter from '../../components/common/CycleFilter';
 import UserTable from '../../components/users/UserTable';
 import UserForm from '../../components/users/UserForm';
 import { showDeleteConfirm, showDeletedSuccess } from '../../utils/toast';
@@ -24,12 +26,19 @@ const Users = () => {
     const [showForm, setShowForm] = useState(false);
     const [editingUser, setEditingUser] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const cycleId = useCycleStore((s) => s.getSelectedId('users'));
+    const fetchCycles = useCycleStore((s) => s.fetchCycles);
 
     useEffect(() => {
-        fetchUsers(1, 10);
+        fetchCycles();
         fetchRoles();
         return () => clearError();
-    }, []);
+    }, [fetchCycles]);
+
+    // Reload the member list whenever the selected cycle changes
+    useEffect(() => {
+        fetchUsers(1, 10, cycleId);
+    }, [cycleId]);
 
     const handleCreate = () => {
         setEditingUser(null);
@@ -52,7 +61,7 @@ const Users = () => {
         );
 
         if (result.isConfirmed) {
-            const response = await deleteUser(user.id);
+            const response = await deleteUser(user.id, cycleId);
             if (response.success) {
                 await showDeletedSuccess('Deleted!', 'User has been deleted successfully.');
             }
@@ -64,9 +73,9 @@ const Users = () => {
         try {
             let result;
             if (editingUser) {
-                result = await updateUser(editingUser.id, data);
+                result = await updateUser(editingUser.id, data, cycleId);
             } else {
-                result = await createUser(data);
+                result = await createUser(data, cycleId);
             }
 
             if (result.success) {
@@ -116,6 +125,7 @@ const Users = () => {
                 <UserTable
                     users={users}
                     pagination={pagination}
+                    cycleFilter={<CycleFilter moduleKey="users" />}
                     onEdit={handleEdit}
                     onDelete={handleDelete}
                     onView={handleView}

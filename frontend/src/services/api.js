@@ -49,14 +49,15 @@ export const authAPI = {
 
 // Dashboard API calls
 export const dashboardAPI = {
-    getDashboard: (params = '') => api.get(`/dashboard${params}`),
+    getDashboard: (cycleId) => api.get(`/dashboard${cycleId ? `?cycle_id=${cycleId}` : ''}`),
 };
 
 // Billing Cycle API calls - FIXED: use 'api' not 'apiClient'
 export const billingCycleAPI = {
     getCurrent: () => api.get('/billing-cycle/current'),
+    getAll: () => api.get('/billing-cycle/all'),
     getHistory: (params = '') => api.get(`/billing-cycle/history${params}`),
-    closeMonth: () => api.post('/billing-cycle/close'),
+    closeMonth: (data) => api.post('/billing-cycle/close', data),
 };
 
 export default api;

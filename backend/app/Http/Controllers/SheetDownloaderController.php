@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\BillingCycle;
 use App\Models\Expense;
 use App\Models\Payment;
 use Illuminate\Http\Request;
@@ -14,16 +15,15 @@ class SheetDownloaderController extends Controller
     {
         $user = Auth::user();
 
-        // Get current cycle
-        $cycle = \App\Models\BillingCycle::current();
+        [$cycle, $from, $to] = $this->resolveRange($request);
 
-        // Use cycle start as default "from", and TODAY as default "to"
-        // (not the cycle end date) so the sheet matches the dashboard and the
-        // expenses list even when the open cycle is overdue for closing.
-        $from = $request->get('from', $cycle->start_date->format('Y-m-d'));
-        $to = $request->get('to', Carbon::now()->format('Y-m-d'));
+        $expenseQuery = $user->applyOwnAllScope(Expense::with(['user', 'category']), 'expenses.view-all');
 
-        $expenses = $user->applyOwnAllScope(Expense::with(['user', 'category']), 'expenses.view-all')
+        if ($request->integer('cycle_id')) {
+            $expenseQuery->inCycle($cycle);
+        }
+
+        $expenses = $expenseQuery
             ->whereBetween('date', [$from, $to])
             ->latest('date')
             ->get();
@@ -42,6 +42,7 @@ class SheetDownloaderController extends Controller
             'success' => true,
             'data' => [
                 'expenses' => $expenses,
+                'cycle_id' => $cycle->id,
                 'from' => $from,
                 'to' => $to,
                 'total_expenses' => $totalExpenses,
@@ -56,17 +57,24 @@ class SheetDownloaderController extends Controller
     {
         $user = Auth::user();
 
-        $from = $request->get('from', now()->startOfMonth()->format('Y-m-d'));
-        $to = $request->get('to', now()->endOfMonth()->format('Y-m-d'));
+        [$cycle, $from, $to] = $this->resolveRange($request);
 
-        $expenses = $user->applyOwnAllScope(Expense::with(['user', 'category']), 'expenses.view-all')
+        $expenseQuery = $user->applyOwnAllScope(Expense::with(['user', 'category']), 'expenses.view-all');
+
+        if ($request->integer('cycle_id')) {
+            $expenseQuery->inCycle($cycle);
+        }
+
+        $expenses = $expenseQuery
             ->whereBetween('date', [$from, $to])
             ->get();
 
         $totalExpenses = $expenses->sum('amount');
 
+        // Payments are attributed by their permanent billing_cycle_id so the
+        // export always matches the selected cycle.
         $totalPaid = $user->applyOwnAllScope(Payment::query(), 'payments.view-all')
-            ->whereBetween('created_at', [$from . ' 00:00:00', $to . ' 23:59:59'])
+            ->where('billing_cycle_id', $cycle->id)
             ->sum('paid_amount');
 
         $balance = $totalPaid - $totalExpenses;
@@ -115,5 +123,27 @@ class SheetDownloaderController extends Controller
 
             fclose($file);
         }, 200, $headers);
+    }
+
+    /**
+     * Resolve the export range. When a cycle_id is supplied the default range
+     * is that cycle's sealed range (start -> end for closed cycles, start ->
+     * today for the open one). Explicit from/to always win so existing page
+     * level date filters keep working.
+     */
+    private function resolveRange(Request $request): array
+    {
+        $cycleId = $request->integer('cycle_id') ?: null;
+        $cycle = $cycleId ? BillingCycle::find($cycleId) : BillingCycle::current();
+        $cycle = $cycle ?: BillingCycle::current();
+
+        $isClosed = $cycle->status === 'closed';
+        $defaultFrom = $cycle->start_date->format('Y-m-d');
+        $defaultTo = $isClosed ? $cycle->end_date->format('Y-m-d') : Carbon::now()->format('Y-m-d');
+
+        $from = $request->get('from', $defaultFrom);
+        $to = $request->get('to', $defaultTo);
+
+        return [$cycle, $from, $to];
     }
 }

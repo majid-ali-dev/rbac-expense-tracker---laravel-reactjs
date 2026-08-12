@@ -6,6 +6,7 @@ use App\Http\Requests\User\UserStoreRequest;
 use App\Http\Requests\User\UserTotalUpdateRequest;
 use App\Http\Requests\User\UserUpdateRequest;
 use App\Http\Resources\UserResource;
+use App\Models\BillingCycle;
 use App\Services\UserService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -22,7 +23,8 @@ class UserController extends Controller
     public function index(Request $request): JsonResponse
     {
         $perPage = $request->get('per_page', 10);
-        $users = $this->userService->getAllMembers($perPage);
+        $cycle = $this->resolveCycle($request);
+        $users = $this->userService->getAllMembers($perPage, $cycle->id);
 
         return response()->json([
             'success' => true,
@@ -62,9 +64,10 @@ class UserController extends Controller
      * the { user, payment_history } shape the frontend expects — this is the
      * fix for the "User not found" bug caused by a response-shape mismatch.
      */
-    public function show(int $id): JsonResponse
+    public function show(int $id, Request $request): JsonResponse
     {
-        $result = $this->userService->getUserWithPaymentHistory($id);
+        $cycle = $this->resolveCycle($request);
+        $result = $this->userService->getUserWithPaymentHistory($id, $cycle->id);
 
         if (!$result) {
             return response()->json([
@@ -145,5 +148,21 @@ class UserController extends Controller
             'success' => true,
             'data' => $roles,
         ]);
+    }
+
+    /**
+     * Resolve the selected cycle from the request and stash it on the request
+     * so nested resources (e.g. UserResource) serialize cycle-scoped values
+     * without re-querying.
+     */
+    private function resolveCycle(Request $request): BillingCycle
+    {
+        $cycleId = $request->integer('cycle_id') ?: null;
+        $cycle = $cycleId ? BillingCycle::find($cycleId) : null;
+        $cycle = $cycle ?: BillingCycle::current();
+
+        $request->attributes->set('billing_cycle', $cycle);
+
+        return $cycle;
     }
 }

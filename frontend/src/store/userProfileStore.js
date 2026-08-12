@@ -5,21 +5,23 @@ import { showError } from '../utils/toast';
 const useUserProfileStore = create((set) => ({
     user: null,
     paymentHistory: [],
+    cycle: null,
     loading: false,
     error: null,
 
-    fetchUserProfile: async (id) => {
+    fetchUserProfile: async (id, cycleId = null) => {
         set({ loading: true, error: null });
         try {
-            const response = await userAPI.getUserWithPayments(id);
-            const { user, payment_history } = response.data.data;
+            const response = await userAPI.getUserWithPayments(id, cycleId);
+            const { user, payment_history, cycle } = response.data.data;
 
             set({
                 user: user,
                 paymentHistory: payment_history,
+                cycle: cycle || null,
                 loading: false,
             });
-            return { success: true, user, payment_history };
+            return { success: true, user, payment_history, cycle };
         } catch (error) {
             const errorMessage = error.response?.data?.message || 'Failed to fetch user profile';
             set({ loading: false, error: errorMessage });
@@ -28,7 +30,7 @@ const useUserProfileStore = create((set) => ({
         }
     },
 
-    clearProfile: () => set({ user: null, paymentHistory: [], loading: false, error: null }),
+    clearProfile: () => set({ user: null, paymentHistory: [], cycle: null, loading: false, error: null }),
 }));
 
 export default useUserProfileStore;

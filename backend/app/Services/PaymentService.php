@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\BillingCycle;
+use App\Models\MemberDue;
 use App\Models\Payment;
 use App\Models\User;
 use App\Repositories\Contracts\PaymentRepositoryInterface;
@@ -18,15 +19,25 @@ class PaymentService
         $this->paymentRepository = $paymentRepository;
     }
 
-    public function getMemberPayments(int $perPage = 10): LengthAwarePaginator
+    public function getMemberPayments(int $perPage = 10, ?int $cycleId = null): LengthAwarePaginator
     {
-        $paginator = $this->paymentRepository->getMemberPayments($perPage);
-        $cycle = BillingCycle::current();
+        $cycle = $cycleId ? BillingCycle::find($cycleId) : BillingCycle::current();
+        $resolvedCycleId = $cycle?->id;
 
-        $paginator->getCollection()->load([
-            'dues' => fn($q) => $q->where('billing_cycle_id', $cycle->id),
-            'payments' => fn($q) => $q->where('billing_cycle_id', $cycle->id),
-        ]);
+        $paginator = $this->paymentRepository->getMemberPayments($perPage, $resolvedCycleId);
+
+        if ($resolvedCycleId) {
+            $paginator->getCollection()->load([
+                'dues' => fn($q) => $q->where('billing_cycle_id', $resolvedCycleId),
+                'payments' => fn($q) => $q
+                    ->where('billing_cycle_id', $resolvedCycleId)
+                    // billing_cycle_id MUST be selected — User::currentCyclePaid()
+                    // filters the loaded collection by it, and without the column
+                    // every payment looks like it belongs to no cycle (paid=0).
+                    ->select('id', 'user_id', 'billing_cycle_id', 'paid_amount', 'month', 'updated_by', 'created_at')
+                    ->latest(),
+            ]);
+        }
 
         return $paginator;
     }
@@ -53,7 +64,8 @@ class PaymentService
             'updated_by' => Auth::id(),
         ]);
 
-        $this->updateUserTotals($user);
+        $this->syncMemberDue($user, $cycle->id);
+        $this->updateUserTotals($user, $cycle->id);
 
         return $payment;
     }
@@ -65,6 +77,7 @@ class PaymentService
         $deleted = $this->paymentRepository->delete($payment);
 
         if ($deleted) {
+            $this->syncMemberDue($user, $cycleId);
             $this->updateUserStatus($user, $cycleId);
         }
 
@@ -88,6 +101,7 @@ class PaymentService
         ]);
 
         if ($updated) {
+            $this->syncMemberDue($user, $cycleId);
             $this->updateUserStatus($user, $cycleId);
         }
 
@@ -95,40 +109,59 @@ class PaymentService
     }
 
     /**
-     * ✅ NEW: Update user totals and status
-     * Called after payment create/update/delete
+     * Keep the legacy `status` column in sync with a member's CURRENT cycle
+     * state (the status column is an operational value for the open cycle).
      */
-    public function updateUserTotals(User $user): void
+    public function updateUserTotals(User $user, int $cycleId): void
     {
-        $cycle = BillingCycle::current();
-        $status = $user->currentCycleStatus($cycle->id);
+        $this->updateUserStatus($user, $cycleId);
+    }
 
-        $user->update([
-            'status' => $status,
-        ]);
+    private function updateUserStatus(User $user, int $billingCycleId): void
+    {
+        // Only refresh the user's live status when the payment belongs to the
+        // current open cycle — historical cycles must not clobber live state.
+        $current = BillingCycle::where('status', 'open')->latest('start_date')->first();
+
+        if ($current && (int) $current->id === (int) $billingCycleId) {
+            $user->update([
+                'status' => $user->currentCycleStatus($billingCycleId),
+            ]);
+        }
     }
 
     /**
-     * Keeps the legacy `status` column in sync for the CURRENT cycle
-     * (still used by simple listing tables/badges elsewhere in the app).
+     * Recompute and persist a member's amount_paid for a cycle in member_dues.
+     * Keeps the per-cycle snapshot accurate even when a payment is added or
+     * removed after the cycle has been closed.
      */
-    private function updateUserStatus(User $user, int $billingCycleId): void
+    public function syncMemberDue(User $user, int $billingCycleId): void
     {
-        $user->update([
-            'status' => $user->currentCycleStatus($billingCycleId),
-        ]);
+        $paidAmount = (float) Payment::where('user_id', $user->id)
+            ->where('billing_cycle_id', $billingCycleId)
+            ->sum('paid_amount');
+
+        $assigned = (float) (MemberDue::where('user_id', $user->id)
+            ->where('billing_cycle_id', $billingCycleId)
+            ->value('amount_assigned') ?? $user->total_amount ?? 0);
+
+        MemberDue::updateOrCreate(
+            ['user_id' => $user->id, 'billing_cycle_id' => $billingCycleId],
+            ['amount_assigned' => $assigned, 'amount_paid' => $paidAmount]
+        );
     }
 
-    public function getPaymentStats($users): array
+    public function getPaymentStats($users, ?int $cycleId = null): array
     {
-        $cycle = BillingCycle::current();
+        $cycle = $cycleId ? BillingCycle::find($cycleId) : BillingCycle::current();
+        $resolvedCycleId = $cycle?->id;
 
-        $totalAmount = $users->sum(fn(User $u) => $u->currentCycleAmount($cycle->id));
-        $totalPaid = $users->sum(fn(User $u) => $u->currentCyclePaid($cycle->id));
-        $totalRemaining = $users->sum(fn(User $u) => $u->currentCycleRemaining($cycle->id));
-        $paidCount = $users->filter(fn(User $u) => $u->currentCycleStatus($cycle->id) === 'paid')->count();
-        $partialCount = $users->filter(fn(User $u) => $u->currentCycleStatus($cycle->id) === 'partial')->count();
-        $unpaidCount = $users->filter(fn(User $u) => $u->currentCycleStatus($cycle->id) === 'unpaid')->count();
+        $totalAmount = $users->sum(fn(User $u) => $u->currentCycleAmount($resolvedCycleId));
+        $totalPaid = $users->sum(fn(User $u) => $u->currentCyclePaid($resolvedCycleId));
+        $totalRemaining = $users->sum(fn(User $u) => $u->currentCycleRemaining($resolvedCycleId));
+        $paidCount = $users->filter(fn(User $u) => $u->currentCycleStatus($resolvedCycleId) === 'paid')->count();
+        $partialCount = $users->filter(fn(User $u) => $u->currentCycleStatus($resolvedCycleId) === 'partial')->count();
+        $unpaidCount = $users->filter(fn(User $u) => $u->currentCycleStatus($resolvedCycleId) === 'unpaid')->count();
 
         return [
             'total_amount' => $totalAmount,

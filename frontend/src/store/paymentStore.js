@@ -15,10 +15,10 @@ const usePaymentStore = create((set, get) => ({
         last_page: 1,
     },
 
-    fetchPayments: async (page = 1, perPage = 10) => {
+    fetchPayments: async (page = 1, perPage = 10, cycleId = null) => {
         set({ loading: true, error: null });
         try {
-            const response = await paymentAPI.getPayments(page, perPage);
+            const response = await paymentAPI.getPayments(page, perPage, cycleId);
             const { data, meta } = response.data;
 
             set({
@@ -41,10 +41,10 @@ const usePaymentStore = create((set, get) => ({
         }
     },
 
-    fetchAddPayment: async (id) => {
+    fetchAddPayment: async (id, cycleId = null) => {
         set({ loading: true, error: null });
         try {
-            const response = await paymentAPI.getAddPayment(id);
+            const response = await paymentAPI.getAddPayment(id, cycleId);
             const user = response.data.data;
             set({ user, loading: false });
             return { success: true, user };

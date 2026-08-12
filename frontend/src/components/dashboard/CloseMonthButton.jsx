@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
+import Swal from 'sweetalert2';
 import { FaLock } from 'react-icons/fa';
 import { billingCycleAPI } from '../../services/api';
 import usePermission from '../../hooks/usePermission';
-import { showDeleteConfirm, showDeletedSuccess, showError } from '../../utils/toast';
+import useCycleStore from '../../store/cycleStore';
+import { showDeletedSuccess, showError } from '../../utils/toast';
 
-const CloseMonthButton = ({ cycleLabel, onClosed }) => {
+const CloseMonthButton = ({ cycleLabel, cycleId, onClosed }) => {
     const [loading, setLoading] = useState(false);
     const { can } = usePermission();
 
@@ -14,20 +16,64 @@ const CloseMonthButton = ({ cycleLabel, onClosed }) => {
     }
 
     const handleClose = async () => {
-        const result = await showDeleteConfirm(
-            'Close Current Cycle?',
-            `${cycleLabel || 'This cycle'} will be closed and a new one will start. All members reset to unpaid.`
-        );
+        const cycle = useCycleStore.getState().currentCycle;
+        const today = new Date().toISOString().split('T')[0];
+        const defaultStart = cycle?.start_date ? cycle.start_date.slice(0, 10) : today;
 
-        if (!result.isConfirmed) return;
+        const result = await Swal.fire({
+            title: `Close ${cycleLabel || 'Current Cycle'}?`,
+            html: `
+                <div style="text-align:left">
+                    <p style="font-size:13px;color:#64748b;margin-bottom:16px;line-height:1.5">
+                        Choose the date range that will be permanently closed and snapshotted.
+                        Expenses/payments inside this range are saved to this cycle; anything after
+                        the end date stays available in the next cycle.
+                    </p>
+                    <label for="swal-close-start" style="font-size:12px;font-weight:700;color:#334155">Start Date</label>
+                    <input type="date" id="swal-close-start" class="swal2-input" value="${defaultStart}" max="${today}" />
+                    <label for="swal-close-end" style="font-size:12px;font-weight:700;color:#334155;margin-top:12px;display:block">End Date (today)</label>
+                    <input type="date" id="swal-close-end" class="swal2-input" value="${today}" max="${today}" />
+                </div>
+            `,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, close cycle',
+            cancelButtonText: 'Cancel',
+            reverseButtons: true,
+            preConfirm: () => {
+                const start = Swal.getPopup()?.querySelector('#swal-close-start')?.value;
+                const end = Swal.getPopup()?.querySelector('#swal-close-end')?.value;
+
+                if (!start || !end) {
+                    Swal.showValidationMessage('Please select both dates');
+                    return false;
+                }
+                if (start > end) {
+                    Swal.showValidationMessage('Start date cannot be after the end date');
+                    return false;
+                }
+                return { start_date: start, end_date: end };
+            },
+        });
+
+        if (!result.isConfirmed || !result.value) return;
 
         setLoading(true);
         try {
-            const response = await billingCycleAPI.closeMonth();
+            const response = await billingCycleAPI.closeMonth({
+                ...result.value,
+                // Always identify the cycle being closed so the backend can
+                // reject a stale/concurrent request that targets the wrong one.
+                cycle_id: cycleId ?? cycle?.id,
+            });
             await showDeletedSuccess(
                 'Cycle Closed',
                 response.data.message || 'New cycle started'
             );
+            // Refresh the cycle list so every module's dropdown shows the new cycle
+            await useCycleStore.getState().fetchCycles();
             onClosed?.();
         } catch (err) {
             console.error('Close error:', err);
