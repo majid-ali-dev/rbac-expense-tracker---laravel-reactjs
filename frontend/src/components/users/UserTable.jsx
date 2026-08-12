@@ -3,7 +3,7 @@ import { FaEdit, FaTrash, FaEye } from 'react-icons/fa';
 import DataTable from '../common/DataTable';
 import usePermission from '../../hooks/usePermission';
 
-const UserTable = ({ users = [], pagination, cycleFilter, onEdit, onDelete, onView, onCreate, onPageChange }) => {
+const UserTable = ({ users = [], pagination, cycleFilter, readOnly = false, onEdit, onDelete, onView, onCreate, onPageChange }) => {
     const { can } = usePermission();
     const columns = [
         {
@@ -129,23 +129,30 @@ const UserTable = ({ users = [], pagination, cycleFilter, onEdit, onDelete, onVi
                         >
                             <FaEye size={16} />
                         </button>
-                        {can('users.edit') && (
-                            <button
-                                onClick={() => onEdit(userData)}
-                                className="p-2 text-purple-600 hover:bg-purple-50 rounded-xl transition-all hover:scale-105"
-                                title="Edit"
-                            >
-                                <FaEdit size={16} />
-                            </button>
-                        )}
-                        {can('users.delete') && (
-                            <button
-                                onClick={() => onDelete(userData)}
-                                className="p-2 text-red-600 hover:bg-red-50 rounded-xl transition-all hover:scale-105"
-                                title="Delete"
-                            >
-                                <FaTrash size={16} />
-                            </button>
+                        {readOnly ? (
+                            // Closed (historical) cycles are read-only.
+                            <span className="inline-flex px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-500">Closed</span>
+                        ) : (
+                            <>
+                                {can('users.edit') && (
+                                    <button
+                                        onClick={() => onEdit(userData)}
+                                        className="p-2 text-purple-600 hover:bg-purple-50 rounded-xl transition-all hover:scale-105"
+                                        title="Edit"
+                                    >
+                                        <FaEdit size={16} />
+                                    </button>
+                                )}
+                                {can('users.delete') && (
+                                    <button
+                                        onClick={() => onDelete(userData)}
+                                        className="p-2 text-red-600 hover:bg-red-50 rounded-xl transition-all hover:scale-105"
+                                        title="Delete"
+                                    >
+                                        <FaTrash size={16} />
+                                    </button>
+                                )}
+                            </>
                         )}
                     </div>
                 );
@@ -157,8 +164,13 @@ const UserTable = ({ users = [], pagination, cycleFilter, onEdit, onDelete, onVi
     return (
         <>
             {cycleFilter && (
-                <div className="flex items-center justify-end mb-4">
-                    {cycleFilter}
+                <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
+                    {readOnly && (
+                        <p className="text-sm text-gray-500">
+                            This cycle is closed and read-only. You can only modify data in the current open cycle.
+                        </p>
+                    )}
+                    <div className={readOnly ? '' : 'ml-auto'}>{cycleFilter}</div>
                 </div>
             )}
             <DataTable
@@ -166,7 +178,7 @@ const UserTable = ({ users = [], pagination, cycleFilter, onEdit, onDelete, onVi
             columns={columns}
             title="Users List"
             createButtonText="Add New User"
-            onCreate={can('users.create') ? onCreate : null}
+            onCreate={can('users.create') && !readOnly ? onCreate : null}
             searchPlaceholder="Search by ID, Name, Email..."
             itemsPerPage={pagination?.per_page || 10}
             currentPage={pagination?.current_page || 1}

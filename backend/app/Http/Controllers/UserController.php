@@ -40,6 +40,8 @@ class UserController extends Controller
 
     public function store(UserStoreRequest $request): JsonResponse
     {
+        $this->guardWritableCycle($request);
+
         $user = $this->userService->create($request->validated());
 
         $roleIds = $request->roles ?? [];
@@ -84,6 +86,8 @@ class UserController extends Controller
 
     public function update(UserUpdateRequest $request, int $id): JsonResponse
     {
+        $this->guardWritableCycle($request);
+
         $updated = $this->userService->update($id, $request->validated());
 
         if (!$updated) {
@@ -105,6 +109,8 @@ class UserController extends Controller
 
     public function updateTotal(UserTotalUpdateRequest $request, int $id): JsonResponse
     {
+        $this->guardWritableCycle($request);
+
         $updated = $this->userService->updateTotal($id, $request->total_amount);
 
         if (!$updated) {
@@ -123,8 +129,10 @@ class UserController extends Controller
         ]);
     }
 
-    public function destroy(int $id): JsonResponse
+    public function destroy(Request $request, int $id): JsonResponse
     {
+        $this->guardWritableCycle($request);
+
         $deleted = $this->userService->delete($id);
 
         if (!$deleted) {

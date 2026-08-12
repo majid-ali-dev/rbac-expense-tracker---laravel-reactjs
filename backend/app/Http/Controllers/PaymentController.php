@@ -183,6 +183,10 @@ class PaymentController extends Controller
             return response()->json(['success' => false, 'message' => 'Payment not found'], 404);
         }
 
+        // Payments recorded in a closed cycle are immutable — same read-only
+        // rule enforced on the UI, now enforced server-side too.
+        BillingCycle::assertCycleWritable($payment->billing_cycle_id);
+
         $deleted = $this->paymentService->deletePayment($payment);
 
         if (!$deleted) {

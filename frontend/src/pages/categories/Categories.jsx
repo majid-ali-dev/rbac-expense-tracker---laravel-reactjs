@@ -24,6 +24,8 @@ const Categories = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const cycleId = useCycleStore((s) => s.getSelectedId('categories'));
     const fetchCycles = useCycleStore((s) => s.fetchCycles);
+    // Closed (historical) cycles are read-only everywhere.
+    const readOnly = useCycleStore((s) => s.isReadOnly('categories'));
 
     useEffect(() => {
         fetchCycles();
@@ -36,16 +38,19 @@ const Categories = () => {
     }, [cycleId]);
 
     const handleCreate = () => {
+        if (readOnly) return;
         setEditingCategory(null);
         setShowForm(true);
     };
 
     const handleEdit = (category) => {
+        if (readOnly) return;
         setEditingCategory(category);
         setShowForm(true);
     };
 
     const handleDelete = async (category) => {
+        if (readOnly) return;
         const result = await showDeleteConfirm(
             'Are you sure?',
             `You won't be able to revert this! Category "${category.name}" will be deleted.`
@@ -60,6 +65,7 @@ const Categories = () => {
     };
 
     const handleFormSubmit = async (data) => {
+        if (readOnly) return;
         setIsSubmitting(true);
         try {
             let result;
@@ -116,6 +122,7 @@ const Categories = () => {
                     categories={categories}
                     pagination={pagination}
                     cycleFilter={<CycleFilter moduleKey="categories" />}
+                    readOnly={readOnly}
                     onEdit={handleEdit}
                     onDelete={handleDelete}
                     onCreate={handleCreate}

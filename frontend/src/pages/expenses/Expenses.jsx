@@ -29,6 +29,8 @@ const Expenses = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const cycleId = useCycleStore((s) => s.getSelectedId('expenses'));
     const fetchCycles = useCycleStore((s) => s.fetchCycles);
+    // Closed (historical) cycles are read-only everywhere.
+    const readOnly = useCycleStore((s) => s.isReadOnly('expenses'));
 
     useEffect(() => {
         fetchCycles();
@@ -42,6 +44,7 @@ const Expenses = () => {
     }, [cycleId]);
 
     const handleCreate = () => {
+        if (readOnly) return;
         setEditingExpense(null);
         setShowForm(true);
         setShowView(false);
@@ -54,12 +57,14 @@ const Expenses = () => {
     };
 
     const handleEdit = (expense) => {
+        if (readOnly) return;
         setEditingExpense(expense);
         setShowForm(true);
         setShowView(false);
     };
 
     const handleDelete = async (expense) => {
+        if (readOnly) return;
         const result = await showDeleteConfirm(
             'Are you sure?',
             `You won't be able to revert this! Expense "${expense.title}" will be deleted.`
@@ -74,6 +79,7 @@ const Expenses = () => {
     };
 
     const handleFormSubmit = async (data) => {
+        if (readOnly) return;
         setIsSubmitting(true);
         try {
             let result;
@@ -138,6 +144,7 @@ const Expenses = () => {
                     expenses={expenses}
                     pagination={pagination}
                     cycleFilter={<CycleFilter moduleKey="expenses" />}
+                    readOnly={readOnly}
                     onView={handleView}
                     onEdit={handleEdit}
                     onDelete={handleDelete}

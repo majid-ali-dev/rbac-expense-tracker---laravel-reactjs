@@ -24,7 +24,8 @@ const AddPayment = () => {
     const cycles = useCycleStore((s) => s.cycles);
     const cycleId = useCycleStore((s) => s.getSelectedId('payments'));
     const selectedCycle = cycles.find((c) => c.id === cycleId) || null;
-    const readOnly = selectedCycle?.status === 'closed';
+    // Closed (historical) cycles are read-only everywhere.
+    const readOnly = useCycleStore((s) => s.isReadOnly('payments'));
 
     useEffect(() => {
         useCycleStore.getState().fetchCycles();

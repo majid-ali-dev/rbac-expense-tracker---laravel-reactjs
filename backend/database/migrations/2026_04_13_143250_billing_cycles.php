@@ -6,6 +6,11 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    /**
+     * NOTE: this migration intentionally runs BEFORE expenses/payments so those
+     * tables can declare a foreign key back to billing_cycles in their own
+     * create migrations (no extra ALTER migration needed).
+     */
     public function up(): void
     {
         Schema::create('billing_cycles', function (Blueprint $table) {

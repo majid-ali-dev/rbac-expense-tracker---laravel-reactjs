@@ -44,6 +44,8 @@ class CategoryController extends Controller
 
     public function store(CategoryStoreRequest $request): JsonResponse
     {
+        $this->guardWritableCycle($request);
+
         $category = $this->categoryService->create($request->validated());
 
         return response()->json([
@@ -72,6 +74,8 @@ class CategoryController extends Controller
 
     public function update(CategoryUpdateRequest $request, int $id): JsonResponse
     {
+        $this->guardWritableCycle($request);
+
         $updated = $this->categoryService->update($id, $request->validated());
 
         if (!$updated) {
@@ -90,8 +94,10 @@ class CategoryController extends Controller
         ]);
     }
 
-    public function destroy(int $id): JsonResponse
+    public function destroy(Request $request, int $id): JsonResponse
     {
+        $this->guardWritableCycle($request);
+
         $deleted = $this->categoryService->delete($id);
 
         if (!$deleted) {

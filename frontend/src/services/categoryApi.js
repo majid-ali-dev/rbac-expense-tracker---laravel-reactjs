@@ -6,11 +6,16 @@ export const categoryAPI = {
 
     getCategory: (id) => api.get(`/categories/${id}`),
 
-    createCategory: (data) => api.post('/categories', data),
+    // cycle_id = the cycle context being edited; a closed cycle is rejected
+    // server-side (closed cycles are read-only).
+    createCategory: (data, cycleId = null) =>
+        api.post('/categories', cycleId ? { ...data, cycle_id: cycleId } : data),
 
-    updateCategory: (id, data) => api.put(`/categories/${id}`, data),
+    updateCategory: (id, data, cycleId = null) =>
+        api.put(`/categories/${id}`, cycleId ? { ...data, cycle_id: cycleId } : data),
 
-    deleteCategory: (id) => api.delete(`/categories/${id}`),
+    deleteCategory: (id, cycleId = null) =>
+        api.delete(`/categories/${id}${cycleId ? `?cycle_id=${cycleId}` : ''}`),
 
     getAllCategories: () => api.get('/categories/all'),
 };

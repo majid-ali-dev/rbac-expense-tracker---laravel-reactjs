@@ -28,6 +28,8 @@ const Users = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const cycleId = useCycleStore((s) => s.getSelectedId('users'));
     const fetchCycles = useCycleStore((s) => s.fetchCycles);
+    // Closed (historical) cycles are read-only everywhere.
+    const readOnly = useCycleStore((s) => s.isReadOnly('users'));
 
     useEffect(() => {
         fetchCycles();
@@ -41,11 +43,13 @@ const Users = () => {
     }, [cycleId]);
 
     const handleCreate = () => {
+        if (readOnly) return;
         setEditingUser(null);
         setShowForm(true);
     };
 
     const handleEdit = (user) => {
+        if (readOnly) return;
         setEditingUser(user);
         setShowForm(true);
     };
@@ -55,6 +59,7 @@ const Users = () => {
     };
 
     const handleDelete = async (user) => {
+        if (readOnly) return;
         const result = await showDeleteConfirm(
             'Are you sure?',
             `You won't be able to revert this! User "${user.name}" will be deleted.`
@@ -69,6 +74,7 @@ const Users = () => {
     };
 
     const handleFormSubmit = async (data) => {
+        if (readOnly) return;
         setIsSubmitting(true);
         try {
             let result;
@@ -126,6 +132,7 @@ const Users = () => {
                     users={users}
                     pagination={pagination}
                     cycleFilter={<CycleFilter moduleKey="users" />}
+                    readOnly={readOnly}
                     onEdit={handleEdit}
                     onDelete={handleDelete}
                     onView={handleView}

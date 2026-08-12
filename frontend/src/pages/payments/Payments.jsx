@@ -15,11 +15,10 @@ const Payments = () => {
         fetchPayments,
         clearError,
     } = usePaymentStore();
-    const cycles = useCycleStore((s) => s.cycles);
     const cycleId = useCycleStore((s) => s.getSelectedId('payments'));
     const fetchCycles = useCycleStore((s) => s.fetchCycles);
-    const selectedCycle = cycles.find((c) => c.id === cycleId) || null;
-    const readOnly = selectedCycle?.status === 'closed';
+    // Closed (historical) cycles are read-only everywhere.
+    const readOnly = useCycleStore((s) => s.isReadOnly('payments'));
 
     useEffect(() => {
         fetchCycles();

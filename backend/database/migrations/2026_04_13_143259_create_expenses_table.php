@@ -16,6 +16,12 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->foreignId('category_id')->nullable()->constrained('categories')->onDelete('set null');
 
+            // Permanent attribution of an expense to the billing cycle whose
+            // date range contains its date (FK is valid because the
+            // billing_cycles migration now runs before this one).
+            $table->foreignId('billing_cycle_id')->nullable()->constrained()->nullOnDelete();
+            $table->index(['billing_cycle_id', 'date']);
+
             $table->string('title');
             $table->decimal('amount', 10, 2);
             $table->text('description')->nullable();
