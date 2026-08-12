@@ -54,9 +54,11 @@ const renderLegend = (props, total) => {
         <div className="flex justify-center gap-5 mt-4 flex-wrap">
             {payload.map((entry, index) => {
                 const pct = total > 0 ? Math.round(((entry.payload?.value || 0) / total) * 100) : 0;
+                const statusName = entry.value;
+                const color = STATUS_GRADIENTS[statusName] ? STATUS_GRADIENTS[statusName][0] : '#94a3b8';
                 return (
                     <div key={index} className="flex items-center gap-1.5 text-xs text-gray-600 font-semibold">
-                        <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: entry.color }} />
+                        <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: color }} />
                         {entry.value}
                         <span className="text-gray-900 font-extrabold">{pct}%</span>
                     </div>
