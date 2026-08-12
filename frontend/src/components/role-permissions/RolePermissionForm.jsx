@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { FaTimes, FaArrowLeft, FaCheckCircle, FaShieldAlt } from 'react-icons/fa';
+import DataTable from '../common/DataTable';
 
 const RolePermissionForm = ({ role, allPermissions, onSubmit, onCancel, loading }) => {
     const [selectedPermissions, setSelectedPermissions] = useState([]);
+    const [currentPageIds, setCurrentPageIds] = useState([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
@@ -23,11 +25,14 @@ const RolePermissionForm = ({ role, allPermissions, onSubmit, onCancel, loading 
         });
     };
 
-    const handleSelectAll = () => {
-        if (selectedPermissions.length === allPermissions.length) {
-            setSelectedPermissions([]);
+    const allOnPageSelected =
+        currentPageIds.length > 0 && currentPageIds.every(id => selectedPermissions.includes(id));
+
+    const handleSelectPage = () => {
+        if (allOnPageSelected) {
+            setSelectedPermissions(prev => prev.filter(id => !currentPageIds.includes(id)));
         } else {
-            setSelectedPermissions(allPermissions.map(p => p.id));
+            setSelectedPermissions(prev => [...new Set([...prev, ...currentPageIds])]);
         }
     };
 
@@ -40,6 +45,45 @@ const RolePermissionForm = ({ role, allPermissions, onSubmit, onCancel, loading 
             setIsSubmitting(false);
         }
     };
+
+    const columns = [
+        {
+            id: 'id',
+            header: 'Id',
+            accessorFn: (row) => row.id,
+            cell: ({ row }) => (
+                <span className="text-sm text-gray-700 font-medium">{row.index + 1}</span>
+            ),
+            enableSorting: true,
+        },
+        {
+            id: 'name',
+            header: 'Permission Name',
+            accessorFn: (row) => row.name,
+            cell: ({ getValue }) => (
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-purple-100 text-purple-700">
+                    {getValue()}
+                </span>
+            ),
+            enableSorting: true,
+        },
+        {
+            id: 'select',
+            header: 'Select',
+            cell: ({ row }) => {
+                const permission = row.original;
+                return (
+                    <input
+                        type="checkbox"
+                        checked={selectedPermissions.includes(permission.id)}
+                        onChange={() => handleTogglePermission(permission.id)}
+                        className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
+                    />
+                );
+            },
+            enableSorting: false,
+        },
+    ];
 
     if (!role) {
         return null;
@@ -76,54 +120,22 @@ const RolePermissionForm = ({ role, allPermissions, onSubmit, onCancel, loading 
                     </span>
                     <button
                         type="button"
-                        onClick={handleSelectAll}
+                        onClick={handleSelectPage}
                         className="text-sm text-blue-600 hover:text-blue-700 font-medium"
                     >
-                        {selectedPermissions.length === allPermissions.length ? 'Deselect All' : 'Select All'}
+                        {allOnPageSelected ? 'Deselect Current Page' : 'Select Current Page'}
                     </button>
                 </div>
 
-                <div className="border border-gray-200 rounded-2xl overflow-hidden">
-                    <table className="w-full text-center align-middle">
-                        <thead>
-                            <tr className="bg-gray-50/80 border-b border-gray-200">
-                                <th className="py-3.5 px-4 text-sm font-bold text-gray-600 uppercase tracking-wider">Id</th>
-                                <th className="py-3.5 px-4 text-sm font-bold text-gray-600 uppercase tracking-wider">Permission Name</th>
-                                <th className="py-3.5 px-4 text-sm font-bold text-gray-600 uppercase tracking-wider">Select</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {allPermissions.length === 0 ? (
-                                <tr>
-                                    <td colSpan="3" className="py-8 text-center text-gray-500">
-                                        No permissions available
-                                    </td>
-                                </tr>
-                            ) : (
-                                allPermissions.map((permission, index) => (
-                                    <tr key={permission.id} className="border-b border-gray-100 hover:bg-gray-50/50 transition-colors">
-                                        <td className="py-3.5 px-4 text-sm text-gray-700 font-medium">
-                                            {index + 1}
-                                        </td>
-                                        <td className="py-3.5 px-4">
-                                            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-purple-100 text-purple-700">
-                                                {permission.name}
-                                            </span>
-                                        </td>
-                                        <td className="py-3.5 px-4">
-                                            <input
-                                                type="checkbox"
-                                                checked={selectedPermissions.includes(permission.id)}
-                                                onChange={() => handleTogglePermission(permission.id)}
-                                                className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
-                                            />
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
-                </div>
+                <DataTable
+                    data={allPermissions}
+                    columns={columns}
+                    title="Permissions"
+                    searchPlaceholder="Search permissions..."
+                    itemsPerPage={10}
+                    onCreate={null}
+                    onPageRowsChange={setCurrentPageIds}
+                />
 
                 <div className="flex items-center gap-3 pt-2">
                     <button

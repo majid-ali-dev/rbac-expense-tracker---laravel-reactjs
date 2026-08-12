@@ -1,28 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useRolePermissionStore from '../../store/rolePermissionStore';
 import RolePermissionTable from '../../components/role-permissions/RolePermissionTable';
-import RolePermissionForm from '../../components/role-permissions/RolePermissionForm';
-import { showDeleteConfirm } from '../../utils/toast';
 
 const RolePermissions = () => {
     const navigate = useNavigate();
-    const {
-        roles,
-        role,
-        allPermissions,
-        loading,
-        pagination,
-        fetchRoles,
-        fetchRolePermissions,
-        updateRolePermissions,
-        clearRole,
-        clearError,
-    } = useRolePermissionStore();
-
-    const [showForm, setShowForm] = useState(false);
-    const [editingRole, setEditingRole] = useState(null);
-    const [isSubmitting, setIsSubmitting] = useState(false);
+    const { roles, loading, pagination, fetchRoles, clearError } = useRolePermissionStore();
 
     useEffect(() => {
         fetchRoles(1, 10);
@@ -30,29 +13,11 @@ const RolePermissions = () => {
     }, []);
 
     const handleEdit = (role) => {
-        setEditingRole(role);
-        setShowForm(true);
-        fetchRolePermissions(role.id);
+        navigate(`/role-permissions/${role.id}/edit`);
     };
 
-    const handleFormSubmit = async (permissionIds) => {
-        setIsSubmitting(true);
-        try {
-            const result = await updateRolePermissions(editingRole.id, permissionIds);
-            if (result.success) {
-                setShowForm(false);
-                setEditingRole(null);
-                clearRole();
-            }
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
-
-    const handleCancelForm = () => {
-        setShowForm(false);
-        setEditingRole(null);
-        clearRole();
+    const handleView = (role) => {
+        navigate(`/role-permissions/${role.id}/view`);
     };
 
     const handlePageChange = (page) => {
@@ -73,24 +38,13 @@ const RolePermissions = () => {
     }
 
     return (
-        <div className="space-y-6">
-            {showForm ? (
-                <RolePermissionForm
-                    role={role || editingRole}
-                    allPermissions={allPermissions}
-                    onSubmit={handleFormSubmit}
-                    onCancel={handleCancelForm}
-                    loading={isSubmitting || loading}
-                />
-            ) : (
-                <RolePermissionTable
-                    roles={roles}
-                    pagination={pagination}
-                    onEdit={handleEdit}
-                    onPageChange={handlePageChange}
-                />
-            )}
-        </div>
+        <RolePermissionTable
+            roles={roles}
+            pagination={pagination}
+            onEdit={handleEdit}
+            onView={handleView}
+            onPageChange={handlePageChange}
+        />
     );
 };
 

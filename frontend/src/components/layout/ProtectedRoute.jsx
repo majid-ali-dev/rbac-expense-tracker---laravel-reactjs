@@ -73,6 +73,8 @@ const ProtectedRoute = () => {
                         <Breadcrumb
                             labelMap={{
                                 'role-permissions': 'Roles & Permissions',
+                                'role-permissions/edit': 'Assign Permissions',
+                                'role-permissions/view': 'View Permissions',
                             }}
                         />
                         <Outlet />

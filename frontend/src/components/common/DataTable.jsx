@@ -18,6 +18,7 @@ const DataTable = ({
     searchPlaceholder = 'Search...',
     itemsPerPage = 10,
     onPageChange,
+    onPageRowsChange,
     pageCount,
     currentPage: externalPage,
 }) => {
@@ -67,6 +68,18 @@ const DataTable = ({
     const pageCount_ = table.getPageCount();
     const currentPage_ = table.getState().pagination.pageIndex + 1;
 
+    // Notify the parent which rows are visible on the current page
+    // (filtered + paginated) so it can implement page-level bulk actions.
+    const pageRowIds = table.getRowModel().rows
+        .map((row) => row.original?.id)
+        .filter((id) => id !== undefined && id !== null)
+        .join(',');
+    React.useEffect(() => {
+        if (onPageRowsChange) {
+            onPageRowsChange(pageRowIds ? pageRowIds.split(',').map((id) => Number(id)) : []);
+        }
+    }, [pageRowIds, onPageRowsChange]);
+
     // Handle search with debounce
     const handleSearch = (e) => {
         setGlobalFilter(e.target.value);
@@ -87,12 +100,16 @@ const DataTable = ({
                             placeholder={searchPlaceholder}
                             value={globalFilter ?? ''}
                             onChange={handleSearch}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') e.preventDefault();
+                            }}
                             className="w-full sm:w-72 pl-9 pr-4 py-2 border border-gray-300 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                         />
                     </div>
                 </div>
                 {onCreate && (
                     <button
+                        type="button"
                         onClick={onCreate}
                         className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-2xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20 text-sm font-semibold whitespace-nowrap"
                     >
@@ -176,6 +193,7 @@ const DataTable = ({
                     </div>
                     <div className="flex items-center gap-2 order-1 sm:order-2">
                         <button
+                            type="button"
                             onClick={() => table.previousPage()}
                             disabled={!table.getCanPreviousPage()}
                             className="p-2 border border-gray-300 rounded-2xl text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-all"
@@ -186,6 +204,7 @@ const DataTable = ({
                             {currentPage_}
                         </span>
                         <button
+                            type="button"
                             onClick={() => table.nextPage()}
                             disabled={!table.getCanNextPage()}
                             className="p-2 border border-gray-300 rounded-2xl text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-all"
