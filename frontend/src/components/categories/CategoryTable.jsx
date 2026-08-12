@@ -3,7 +3,7 @@ import { FaEdit, FaTrash } from 'react-icons/fa';
 import DataTable from '../common/DataTable';
 import usePermission from '../../hooks/usePermission';
 
-const CategoryTable = ({ categories = [], pagination, cycleFilter, onEdit, onDelete, onCreate, onPageChange }) => {
+const CategoryTable = ({ categories = [], pagination, cycleFilter, readOnly = false, onEdit, onDelete, onCreate, onPageChange }) => {
     const { can } = usePermission();
 
     const columns = [
@@ -68,7 +68,10 @@ const CategoryTable = ({ categories = [], pagination, cycleFilter, onEdit, onDel
             cell: ({ row }) => {
                 const category = row.original;
 
-                return (
+                return readOnly ? (
+                    // Closed (historical) cycles are read-only.
+                    <span className="inline-flex px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-500">Closed</span>
+                ) : (
                     <div className="flex items-center justify-center gap-2">
                         {can('categories.edit') && (
                             <button
@@ -98,8 +101,13 @@ const CategoryTable = ({ categories = [], pagination, cycleFilter, onEdit, onDel
     return (
         <>
             {cycleFilter && (
-                <div className="flex items-center justify-end mb-4">
-                    {cycleFilter}
+                <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
+                    {readOnly && (
+                        <p className="text-sm text-gray-500">
+                            This cycle is closed and read-only. You can only modify data in the current open cycle.
+                        </p>
+                    )}
+                    <div className={readOnly ? '' : 'ml-auto'}>{cycleFilter}</div>
                 </div>
             )}
             <DataTable
@@ -107,7 +115,7 @@ const CategoryTable = ({ categories = [], pagination, cycleFilter, onEdit, onDel
             columns={columns}
             title="Manage Categories"
             createButtonText="Add Category"
-            onCreate={can('categories.create') ? onCreate : null}
+            onCreate={can('categories.create') && !readOnly ? onCreate : null}
             searchPlaceholder="Search by ID, Name..."
             itemsPerPage={pagination?.per_page || 10}
             currentPage={pagination?.current_page || 1}

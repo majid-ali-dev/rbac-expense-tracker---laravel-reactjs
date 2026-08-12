@@ -8,17 +8,22 @@ export const userAPI = {
     // Get single user
     getUser: (id) => api.get(`/users/${id}`),
 
-    // Create user
-    createUser: (data) => api.post('/users', data),
+    // Create user (cycle_id = the cycle context being edited; a closed cycle
+    // is rejected server-side)
+    createUser: (data, cycleId = null) =>
+        api.post('/users', cycleId ? { ...data, cycle_id: cycleId } : data),
 
     // Update user
-    updateUser: (id, data) => api.put(`/users/${id}`, data),
+    updateUser: (id, data, cycleId = null) =>
+        api.put(`/users/${id}`, cycleId ? { ...data, cycle_id: cycleId } : data),
 
     // Update total amount
-    updateTotal: (id, total_amount) => api.put(`/users/${id}/total`, { total_amount }),
+    updateTotal: (id, total_amount, cycleId = null) =>
+        api.put(`/users/${id}/total`, cycleId ? { total_amount, cycle_id: cycleId } : { total_amount }),
 
     // Delete user
-    deleteUser: (id) => api.delete(`/users/${id}`),
+    deleteUser: (id, cycleId = null) =>
+        api.delete(`/users/${id}${cycleId ? `?cycle_id=${cycleId}` : ''}`),
 
     // Get all roles
     getRoles: () => api.get('/users/roles'),

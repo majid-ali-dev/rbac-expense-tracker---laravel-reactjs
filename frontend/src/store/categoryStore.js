@@ -57,7 +57,7 @@ const useCategoryStore = create((set, get) => ({
     createCategory: async (categoryData, cycleId = null) => {
         set({ loading: true, error: null });
         try {
-            const response = await categoryAPI.createCategory(categoryData);
+            const response = await categoryAPI.createCategory(categoryData, cycleId);
             const category = response.data.data;
             showSuccess('Category created successfully');
 
@@ -77,7 +77,7 @@ const useCategoryStore = create((set, get) => ({
     updateCategory: async (id, categoryData, cycleId = null) => {
         set({ loading: true, error: null });
         try {
-            const response = await categoryAPI.updateCategory(id, categoryData);
+            const response = await categoryAPI.updateCategory(id, categoryData, cycleId);
             const category = response.data.data;
             showSuccess('Category updated successfully');
 
@@ -97,7 +97,7 @@ const useCategoryStore = create((set, get) => ({
     deleteCategory: async (id, cycleId = null) => {
         set({ loading: true, error: null });
         try {
-            await categoryAPI.deleteCategory(id);
+            await categoryAPI.deleteCategory(id, cycleId);
             showSuccess('Category deleted successfully');
 
             await get().fetchCategories(get().pagination.current_page, get().pagination.per_page, cycleId);

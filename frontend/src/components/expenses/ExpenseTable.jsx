@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import DataTable from '../common/DataTable';
 import usePermission from '../../hooks/usePermission';
 
-const ExpenseTable = ({ expenses = [], pagination, cycleFilter, onView, onEdit, onDelete, onCreate, onPageChange }) => {
+const ExpenseTable = ({ expenses = [], pagination, cycleFilter, readOnly = false, onView, onEdit, onDelete, onCreate, onPageChange }) => {
     const navigate = useNavigate();
     const { can, canActOn } = usePermission();
 
@@ -78,23 +78,30 @@ const ExpenseTable = ({ expenses = [], pagination, cycleFilter, onView, onEdit, 
                         >
                             <FaEye size={16} />
                         </button>
-                        {canEdit && (
-                            <button
-                                onClick={() => onEdit(expense)}
-                                className="p-2 text-purple-600 hover:bg-purple-50 rounded-xl transition-all hover:scale-105"
-                                title="Edit"
-                            >
-                                <FaEdit size={16} />
-                            </button>
-                        )}
-                        {canDelete && (
-                            <button
-                                onClick={() => onDelete(expense)}
-                                className="p-2 text-red-600 hover:bg-red-50 rounded-xl transition-all hover:scale-105"
-                                title="Delete"
-                            >
-                                <FaTrash size={16} />
-                            </button>
+                        {readOnly ? (
+                            // Closed (historical) cycles are read-only.
+                            <span className="inline-flex px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-500">Closed</span>
+                        ) : (
+                            <>
+                                {canEdit && (
+                                    <button
+                                        onClick={() => onEdit(expense)}
+                                        className="p-2 text-purple-600 hover:bg-purple-50 rounded-xl transition-all hover:scale-105"
+                                        title="Edit"
+                                    >
+                                        <FaEdit size={16} />
+                                    </button>
+                                )}
+                                {canDelete && (
+                                    <button
+                                        onClick={() => onDelete(expense)}
+                                        className="p-2 text-red-600 hover:bg-red-50 rounded-xl transition-all hover:scale-105"
+                                        title="Delete"
+                                    >
+                                        <FaTrash size={16} />
+                                    </button>
+                                )}
+                            </>
                         )}
                     </div>
                 );
@@ -108,14 +115,20 @@ const ExpenseTable = ({ expenses = [], pagination, cycleFilter, onView, onEdit, 
             {/* Header Buttons - Left: Add Expense, Right: View Expenses */}
             <div className="flex items-center justify-between flex-wrap gap-4">
                 <div className="flex items-center gap-3">
-                    {can('expenses.create') && (
-                        <button
-                            onClick={onCreate}
-                            className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white font-bold rounded-2xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20"
-                        >
-                            <span className="text-lg font-bold">+</span>
-                            Add Expense
-                        </button>
+                    {readOnly ? (
+                        <p className="text-sm text-gray-500">
+                            This cycle is closed and read-only. You can only modify data in the current open cycle.
+                        </p>
+                    ) : (
+                        can('expenses.create') && (
+                            <button
+                                onClick={onCreate}
+                                className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white font-bold rounded-2xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20"
+                            >
+                                <span className="text-lg font-bold">+</span>
+                                Add Expense
+                            </button>
+                        )
                     )}
                 </div>
                 <div className="flex items-center gap-3">

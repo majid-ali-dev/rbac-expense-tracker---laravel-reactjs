@@ -55,6 +55,16 @@ const useCycleStore = create((set, get) => ({
         return get().cycles.find((c) => c.id === Number(cycleId)) || null;
     },
 
+    /**
+     * Whether the cycle a module is currently showing is closed. Closed
+     * (historical) cycles are read-only everywhere — pages use this to hide
+     * create/edit/delete actions (Payments, Users, Categories, Expenses).
+     */
+    isReadOnly: (moduleKey) => {
+        const cycle = get().getCycleById(get().getSelectedId(moduleKey));
+        return cycle ? cycle.status === 'closed' : false;
+    },
+
     /** Explicitly switch the module to another cycle (null = current cycle). */
     selectCycle: (moduleKey, cycleId) =>
         set((state) => ({

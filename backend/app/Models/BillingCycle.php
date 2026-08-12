@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Carbon\Carbon;
 
 class BillingCycle extends Model
@@ -59,5 +60,42 @@ class BillingCycle extends Model
         // Check if all members have paid
         // OR if admin manually decides to close
         return $this->status === 'open';
+    }
+
+    /**
+     * Whether this cycle is sealed (closed) and must be treated as read-only.
+     */
+    public function isClosed(): bool
+    {
+        return $this->status === 'closed';
+    }
+
+    /**
+     * Shared server-side guard: throw a 409 response when this cycle is
+     * closed, so no create/update/delete can ever target sealed data — even
+     * when the request bypasses the UI (direct API call).
+     */
+    public function assertWritable(): void
+    {
+        if ($this->isClosed()) {
+            throw new HttpResponseException(response()->json([
+                'success' => false,
+                'message' => "The \"{$this->label}\" cycle is closed and read-only. Data in closed cycles cannot be modified.",
+            ], 409));
+        }
+    }
+
+    /**
+     * Same guard, resolved by cycle id. Null (a record that cannot be
+     * attributed to any cycle) is always allowed.
+     */
+    public static function assertCycleWritable(?int $cycleId): void
+    {
+        if (!$cycleId) {
+            return;
+        }
+
+        $cycle = static::find($cycleId);
+        $cycle?->assertWritable();
     }
 }
