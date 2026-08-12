@@ -6,6 +6,8 @@ import Dashboard from './pages/dashboard/Dashboard';
 import Roles from './pages/roles/Roles';
 import Permissions from './pages/permissions/Permissions';
 import RolePermissions from './pages/role-permissions/RolePermissions';
+import EditRolePermissions from './pages/role-permissions/EditRolePermissions';
+import ViewRolePermissions from './pages/role-permissions/ViewRolePermissions';
 import Users from './pages/users/Users';
 import UserProfile from './pages/users/UserProfile';
 import Categories from './pages/categories/Categories';
@@ -29,6 +31,8 @@ function App() {
           <Route path="/roles" element={<Roles />} />
           <Route path="/permissions" element={<Permissions />} />
           <Route path="/role-permissions" element={<RolePermissions />} />
+          <Route path="/role-permissions/:id/edit" element={<EditRolePermissions />} />
+          <Route path="/role-permissions/:id/view" element={<ViewRolePermissions />} />
           <Route path="/users" element={<Users />} />
           <Route path="/users/:id" element={<UserProfile />} />
           <Route path="/categories" element={<Categories />} />

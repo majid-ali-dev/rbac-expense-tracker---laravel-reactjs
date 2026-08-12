@@ -1,9 +1,9 @@
 import React from 'react';
-import { FaEdit } from 'react-icons/fa';
+import { FaEdit, FaEye } from 'react-icons/fa';
 import DataTable from '../common/DataTable';
 import usePermission from '../../hooks/usePermission';
 
-const RolePermissionTable = ({ roles = [], pagination, onEdit, onPageChange }) => {
+const RolePermissionTable = ({ roles = [], pagination, onEdit, onView, onPageChange }) => {
     const { can } = usePermission();
 
     const columns = [
@@ -73,6 +73,15 @@ const RolePermissionTable = ({ roles = [], pagination, onEdit, onPageChange }) =
 
                 return (
                     <div className="flex items-center justify-center gap-2">
+                        {can('role-permissions.view') && onView && (
+                            <button
+                                onClick={() => onView(role)}
+                                className="p-2 text-blue-600 hover:bg-blue-50 rounded-xl transition-all hover:scale-105"
+                                title="View"
+                            >
+                                <FaEye size={16} />
+                            </button>
+                        )}
                         {can('role-permissions.update') && (
                             <button
                                 onClick={() => onEdit(role)}

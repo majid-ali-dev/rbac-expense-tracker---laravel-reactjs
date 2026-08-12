@@ -10,20 +10,30 @@ const capitalizeSegment = (segment) =>
 
 // Build the trail from the current pathname.
 // Always starts with "Dashboard" (/dashboard), then one item per segment
-// ("/users/5" -> Dashboard / Users / #5).
+// ("/users/5" -> Dashboard / Users / #5). Numeric id segments in the middle
+// of a trail are skipped (e.g. "/role-permissions/3/view" ->
+// Dashboard / Roles & Permissions / View Permissions).
 const buildItems = (pathname, labelMap) => {
     const segments = pathname.split('/').filter(Boolean);
     // Avoid a duplicate "Dashboard" entry on /dashboard/... routes.
     const rest = segments[0] === 'dashboard' ? segments.slice(1) : segments;
 
+    const visible = rest
+        .map((segment, index) => ({ segment, index, isId: /^\d+$/.test(segment) }))
+        .filter(({ segment, index, isId }) => !(isId && index < rest.length - 1));
+
     return [
         { label: 'Dashboard', path: '/dashboard' },
-        ...rest.map((segment, index) => {
+        ...visible.map(({ segment, index, isId }) => {
             const path = '/' + rest.slice(0, index + 1).join('/');
-            const isId = /^\d+$/.test(segment);
+            // Path-scoped label key (ids stripped), e.g. 'role-permissions/view'.
+            const trailKey = rest
+                .slice(0, index + 1)
+                .filter((s) => !/^\d+$/.test(s))
+                .join('/');
             const label = isId
                 ? `#${segment}`
-                : labelMap[segment] || capitalizeSegment(segment);
+                : labelMap[segment] || labelMap[trailKey] || capitalizeSegment(segment);
             return { label, path };
         }),
     ];
