@@ -117,7 +117,7 @@ const ViewRolePermissions = () => {
                         <div>
                             <h1 className="text-xl font-extrabold text-gray-900">{role.name}</h1>
                             <p className="text-sm text-gray-500 mt-0.5">
-                                Role #{role.id} · Permissions overview
+                                Role {role.id} · Permissions overview
                             </p>
                         </div>
                     </div>
