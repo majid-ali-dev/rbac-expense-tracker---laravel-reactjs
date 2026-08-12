@@ -133,20 +133,6 @@ const ViewRolePermissions = () => {
                     </div>
                 </div>
 
-                <div className="mt-6">
-                    <div className="flex items-center justify-between text-sm mb-2">
-                        <span className="text-gray-500">Assigned permissions</span>
-                        <span className="font-semibold text-gray-900">
-                            {assignedCount}/{totalCount} ({progress}%)
-                        </span>
-                    </div>
-                    <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
-                        <div
-                            className="h-full bg-blue-600 rounded-full transition-all duration-500"
-                            style={{ width: `${progress}%` }}
-                        ></div>
-                    </div>
-                </div>
             </div>
 
             {/* Permission list — same DataTable as the other pages (search + 10 per page) */}
