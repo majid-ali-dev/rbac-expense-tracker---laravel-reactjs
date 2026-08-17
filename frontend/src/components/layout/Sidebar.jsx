@@ -9,6 +9,7 @@ import {
     FaShoppingCart,
     FaMoneyBillWave,
     FaWallet,
+    FaCalendarAlt,
     FaSignOutAlt,
     FaBars,
     FaTimes
@@ -49,6 +50,7 @@ const Sidebar = () => {
         { title: 'Categories', icon: FaShoppingCart, path: '/categories' },
         { title: 'Expenses', icon: FaMoneyBillWave, path: '/expenses' },
         { title: 'Payments', icon: FaWallet, path: '/payments' },
+        { title: 'Billing Cycles', icon: FaCalendarAlt, path: '/billing-cycles' },
     ];
 
     const filteredMenuItems = menuItems.filter(item => canAccessModule(user, item.path));

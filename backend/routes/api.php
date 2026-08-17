@@ -30,9 +30,20 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     // Billing Cycle Routes
     Route::prefix('billing-cycle')->group(function () {
+        // Current open cycle: needed by every module as the default context.
         Route::get('/current', [BillingCycleController::class, 'current']);
-        Route::get('/all', [BillingCycleController::class, 'all']);
-        Route::get('/history', [BillingCycleController::class, 'history']);
+
+        // Listing/selecting historical cycles requires billing-cycle.view.
+        Route::get('/all', [BillingCycleController::class, 'all'])
+            ->middleware('permission:billing-cycle.view');
+        Route::get('/history', [BillingCycleController::class, 'history'])
+            ->middleware('permission:billing-cycle.view');
+
+        // Management (create / edit / close) is admin-only via permissions.
+        Route::post('/', [BillingCycleController::class, 'store'])
+            ->middleware('permission:billing-cycle.create');
+        Route::put('/{id}', [BillingCycleController::class, 'update'])
+            ->middleware('permission:billing-cycle.edit');
         Route::post('/close', [BillingCycleController::class, 'closeCurrentMonth'])
             ->middleware('permission:billing-cycle.close');
     });

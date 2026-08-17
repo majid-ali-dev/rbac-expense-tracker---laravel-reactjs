@@ -38,7 +38,10 @@ class ExpenseController extends Controller
 
     public function store(ExpenseStoreRequest $request): JsonResponse
     {
-        $expense = $this->expenseService->create($request->validated());
+        $expense = $this->expenseService->create(
+            $request->safe()->except(['cycle_id']),
+            $request->integer('cycle_id') ?: null
+        );
 
         return response()->json([
             'success' => true,
@@ -93,7 +96,11 @@ class ExpenseController extends Controller
             ], 403);
         }
 
-        $updated = $this->expenseService->update($id, $request->validated());
+        $updated = $this->expenseService->update(
+            $id,
+            $request->safe()->except(['cycle_id']),
+            $request->integer('cycle_id') ?: null
+        );
 
         if (!$updated) {
             return response()->json([
@@ -111,7 +118,7 @@ class ExpenseController extends Controller
         ]);
     }
 
-    public function destroy(int $id): JsonResponse
+    public function destroy(Request $request, int $id): JsonResponse
     {
         $expense = $this->expenseService->findById($id);
 
@@ -129,7 +136,7 @@ class ExpenseController extends Controller
             ], 403);
         }
 
-        $deleted = $this->expenseService->delete($id);
+        $deleted = $this->expenseService->delete($id, $request->integer('cycle_id') ?: null);
 
         if (!$deleted) {
             return response()->json([

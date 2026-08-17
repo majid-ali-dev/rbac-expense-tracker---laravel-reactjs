@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import usePaymentStore from '../../store/paymentStore';
 import usePermission from '../../hooks/usePermission';
 
-const AddPaymentForm = ({ user, onSubmit, onCancel, loading, onPaymentDeleted }) => {
+const AddPaymentForm = ({ user, cycleId = null, onSubmit, onCancel, loading, onPaymentDeleted }) => {
     const navigate = useNavigate();
     const { deletePayment } = usePaymentStore();
     const { can } = usePermission();
@@ -52,7 +52,9 @@ const AddPaymentForm = ({ user, onSubmit, onCancel, loading, onPaymentDeleted })
     const handleDeletePayment = async (payment) => {
         if (!window.confirm('Are you sure you want to delete this payment record?')) return;
 
-        const result = await deletePayment(payment.id);
+        // Deletions target the globally selected cycle so payments in an old
+        // (closed) cycle can be managed exactly like the current one.
+        const result = await deletePayment(payment.id, cycleId);
         if (result.success) {
             onPaymentDeleted?.();
         }

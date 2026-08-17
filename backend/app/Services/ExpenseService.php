@@ -45,7 +45,7 @@ class ExpenseService
         return $this->expenseRepository->findById($id);
     }
 
-    public function create(array $data): Expense
+    public function create(array $data, ?int $cycleId = null): Expense
     {
         $category = $this->expenseRepository->getCategories()->where('id', $data['category_id'])->first();
         $data['user_id'] = Auth::id();
@@ -56,12 +56,18 @@ class ExpenseService
             $data['date'] = Carbon::now()->format('Y-m-d');
         }
 
-        // Attach the expense to the cycle whose date range contains its date,
-        // so it is permanently traceable to the correct billing cycle.
-        $data['billing_cycle_id'] = $this->resolveCycleIdForDate($data['date']);
-
-        // Closed cycles are immutable — never allow creating an expense into one.
-        BillingCycle::assertCycleWritable($data['billing_cycle_id']);
+        if ($cycleId) {
+            // Explicitly selected cycle: the expense belongs to THAT cycle,
+            // even when it is closed (historical cycles stay editable when
+            // selected). The caller is permission-gated by the route.
+            $data['billing_cycle_id'] = (int) $cycleId;
+        } else {
+            // Default: attach the expense to the cycle whose date range
+            // contains its date, so it is permanently traceable. Closed
+            // cycles stay protected unless explicitly selected.
+            $data['billing_cycle_id'] = $this->resolveCycleIdForDate($data['date']);
+            BillingCycle::assertCycleWritable($data['billing_cycle_id']);
+        }
 
         $expense = $this->expenseRepository->create($data);
 
@@ -77,7 +83,7 @@ class ExpenseService
         return $expense;
     }
 
-    public function update(int $id, array $data): bool
+    public function update(int $id, array $data, ?int $cycleId = null): bool
     {
         $expense = $this->findById($id);
         if (!$expense) {
@@ -90,15 +96,24 @@ class ExpenseService
         $data['title'] = $category ? $category->name : '';
         $data['updated_by'] = Auth::id();
 
-        // Block any update that touches a closed cycle — either the cycle the
+        // When a cycle is explicitly selected, the expense is edited inside
+        // THAT cycle (closed cycles included). Without an explicit selection,
+        // block any update that touches a closed cycle — either the cycle the
         // expense currently belongs to, or the cycle it would move to if its
         // date changed (legacy expenses without a cycle are matched by date).
         $currentCycleId = $expense->billing_cycle_id ?: $this->resolveCycleIdForDate($expense->date?->format('Y-m-d') ?? '');
-        BillingCycle::assertCycleWritable($currentCycleId);
+        if (!$cycleId) {
+            BillingCycle::assertCycleWritable($currentCycleId);
+        }
 
         if (isset($data['date']) && $data['date'] && $expense->date?->format('Y-m-d') !== $data['date']) {
-            $data['billing_cycle_id'] = $this->resolveCycleIdForDate($data['date']);
-            BillingCycle::assertCycleWritable($data['billing_cycle_id']);
+            if ($cycleId) {
+                // Keep the expense inside the explicitly selected cycle.
+                $data['billing_cycle_id'] = (int) $cycleId;
+            } else {
+                $data['billing_cycle_id'] = $this->resolveCycleIdForDate($data['date']);
+                BillingCycle::assertCycleWritable($data['billing_cycle_id']);
+            }
         }
 
         $updated = $this->expenseRepository->update($expense, $data);
@@ -121,16 +136,19 @@ class ExpenseService
         return $updated;
     }
 
-    public function delete(int $id): bool
+    public function delete(int $id, ?int $cycleId = null): bool
     {
         $expense = $this->findById($id);
         if (!$expense) {
             return false;
         }
 
-        // Closed cycles are immutable — never allow deleting their expenses.
-        $cycleId = $expense->billing_cycle_id ?: $this->resolveCycleIdForDate($expense->date?->format('Y-m-d') ?? '');
-        BillingCycle::assertCycleWritable($cycleId);
+        // With an explicit cycle selection the expense may be deleted from a
+        // closed (historical) cycle; otherwise closed cycles are immutable.
+        if (!$cycleId) {
+            $cycleId = $expense->billing_cycle_id ?: $this->resolveCycleIdForDate($expense->date?->format('Y-m-d') ?? '');
+            BillingCycle::assertCycleWritable($cycleId);
+        }
 
         ExpenseHistory::create([
             'expense_id' => $expense->id,
@@ -153,11 +171,15 @@ class ExpenseService
      * Resolve the billing cycle that contains the given date.
      * Returns null when no cycle range covers the date (e.g. before the
      * first cycle ever started).
+     *
+     * Uses whereDate so the comparison is date-only — cycle dates can carry a
+     * time component (e.g. '2026-08-01 00:00:00' in SQLite) which would make a
+     * plain <=/>= miss the exact boundary day.
      */
     private function resolveCycleIdForDate(string $date): ?int
     {
-        return BillingCycle::where('start_date', '<=', $date)
-            ->where('end_date', '>=', $date)
+        return BillingCycle::whereDate('start_date', '<=', $date)
+            ->whereDate('end_date', '>=', $date)
             ->latest('start_date')
             ->value('id');
     }

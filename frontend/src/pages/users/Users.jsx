@@ -102,7 +102,7 @@ const Users = () => {
 
     const handlePageChange = (page) => {
         if (page >= 1 && page <= (pagination?.last_page || 1)) {
-            fetchUsers(page, pagination?.per_page || 10);
+            fetchUsers(page, pagination?.per_page || 10, cycleId);
         }
     };
 

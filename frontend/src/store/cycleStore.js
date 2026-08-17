@@ -2,25 +2,22 @@ import { create } from 'zustand';
 import { billingCycleAPI } from '../services/api';
 import { showError } from '../utils/toast';
 
-export const CYCLE_MODULES = ['dashboard', 'users', 'categories', 'expenses', 'payments'];
-
-const defaultSelections = () => Object.fromEntries(CYCLE_MODULES.map((m) => [m, null]));
-
 /**
  * Global billing-cycle context.
  *
  * - `cycles`/`currentCycle`: the full cycle list + the open cycle.
- * - `selections[moduleKey]`: which cycle each module is showing. null means
- *   "current cycle" (the default). Selections persist until the user changes
- *   them explicitly, so a cycle picked on an index page carries over to its
- *   child pages (view, add, etc.).
+ * - `selectedCycleId`: the ONE cycle selected across the whole application
+ *   (Dashboard, Expenses, Payments, Users, Categories, ...). null means "the
+ *   current open cycle" (the default on login). Selecting a cycle anywhere —
+ *   the Billing Cycles module or any page's cycle dropdown — updates it
+ *   globally, so every module shows that cycle's data.
  */
 const useCycleStore = create((set, get) => ({
     cycles: [],
     currentCycle: null,
+    selectedCycleId: null,
     loading: false,
     error: null,
-    selections: defaultSelections(),
 
     fetchCycles: async () => {
         set({ loading: true, error: null });
@@ -29,13 +26,30 @@ const useCycleStore = create((set, get) => ({
             const cycles = response.data.data || [];
             const current = cycles.find((c) => c.status === 'open') || cycles[0] || null;
 
+            // If the globally selected cycle no longer exists, fall back to the
+            // current cycle (the default).
+            let selectedCycleId = get().selectedCycleId;
+            if (selectedCycleId && !cycles.some((c) => c.id === Number(selectedCycleId))) {
+                selectedCycleId = null;
+            }
+
             set({
                 cycles,
                 currentCycle: current,
+                selectedCycleId,
                 loading: false,
             });
             return { success: true, cycles, current };
         } catch (error) {
+            // 403 = the user lacks billing-cycle.view — they cannot list or
+            // select cycles, so the app silently defaults to the current open
+            // cycle everywhere. No error toast: this is the expected state for
+            // users without the permission, not a failure.
+            if (error.response?.status === 403) {
+                set({ cycles: [], currentCycle: null, loading: false });
+                return { success: false, error: null };
+            }
+
             const message = error.response?.data?.message || 'Failed to load billing cycles';
             set({ loading: false, error: message });
             showError(message);
@@ -43,10 +57,13 @@ const useCycleStore = create((set, get) => ({
         }
     },
 
-    /** Cycle id a module is currently showing (defaults to the current cycle). */
+    /**
+     * Cycle id currently shown across the app (defaults to the current cycle).
+     * moduleKey is kept for API compatibility with existing callers.
+     */
     getSelectedId: (moduleKey) => {
-        const { selections, currentCycle } = get();
-        return selections[moduleKey] || currentCycle?.id || null;
+        const { selectedCycleId, currentCycle } = get();
+        return selectedCycleId || currentCycle?.id || null;
     },
 
     /** Resolve a full cycle object from the store by id. */
@@ -56,22 +73,21 @@ const useCycleStore = create((set, get) => ({
     },
 
     /**
-     * Whether the cycle a module is currently showing is closed. Closed
-     * (historical) cycles are read-only everywhere — pages use this to hide
-     * create/edit/delete actions (Payments, Users, Categories, Expenses).
+     * Closed (historical) cycles are fully editable when selected — editing an
+     * old cycle works exactly like editing the current one. Write permissions
+     * are enforced per module (expenses.create, payments.create, ...), so there
+     * is no separate read-only state.
      */
-    isReadOnly: (moduleKey) => {
-        const cycle = get().getCycleById(get().getSelectedId(moduleKey));
-        return cycle ? cycle.status === 'closed' : false;
-    },
+    isReadOnly: (moduleKey) => false,
 
-    /** Explicitly switch the module to another cycle (null = current cycle). */
+    /**
+     * Set the globally selected cycle across the whole application.
+     * null resets to the current open cycle (the default).
+     */
     selectCycle: (moduleKey, cycleId) =>
-        set((state) => ({
-            selections: { ...state.selections, [moduleKey]: cycleId || null },
-        })),
+        set({ selectedCycleId: cycleId ? Number(cycleId) : null }),
 
-    resetSelections: () => set({ selections: defaultSelections() }),
+    resetSelections: () => set({ selectedCycleId: null }),
 }));
 
 export default useCycleStore;

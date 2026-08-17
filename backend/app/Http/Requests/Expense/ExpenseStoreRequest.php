@@ -18,6 +18,10 @@ class ExpenseStoreRequest extends FormRequest
             'amount' => ['required', 'numeric', 'min:0'],
             'description' => ['nullable', 'string', 'max:1000'],
             'date' => ['required', 'date'],
+            // Explicitly selected billing cycle (e.g. an old/closed cycle the
+            // user is currently viewing). When present, the expense belongs to
+            // that cycle regardless of its date.
+            'cycle_id' => ['nullable', 'integer', 'exists:billing_cycles,id'],
         ];
     }
 

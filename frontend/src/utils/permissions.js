@@ -21,6 +21,7 @@ export const MODULE_PERMISSIONS = {
     '/expenses': ['expenses.view', 'expenses.view-all'],
     '/expenses/view': ['expenses.export'],
     '/payments': ['payments.view', 'payments.view-all'],
+    '/billing-cycles': ['billing-cycle.view'],
     '/notifications': ['notifications.view'],
 };
 

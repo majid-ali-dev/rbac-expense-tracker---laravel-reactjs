@@ -64,6 +64,9 @@ class PermissionSeeder extends Seeder
             'payments.delete',
 
             // Billing cycle
+            'billing-cycle.view',
+            'billing-cycle.create',
+            'billing-cycle.edit',
             'billing-cycle.close',
 
             // Notifications

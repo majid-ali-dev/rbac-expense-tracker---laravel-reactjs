@@ -91,8 +91,9 @@ class PaymentController extends Controller
     }
 
     /**
-     * Add-payment page data. Closed cycles are read-only — payments can only
-     * be recorded into the current open cycle.
+     * Add-payment page data. When an explicit cycle is selected (including an
+     * old/closed one) the page shows that cycle's balances so payments can be
+     * recorded against the selected cycle.
      */
     public function addPayment(int $userId, Request $request): JsonResponse
     {
@@ -101,13 +102,6 @@ class PaymentController extends Controller
 
         if (!$cycle) {
             return response()->json(['success' => false, 'message' => 'Billing cycle not found.'], 404);
-        }
-
-        if ($cycle->status === 'closed') {
-            return response()->json([
-                'success' => false,
-                'message' => 'This cycle is closed and read-only. Payments can only be recorded in the current open cycle.',
-            ], 409);
         }
 
         $targetUser = User::with(['payments' => fn($q) => $q->where('billing_cycle_id', $cycle->id)->latest()])
@@ -133,8 +127,9 @@ class PaymentController extends Controller
     }
 
     /**
-     * Record a payment. Always written to the CURRENT open cycle — closed
-     * cycles are immutable.
+     * Record a payment. Written to the EXPLICITLY selected cycle when
+     * cycle_id is provided (old/closed cycles included); otherwise to the
+     * current open cycle.
      */
     public function pay(PaymentStoreRequest $request, int $userId): JsonResponse
     {
@@ -145,9 +140,14 @@ class PaymentController extends Controller
         }
 
         try {
-            $currentCycle = BillingCycle::where('status', 'open')->latest('start_date')->first();
+            $cycleId = $request->integer('cycle_id') ?: null;
+            $cycle = $cycleId ? BillingCycle::find($cycleId) : null;
 
-            if (!$currentCycle) {
+            if (!$cycle) {
+                $cycle = BillingCycle::where('status', 'open')->latest('start_date')->first();
+            }
+
+            if (!$cycle) {
                 return response()->json([
                     'success' => false,
                     'message' => 'No active billing cycle. Please create or reopen a cycle first.',
@@ -156,14 +156,14 @@ class PaymentController extends Controller
 
             $payment = Payment::create([
                 'user_id' => $targetUser->id,
-                'billing_cycle_id' => $currentCycle->id,
+                'billing_cycle_id' => $cycle->id,
                 'paid_amount' => $request->paid_amount,
                 'month' => strtolower(now()->format('M')),
                 'updated_by' => auth()->id(),
             ]);
 
-            $this->paymentService->syncMemberDue($targetUser, $currentCycle->id);
-            $this->paymentService->updateUserTotals($targetUser, $currentCycle->id);
+            $this->paymentService->syncMemberDue($targetUser, $cycle->id);
+            $this->paymentService->updateUserTotals($targetUser, $cycle->id);
 
             return response()->json([
                 'success' => true,
@@ -175,7 +175,7 @@ class PaymentController extends Controller
         }
     }
 
-    public function destroy(int $paymentId): JsonResponse
+    public function destroy(Request $request, int $paymentId): JsonResponse
     {
         $payment = $this->paymentService->findPaymentById($paymentId);
 
@@ -183,9 +183,11 @@ class PaymentController extends Controller
             return response()->json(['success' => false, 'message' => 'Payment not found'], 404);
         }
 
-        // Payments recorded in a closed cycle are immutable — same read-only
-        // rule enforced on the UI, now enforced server-side too.
-        BillingCycle::assertCycleWritable($payment->billing_cycle_id);
+        // Payments in a closed cycle may be deleted only when the cycle is
+        // explicitly selected; otherwise closed cycles are immutable.
+        if (!$request->integer('cycle_id')) {
+            BillingCycle::assertCycleWritable($payment->billing_cycle_id);
+        }
 
         $deleted = $this->paymentService->deletePayment($payment);
 
