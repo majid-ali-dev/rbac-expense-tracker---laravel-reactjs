@@ -15,9 +15,20 @@ const CloseMonthButton = ({ cycleLabel, cycleId, onClosed }) => {
         return null;
     }
 
+    // Local calendar date (YYYY-MM-DD). Using the UTC date here (toISOString)
+    // can be a day behind the user's local date in timezones ahead of UTC,
+    // which would pre-fill the modal with yesterday and silently close the
+    // cycle on the wrong day.
+    const localDate = (d) => {
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${y}-${m}-${day}`;
+    };
+
     const handleClose = async () => {
         const cycle = useCycleStore.getState().currentCycle;
-        const today = new Date().toISOString().split('T')[0];
+        const today = localDate(new Date());
         const defaultStart = cycle?.start_date ? cycle.start_date.slice(0, 10) : today;
 
         const result = await Swal.fire({
@@ -31,7 +42,7 @@ const CloseMonthButton = ({ cycleLabel, cycleId, onClosed }) => {
                     </p>
                     <label for="swal-close-start" style="font-size:12px;font-weight:700;color:#334155">Start Date</label>
                     <input type="date" id="swal-close-start" class="swal2-input" value="${defaultStart}" max="${today}" />
-                    <label for="swal-close-end" style="font-size:12px;font-weight:700;color:#334155;margin-top:12px;display:block">End Date (today)</label>
+                    <label for="swal-close-end" style="font-size:12px;font-weight:700;color:#334155;margin-top:12px;display:block">End Date (cycle close date)</label>
                     <input type="date" id="swal-close-end" class="swal2-input" value="${today}" max="${today}" />
                 </div>
             `,
@@ -62,15 +73,19 @@ const CloseMonthButton = ({ cycleLabel, cycleId, onClosed }) => {
 
         setLoading(true);
         try {
+            const { start_date, end_date } = result.value;
             const response = await billingCycleAPI.closeMonth({
-                ...result.value,
+                // Send the EXACT dates the user selected in the modal — nothing
+                // else (no system/current date is ever substituted here).
+                start_date,
+                end_date,
                 // Always identify the cycle being closed so the backend can
                 // reject a stale/concurrent request that targets the wrong one.
                 cycle_id: cycleId ?? cycle?.id,
             });
             await showDeletedSuccess(
                 'Cycle Closed',
-                response.data.message || 'New cycle started'
+                `${response.data.message || 'New cycle started'}. Sealed range: ${start_date} to ${end_date}`
             );
             // Refresh the cycle list so every module's dropdown shows the new cycle
             await useCycleStore.getState().fetchCycles();
