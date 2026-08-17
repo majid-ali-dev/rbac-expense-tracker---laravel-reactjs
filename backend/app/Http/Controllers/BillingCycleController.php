@@ -54,17 +54,20 @@ class BillingCycleController extends Controller
     /**
      * POST /api/billing-cycle/close
      *
-     * Closes the current open cycle using the user-selected date range
-     * (defaults: cycle start date -> today). The selected range becomes the
-     * cycle's actual sealed range; data after the end date stays available in
-     * the next cycle.
+     * Closes the current open cycle using the user-selected date range. The
+     * selected range becomes the cycle's actual sealed range; data after the
+     * end date stays available in the next cycle.
+     *
+     * start_date/end_date are REQUIRED: the exact dates chosen in the UI must
+     * be stored verbatim — the API never falls back to the current/system date,
+     * so an accidental or malformed close can never seal "today" into the DB.
      */
     public function closeCurrentMonth(Request $request, MonthlyRolloverService $service): JsonResponse
     {
         try {
             $validated = $request->validate([
-                'start_date' => ['nullable', 'date'],
-                'end_date' => ['nullable', 'date'],
+                'start_date' => ['required', 'date'],
+                'end_date' => ['required', 'date'],
                 // Required: prevents a stale/concurrent request from closing the
                 // freshly-created next cycle instead of the intended one.
                 'cycle_id' => ['required', 'integer', 'exists:billing_cycles,id'],
@@ -72,8 +75,8 @@ class BillingCycleController extends Controller
 
             $newCycle = $service->closeCurrentAndStartNext(
                 auth()->id(),
-                !empty($validated['start_date']) ? Carbon::parse($validated['start_date']) : null,
-                !empty($validated['end_date']) ? Carbon::parse($validated['end_date']) : null,
+                Carbon::parse($validated['start_date']),
+                Carbon::parse($validated['end_date']),
                 $validated['cycle_id']
             );
 

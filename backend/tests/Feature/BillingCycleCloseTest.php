@@ -137,12 +137,14 @@ class BillingCycleCloseTest extends TestCase
 
         $this->postJson('/api/billing-cycle/close', [
             'cycle_id' => $this->cycle->id,
+            'start_date' => $this->cycle->start_date->format('Y-m-d'),
             'end_date' => $today->format('Y-m-d'),
         ])->assertOk();
 
         // Second attempt against the now-closed cycle id -> 409
         $this->postJson('/api/billing-cycle/close', [
             'cycle_id' => $this->cycle->id,
+            'start_date' => $this->cycle->start_date->format('Y-m-d'),
             'end_date' => $today->format('Y-m-d'),
         ])->assertStatus(409);
 
@@ -171,10 +173,49 @@ class BillingCycleCloseTest extends TestCase
         // cycle_id is required so a stale/concurrent close can never target the
         // wrong (freshly created) cycle.
         $this->postJson('/api/billing-cycle/close', [
+            'start_date' => $this->cycle->start_date->format('Y-m-d'),
             'end_date' => $today->format('Y-m-d'),
         ])->assertStatus(422);
 
         $this->assertSame('open', $this->cycle->fresh()->status);
+    }
+
+    public function test_close_without_dates_is_rejected_and_never_uses_system_date(): void
+    {
+        // A close request with no explicit dates must be rejected — the backend
+        // must NEVER silently seal the cycle with the current/system date.
+        $this->postJson('/api/billing-cycle/close', [
+            'cycle_id' => $this->cycle->id,
+        ])->assertStatus(422);
+
+        $fresh = $this->cycle->fresh();
+        $this->assertSame('open', $fresh->status);
+        $this->assertSame(
+            $this->cycle->end_date->format('Y-m-d'),
+            $fresh->end_date->format('Y-m-d')
+        );
+    }
+
+    public function test_close_stores_exactly_the_selected_past_dates(): void
+    {
+        // The exact dates chosen in the UI must be stored verbatim — including
+        // an end date in the past (not today), and a start date inside the
+        // cycle rather than the cycle's own start.
+        $start = Carbon::now()->startOfMonth()->addDays(4);
+        $end = Carbon::now()->startOfMonth()->addDays(10);
+
+        $response = $this->postJson('/api/billing-cycle/close', [
+            'cycle_id' => $this->cycle->id,
+            'start_date' => $start->format('Y-m-d'),
+            'end_date' => $end->format('Y-m-d'),
+        ]);
+
+        $response->assertOk();
+
+        $closed = $this->cycle->fresh();
+        $this->assertSame('closed', $closed->status);
+        $this->assertSame($start->format('Y-m-d'), $closed->start_date->format('Y-m-d'));
+        $this->assertSame($end->format('Y-m-d'), $closed->end_date->format('Y-m-d'));
     }
 
     public function test_expense_creation_assigns_cycle_by_date(): void
