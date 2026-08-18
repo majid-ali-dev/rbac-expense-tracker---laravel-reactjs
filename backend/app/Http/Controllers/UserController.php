@@ -84,7 +84,8 @@ class UserController extends Controller
 
     public function update(UserUpdateRequest $request, int $id): JsonResponse
     {
-        $updated = $this->userService->update($id, $request->validated());
+        $cycle = $this->resolveCycle($request);
+        $updated = $this->userService->update($id, $request->validated(), $cycle->id);
 
         if (!$updated) {
             return response()->json([
@@ -105,7 +106,8 @@ class UserController extends Controller
 
     public function updateTotal(UserTotalUpdateRequest $request, int $id): JsonResponse
     {
-        $updated = $this->userService->updateTotal($id, $request->total_amount);
+        $cycle = $this->resolveCycle($request);
+        $updated = $this->userService->updateTotal($id, $request->total_amount, $cycle->id);
 
         if (!$updated) {
             return response()->json([

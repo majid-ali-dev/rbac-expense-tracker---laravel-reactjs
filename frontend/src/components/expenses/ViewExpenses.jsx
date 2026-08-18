@@ -52,8 +52,13 @@ const ViewExpenses = () => {
         const isClosed = cyc.status === 'closed';
 
         // Open cycle: [start -> today]; closed cycle: its exact sealed range.
-        const from = cyc.start_date > today && !isClosed ? today : cyc.start_date.slice(0, 10);
-        const to = isClosed ? cyc.end_date.slice(0, 10) : today;
+        // A cycle that has not started yet has no data window — use an empty
+        // range instead of an inverted one so totals stay meaningful.
+        let from = cyc.start_date.slice(0, 10);
+        let to = isClosed ? cyc.end_date.slice(0, 10) : today;
+        if (from > to) {
+            to = from;
+        }
 
         setFromDate(from);
         setToDate(to);
@@ -393,14 +398,36 @@ const ViewExpenses = () => {
                             Rs. {totalPaid.toFixed(2)}
                         </p>
                     </div>
-                    <div className={`bg-white rounded-2xl shadow-sm border p-6 text-center hover:shadow-md transition-shadow ${extraBalance > 0 ? 'border-yellow-500' : 'border-red-500'}`}>
-                        <p className={`text-xs font-bold uppercase tracking-wider ${extraBalance > 0 ? 'text-yellow-600' : 'text-red-600'}`}>
-                            {extraBalance > 0 ? 'Extra Balance' : 'Remaining Balance'}
-                        </p>
-                        <p className={`text-2xl font-extrabold mt-2 ${extraBalance > 0 ? 'text-yellow-700' : 'text-red-700'}`}>
-                            Rs. {(extraBalance > 0 ? extraBalance : remainingBalance).toFixed(2)}
-                        </p>
-                    </div>
+                    {(() => {
+                        // Extra only makes sense when payments EXCEED expenses;
+                        // otherwise show what is still remaining to collect, or a
+                        // clean "settled" state when the two are equal.
+                        const isExtra = extraBalance > 0;
+                        const isRemaining = !isExtra && remainingBalance > 0;
+                        const label = isExtra
+                            ? 'Extra Collected'
+                            : isRemaining
+                                ? 'Extra Balance'
+                                : 'All Settled';
+                        const hint = isExtra
+                            ? 'Payments exceed expenses for this period'
+                            : isRemaining
+                                ? 'Expenses exceed payments for this period'
+                                : 'Payments match expenses for this period';
+                        const value = isExtra ? extraBalance : isRemaining ? remainingBalance : 0;
+                        const alert = isRemaining;
+                        return (
+                            <div className={`bg-white rounded-2xl shadow-sm border p-6 text-center hover:shadow-md transition-shadow ${alert ? 'border-red-500' : 'border-green-500'}`}>
+                                <p className={`text-xs font-bold uppercase tracking-wider ${alert ? 'text-red-600' : 'text-green-600'}`}>
+                                    {label}
+                                </p>
+                                <p className={`text-2xl font-extrabold mt-2 ${alert ? 'text-red-700' : 'text-green-700'}`}>
+                                    Rs. {value.toFixed(2)}
+                                </p>
+                                <p className="text-xs text-gray-400 mt-1">{hint}</p>
+                            </div>
+                        );
+                    })()}
                 </div>
             )}
         </div>
