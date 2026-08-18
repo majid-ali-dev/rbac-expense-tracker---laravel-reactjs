@@ -41,7 +41,7 @@ class UserService
      * currentCycleAmount() hamesha purani (0 wali) MemberDue value hi
      * padhta rehta, chahe users.total_amount column update ho jaye.
      */
-    public function update(int $id, array $data): bool
+    public function update(int $id, array $data, ?int $cycleId = null): bool
     {
         $user = $this->findById($id);
         if (!$user) {
@@ -51,7 +51,8 @@ class UserService
         $updated = $this->userRepository->update($user, $data);
 
         if ($updated && array_key_exists('total_amount', $data) && $data['total_amount'] !== null) {
-            $cycle = BillingCycle::current();
+            $cycle = $cycleId ? BillingCycle::find($cycleId) : BillingCycle::current();
+            $cycle = $cycle ?: BillingCycle::current();
 
             MemberDue::updateOrCreate(
                 ['user_id' => $user->id, 'billing_cycle_id' => $cycle->id],
@@ -71,14 +72,15 @@ class UserService
         return $this->userRepository->delete($user);
     }
 
-    public function updateTotal(int $id, float $amount): bool
+    public function updateTotal(int $id, float $amount, ?int $cycleId = null): bool
     {
         $user = $this->findById($id);
         if (!$user) {
             return false;
         }
 
-        $cycle = BillingCycle::current();
+        $cycle = $cycleId ? BillingCycle::find($cycleId) : BillingCycle::current();
+        $cycle = $cycle ?: BillingCycle::current();
 
         MemberDue::updateOrCreate(
             ['user_id' => $user->id, 'billing_cycle_id' => $cycle->id],

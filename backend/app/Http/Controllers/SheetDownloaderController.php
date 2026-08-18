@@ -30,8 +30,16 @@ class SheetDownloaderController extends Controller
 
         $totalExpenses = $expenses->sum('amount');
 
+        // Payments are scoped to the SAME [from, to] window as the expenses so
+        // the extra/remaining comparison is meaningful (apples-to-apples).
+        // Without this, a cycle-attributed payment recorded outside the viewed
+        // window made "Extra" appear even when the period had no expenses.
         $totalPaid = $user->applyOwnAllScope(Payment::query(), 'payments.view-all')
             ->where('billing_cycle_id', $cycle->id)
+            ->whereBetween('created_at', [
+                Carbon::parse($from)->startOfDay(),
+                Carbon::parse($to)->endOfDay(),
+            ])
             ->sum('paid_amount');
 
         $balance = $totalPaid - $totalExpenses;
@@ -71,10 +79,13 @@ class SheetDownloaderController extends Controller
 
         $totalExpenses = $expenses->sum('amount');
 
-        // Payments are attributed by their permanent billing_cycle_id so the
-        // export always matches the selected cycle.
+        // Payments scoped to the same window as expenses (see index()).
         $totalPaid = $user->applyOwnAllScope(Payment::query(), 'payments.view-all')
             ->where('billing_cycle_id', $cycle->id)
+            ->whereBetween('created_at', [
+                Carbon::parse($from)->startOfDay(),
+                Carbon::parse($to)->endOfDay(),
+            ])
             ->sum('paid_amount');
 
         $balance = $totalPaid - $totalExpenses;
@@ -117,8 +128,10 @@ class SheetDownloaderController extends Controller
 
             if ($extraBalance > 0) {
                 fputcsv($file, ['EXTRA BALANCE', '', '', '', number_format($extraBalance, 2), '']);
-            } else {
+            } elseif ($remainingBalance > 0) {
                 fputcsv($file, ['REMAINING BALANCE', '', '', '', number_format($remainingBalance, 2), '']);
+            } else {
+                fputcsv($file, ['BALANCED', '', '', '', number_format(0, 2), '']);
             }
 
             fclose($file);
@@ -143,6 +156,13 @@ class SheetDownloaderController extends Controller
 
         $from = $request->get('from', $defaultFrom);
         $to = $request->get('to', $defaultTo);
+
+        // Never return an inverted range — an empty window is meaningful, a
+        // negative one produces misleading totals (e.g. "Extra" from paid that
+        // belongs to a different period).
+        if (strtotime($to) < strtotime($from)) {
+            $to = $from;
+        }
 
         return [$cycle, $from, $to];
     }
