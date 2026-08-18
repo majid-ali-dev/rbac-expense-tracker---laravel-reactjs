@@ -112,7 +112,7 @@ const Expenses = () => {
 
     const handlePageChange = (page) => {
         if (page >= 1 && page <= (pagination?.last_page || 1)) {
-            fetchExpenses(page, pagination?.per_page || 10);
+            fetchExpenses(page, pagination?.per_page || 10, cycleId);
         }
     };
 

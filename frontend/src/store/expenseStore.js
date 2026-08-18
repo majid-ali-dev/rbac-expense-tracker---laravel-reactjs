@@ -71,7 +71,7 @@ const useExpenseStore = create((set, get) => ({
     createExpense: async (expenseData, cycleId = null) => {
         set({ loading: true, error: null });
         try {
-            const response = await expenseAPI.createExpense(expenseData);
+            const response = await expenseAPI.createExpense(expenseData, cycleId);
             const expense = response.data.data;
             showSuccess('Expense added successfully');
 
@@ -96,7 +96,7 @@ const useExpenseStore = create((set, get) => ({
     updateExpense: async (id, expenseData, cycleId = null) => {
         set({ loading: true, error: null });
         try {
-            const response = await expenseAPI.updateExpense(id, expenseData);
+            const response = await expenseAPI.updateExpense(id, expenseData, cycleId);
             const expense = response.data.data;
             showSuccess('Expense updated successfully');
 
@@ -121,7 +121,7 @@ const useExpenseStore = create((set, get) => ({
     deleteExpense: async (id, cycleId = null) => {
         set({ loading: true, error: null });
         try {
-            await expenseAPI.deleteExpense(id);
+            await expenseAPI.deleteExpense(id, cycleId);
             showSuccess('Expense deleted successfully');
 
             await get().fetchExpenses(get().pagination.current_page, get().pagination.per_page, cycleId);

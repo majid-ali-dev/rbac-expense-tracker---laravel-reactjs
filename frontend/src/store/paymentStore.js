@@ -56,10 +56,10 @@ const usePaymentStore = create((set, get) => ({
         }
     },
 
-    submitPayment: async (id, amount) => {
+    submitPayment: async (id, amount, cycleId = null) => {
         set({ loading: true, error: null });
         try {
-            const response = await paymentAPI.submitPayment(id, { paid_amount: amount });
+            const response = await paymentAPI.submitPayment(id, { paid_amount: amount }, cycleId);
             showSuccess('Payment added successfully');
             set({ loading: false });
             return { success: true };
@@ -71,10 +71,10 @@ const usePaymentStore = create((set, get) => ({
         }
     },
 
-    deletePayment: async (id) => {
+    deletePayment: async (id, cycleId = null) => {
         set({ loading: true, error: null });
         try {
-            await paymentAPI.deletePayment(id);
+            await paymentAPI.deletePayment(id, cycleId);
             showSuccess('Payment deleted successfully');
             set({ loading: false });
             return { success: true };

@@ -57,6 +57,8 @@ export const billingCycleAPI = {
     getCurrent: () => api.get('/billing-cycle/current'),
     getAll: () => api.get('/billing-cycle/all'),
     getHistory: (params = '') => api.get(`/billing-cycle/history${params}`),
+    createCycle: (data) => api.post('/billing-cycle', data),
+    updateCycle: (id, data) => api.put(`/billing-cycle/${id}`, data),
     closeMonth: (data) => api.post('/billing-cycle/close', data),
 };
 

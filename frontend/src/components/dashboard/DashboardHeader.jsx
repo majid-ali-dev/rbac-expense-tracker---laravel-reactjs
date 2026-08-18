@@ -1,8 +1,7 @@
 import React from 'react';
-import CloseMonthButton from './CloseMonthButton';
 import CycleFilter from '../common/CycleFilter';
 
-const DashboardHeader = ({ user, billingCycle, isAdmin, onMonthClosed, notificationBell }) => {
+const DashboardHeader = ({ user, billingCycle, isAdmin, notificationBell }) => {
     const monthLabel = billingCycle?.label || new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 
     return (
@@ -21,14 +20,6 @@ const DashboardHeader = ({ user, billingCycle, isAdmin, onMonthClosed, notificat
                     </span>
                     {/* Cycle filter - select current or historical cycle */}
                     <CycleFilter moduleKey="dashboard" />
-                    {/* Close button - icon only */}
-                    {isAdmin && billingCycle && (
-                        <CloseMonthButton
-                            cycleLabel={monthLabel}
-                            cycleId={billingCycle.id}
-                            onClosed={onMonthClosed}
-                        />
-                    )}
                     {/* Notification Bell */}
                     {notificationBell}
                 </div>

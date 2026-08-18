@@ -21,53 +21,30 @@ const AddPayment = () => {
     } = usePaymentStore();
 
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const cycles = useCycleStore((s) => s.cycles);
     const cycleId = useCycleStore((s) => s.getSelectedId('payments'));
-    const selectedCycle = cycles.find((c) => c.id === cycleId) || null;
-    // Closed (historical) cycles are read-only everywhere.
-    const readOnly = useCycleStore((s) => s.isReadOnly('payments'));
 
     useEffect(() => {
         useCycleStore.getState().fetchCycles();
     }, []);
 
     useEffect(() => {
-        if (id && can('payments.create') && !readOnly) {
+        if (id && can('payments.create')) {
             fetchAddPayment(id, cycleId);
         }
         return () => clearUser();
-    }, [id, cycleId, readOnly]);
+    }, [id, cycleId]);
 
     // Action-level guard: only users with payments.create may add payments.
     if (!can('payments.create')) {
         return <AccessDenied />;
     }
 
-    // Payments can only be recorded into the current/open cycle — closed
-    // (historical) cycles are strictly read-only.
-    if (readOnly) {
-        return (
-            <div className="bg-white rounded-2xl shadow-sm border border-amber-200 p-10 text-center max-w-lg mx-auto mt-10">
-                <div className="text-5xl mb-4">🔒</div>
-                <h2 className="text-xl font-bold text-gray-900">Cycle Closed</h2>
-                <p className="text-gray-500 mt-2 text-sm">
-                    "{selectedCycle?.label}" is closed and read-only. Payments can only be
-                    recorded in the current open cycle.
-                </p>
-                <button
-                    onClick={() => navigate('/payments')}
-                    className="mt-5 inline-flex items-center gap-2 px-6 py-2.5 bg-blue-600 text-white font-bold rounded-2xl hover:bg-blue-700 transition-all"
-                >
-                    Back to Payments
-                </button>
-            </div>
-        );
-    }
-
     const handleSubmit = async (amount) => {
         setIsSubmitting(true);
         try {
-            const result = await submitPayment(id, amount);
+            // Payments are recorded into the globally selected cycle — including
+            // an old/closed cycle when one is selected.
+            const result = await submitPayment(id, amount, cycleId);
             if (result.success) {
                 navigate('/payments');
             }
@@ -90,9 +67,10 @@ const AddPayment = () => {
     return (
         <AddPaymentForm
             user={user}
+            cycleId={cycleId}
             onSubmit={handleSubmit}
             loading={isSubmitting || loading}
-            onPaymentDeleted={() => id && fetchAddPayment(id)}
+            onPaymentDeleted={() => id && fetchAddPayment(id, cycleId)}
         />
     );
 };

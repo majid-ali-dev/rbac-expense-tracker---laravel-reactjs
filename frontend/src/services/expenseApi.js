@@ -6,11 +6,14 @@ export const expenseAPI = {
 
     getExpense: (id) => api.get(`/expenses/${id}`),
 
-    createExpense: (data) => api.post('/expenses', data),
+    createExpense: (data, cycleId = null) =>
+        api.post('/expenses', cycleId ? { ...data, cycle_id: cycleId } : data),
 
-    updateExpense: (id, data) => api.put(`/expenses/${id}`, data),
+    updateExpense: (id, data, cycleId = null) =>
+        api.put(`/expenses/${id}`, cycleId ? { ...data, cycle_id: cycleId } : data),
 
-    deleteExpense: (id) => api.delete(`/expenses/${id}`),
+    deleteExpense: (id, cycleId = null) =>
+        api.delete(`/expenses/${id}${cycleId ? `?cycle_id=${cycleId}` : ''}`),
 
     getCategories: () => api.get('/expenses/categories'),
 };

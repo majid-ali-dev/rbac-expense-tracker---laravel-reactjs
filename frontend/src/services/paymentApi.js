@@ -7,7 +7,9 @@ export const paymentAPI = {
     getAddPayment: (id, cycleId = null) =>
         api.get(`/payments/${id}/add${cycleId ? `?cycle_id=${cycleId}` : ''}`),
 
-    submitPayment: (id, data) => api.post(`/payments/${id}/pay`, data),
+    submitPayment: (id, data, cycleId = null) =>
+        api.post(`/payments/${id}/pay`, cycleId ? { ...data, cycle_id: cycleId } : data),
 
-    deletePayment: (id) => api.delete(`/payments/${id}`),
+    deletePayment: (id, cycleId = null) =>
+        api.delete(`/payments/${id}${cycleId ? `?cycle_id=${cycleId}` : ''}`),
 };

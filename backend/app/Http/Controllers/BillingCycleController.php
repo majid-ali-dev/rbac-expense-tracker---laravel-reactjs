@@ -52,6 +52,81 @@ class BillingCycleController extends Controller
     }
 
     /**
+     * POST /api/billing-cycle
+     *
+     * Create a new billing cycle with the exact start/end dates provided. The
+     * current open cycle (if any) is closed and the new cycle becomes active.
+     */
+    public function store(Request $request, MonthlyRolloverService $service): JsonResponse
+    {
+        try {
+            $validated = $request->validate([
+                'start_date' => ['required', 'date'],
+                'end_date' => ['required', 'date', 'after_or_equal:start_date'],
+            ]);
+
+            $cycle = $service->createCustomCycle(
+                Carbon::parse($validated['start_date']),
+                Carbon::parse($validated['end_date'])
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => "Billing cycle created successfully: {$cycle->label}",
+                'data' => $cycle,
+            ], 201);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => collect($e->errors())->flatten()->first(),
+                'errors' => $e->errors(),
+            ], 422);
+        }
+    }
+
+    /**
+     * PUT /api/billing-cycle/{id}
+     *
+     * Update a cycle's start/end dates (open OR closed — historical cycles
+     * stay editable for admins).
+     */
+    public function update(Request $request, int $id): JsonResponse
+    {
+        $cycle = BillingCycle::find($id);
+
+        if (!$cycle) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Billing cycle not found.',
+            ], 404);
+        }
+
+        try {
+            $validated = $request->validate([
+                'start_date' => ['required', 'date'],
+                'end_date' => ['required', 'date', 'after_or_equal:start_date'],
+            ]);
+
+            $cycle->update([
+                'start_date' => Carbon::parse($validated['start_date'])->startOfDay(),
+                'end_date' => Carbon::parse($validated['end_date'])->startOfDay(),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Billing cycle updated successfully.',
+                'data' => $cycle->fresh(),
+            ]);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => collect($e->errors())->flatten()->first(),
+                'errors' => $e->errors(),
+            ], 422);
+        }
+    }
+
+    /**
      * POST /api/billing-cycle/close
      *
      * Closes the current open cycle using the user-selected date range. The

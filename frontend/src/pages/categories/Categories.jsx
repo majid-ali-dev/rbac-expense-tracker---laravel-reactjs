@@ -93,7 +93,7 @@ const Categories = () => {
 
     const handlePageChange = (page) => {
         if (page >= 1 && page <= (pagination?.last_page || 1)) {
-            fetchCategories(page, pagination?.per_page || 10);
+            fetchCategories(page, pagination?.per_page || 10, cycleId);
         }
     };
 

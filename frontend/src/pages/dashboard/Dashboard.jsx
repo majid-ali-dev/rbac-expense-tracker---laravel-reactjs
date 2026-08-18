@@ -146,7 +146,6 @@ const Dashboard = () => {
                 user={user}
                 billingCycle={dashboardData.billingCycle}
                 isAdmin={showAdminCharts}
-                onMonthClosed={fetchDashboardData}
                 notificationBell={canViewNotifications ? <NotificationBell isAdmin={canManageNotifications} /> : null}
             />
 

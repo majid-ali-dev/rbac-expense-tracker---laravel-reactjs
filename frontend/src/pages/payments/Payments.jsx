@@ -37,7 +37,7 @@ const Payments = () => {
 
     const handlePageChange = (page) => {
         if (page >= 1 && page <= (pagination?.last_page || 1)) {
-            fetchPayments(page, pagination?.per_page || 10);
+            fetchPayments(page, pagination?.per_page || 10, cycleId);
         }
     };
 
