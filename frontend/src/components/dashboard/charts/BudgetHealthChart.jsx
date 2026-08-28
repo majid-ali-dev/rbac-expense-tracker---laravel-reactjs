@@ -115,7 +115,7 @@ const BudgetHealthChart = ({ budgetHealth }) => {
                     <ResponsiveContainer width="100%" height={200}>
                         <BarChart
                             data={trend}
-                            margin={{ top: 5, right: 10, left: -15, bottom: 0 }}
+                            margin={{ top: 5, right: 10, left: 5, bottom: 0 }}
                             barGap={2}
                             barCategoryGap="30%"
                         >
@@ -141,7 +141,7 @@ const BudgetHealthChart = ({ budgetHealth }) => {
                                 tick={{ fontSize: 10, fill: '#94a3b8' }}
                                 axisLine={false}
                                 tickLine={false}
-                                width={40}
+                                width={50}
                                 domain={[0, 'auto']}
                             />
                             <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(148, 163, 184, 0.08)' }} />
