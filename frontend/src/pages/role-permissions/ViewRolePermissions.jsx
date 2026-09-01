@@ -3,8 +3,10 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { FaArrowLeft, FaShieldAlt, FaCheckSquare, FaRegSquare } from 'react-icons/fa';
 import useRolePermissionStore from '../../store/rolePermissionStore';
 import DataTable from '../../components/common/DataTable';
+import useTranslation from '../../hooks/useTranslation';
 
 const ViewRolePermissions = () => {
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const { id } = useParams();
     const { role, allPermissions, loading, fetchRolePermissions, clearRole } = useRolePermissionStore();
@@ -25,7 +27,7 @@ const ViewRolePermissions = () => {
             <div className="flex items-center justify-center min-h-[60vh]">
                 <div className="text-center">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-                    <p className="mt-4 text-gray-600">Loading permissions...</p>
+                    <p className="mt-4 text-gray-600">{t('loadingPermissionsDots')}</p>
                 </div>
             </div>
         );
@@ -35,12 +37,12 @@ const ViewRolePermissions = () => {
         return (
             <div className="flex items-center justify-center min-h-[60vh]">
                 <div className="text-center">
-                    <p className="text-gray-500 text-lg">Role not found</p>
+                    <p className="text-gray-500 text-lg">{t('userNotFound')}</p>
                     <button
                         onClick={handleBack}
                         className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-2xl hover:bg-blue-700 transition-all"
                     >
-                        Go Back
+                        {t('goBack')}
                     </button>
                 </div>
             </div>
@@ -104,7 +106,7 @@ const ViewRolePermissions = () => {
                 className="inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors"
             >
                 <FaArrowLeft size={14} />
-                Back to Roles & Permissions
+                {t('backToRolesPermissions')}
             </button>
 
             {/* Header card */}
@@ -117,18 +119,18 @@ const ViewRolePermissions = () => {
                         <div>
                             <h1 className="text-xl font-extrabold text-gray-900">{role.name}</h1>
                             <p className="text-sm text-gray-500 mt-0.5">
-                                Role {role.id} · Permissions overview
+                                {t('rolePermissionsOverview')} {role.id} · {t('permissionsOverview')}
                             </p>
                         </div>
                     </div>
                     <div className="flex items-center gap-2 flex-wrap">
                         <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-blue-100 text-blue-700">
                             <FaCheckSquare size={12} />
-                            {assignedCount} Assigned
+                            {assignedCount} {t('assignedCount')}
                         </span>
                         <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-gray-100 text-gray-600">
                             <FaRegSquare size={12} />
-                            {unassignedCount} Not assigned
+                            {unassignedCount} {t('notAssignedCount')}
                         </span>
                     </div>
                 </div>

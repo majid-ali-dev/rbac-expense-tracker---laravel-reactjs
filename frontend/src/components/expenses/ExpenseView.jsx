@@ -1,7 +1,9 @@
 import React from 'react';
 import { FaArrowLeft, FaUser, FaTag, FaMoneyBillWave, FaCalendar, FaFileAlt, FaClock, FaUserCircle } from 'react-icons/fa';
+import useTranslation from '../../hooks/useTranslation';
 
 const ExpenseView = ({ expense, onBack }) => {
+    const { t } = useTranslation();
     if (!expense) return null;
 
     // Get history data from expense
@@ -83,8 +85,8 @@ const ExpenseView = ({ expense, onBack }) => {
                         <FaMoneyBillWave className="text-blue-600" size={20} />
                     </div>
                     <div>
-                        <h2 className="text-xl font-extrabold text-gray-900">Expense Details</h2>
-                        <p className="text-sm text-gray-500 mt-0.5">Complete information about this expense</p>
+                        <h2 className="text-xl font-extrabold text-gray-900">{t('expenseDetails')}</h2>
+                        <p className="text-sm text-gray-500 mt-0.5">{t('completeExpenseInfo')}</p>
                     </div>
                 </div>
                 <button
@@ -92,7 +94,7 @@ const ExpenseView = ({ expense, onBack }) => {
                     className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 font-medium rounded-2xl hover:bg-gray-50 transition-all"
                 >
                     <FaArrowLeft size={14} />
-                    Back
+                    {t('back')}
                 </button>
             </div>
 
@@ -103,7 +105,7 @@ const ExpenseView = ({ expense, onBack }) => {
                         <FaUser className="text-blue-600" size={18} />
                     </div>
                     <div>
-                        <p className="text-xs text-gray-500 font-medium">User</p>
+                        <p className="text-xs text-gray-500 font-medium">{t('userLabel')}</p>
                         <p className="text-sm font-bold text-gray-900">{expense.user?.name || '-'}</p>
                     </div>
                 </div>
@@ -113,7 +115,7 @@ const ExpenseView = ({ expense, onBack }) => {
                         <FaTag className="text-purple-600" size={18} />
                     </div>
                     <div>
-                        <p className="text-xs text-gray-500 font-medium">Category</p>
+                        <p className="text-xs text-gray-500 font-medium">{t('categoryLabel')}</p>
                         <p className="text-sm font-bold text-gray-900">{expense.category?.name || '-'}</p>
                     </div>
                 </div>
@@ -123,7 +125,7 @@ const ExpenseView = ({ expense, onBack }) => {
                         <FaMoneyBillWave className="text-green-600" size={18} />
                     </div>
                     <div>
-                        <p className="text-xs text-gray-500 font-medium">Amount</p>
+                        <p className="text-xs text-gray-500 font-medium">{t('amountLabel')}</p>
                         <p className="text-sm font-bold text-green-600">Rs. {(expense.amount || 0).toFixed(2)}</p>
                     </div>
                 </div>
@@ -133,7 +135,7 @@ const ExpenseView = ({ expense, onBack }) => {
                         <FaCalendar className="text-orange-600" size={18} />
                     </div>
                     <div>
-                        <p className="text-xs text-gray-500 font-medium">Date</p>
+                        <p className="text-xs text-gray-500 font-medium">{t('date')}</p>
                         <p className="text-sm font-bold text-gray-900">{expense.date_formatted || '-'}</p>
                     </div>
                 </div>
@@ -143,8 +145,8 @@ const ExpenseView = ({ expense, onBack }) => {
                         <FaFileAlt className="text-red-600" size={18} />
                     </div>
                     <div className="flex-1">
-                        <p className="text-xs text-gray-500 font-medium">Description</p>
-                        <p className="text-sm text-gray-700">{expense.description || 'No description provided'}</p>
+                        <p className="text-xs text-gray-500 font-medium">{t('descriptionLabel')}</p>
+                        <p className="text-sm text-gray-700">{expense.description || t('noDescriptionProvided')}</p>
                     </div>
                 </div>
             </div>
@@ -154,7 +156,7 @@ const ExpenseView = ({ expense, onBack }) => {
                 <div className="mt-8 border-t border-gray-200 pt-6">
                     <div className="flex items-center gap-2 mb-4">
                         <FaClock className="text-blue-600" size={18} />
-                        <h3 className="text-lg font-bold text-gray-900">Expense History</h3>
+                        <h3 className="text-lg font-bold text-gray-900">{t('expenseHistory')}</h3>
                         <span className="text-sm text-gray-500 bg-gray-100 px-3 py-0.5 rounded-full">
                             {histories.length} change{histories.length > 1 ? 's' : ''}
                         </span>

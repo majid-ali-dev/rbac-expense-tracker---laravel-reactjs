@@ -12,6 +12,7 @@ import {
 import { FaChartBar } from 'react-icons/fa';
 import ChartCard from '../ChartCard';
 import useThemeStore from '../../../store/themeStore';
+import useTranslation from '../../../hooks/useTranslation';
 
 const GRADIENTS = [
     ['#60a5fa', '#3b82f6'],
@@ -33,14 +34,15 @@ const CustomTooltip = ({ active, payload }) => {
 };
 
 const CategoryBreakdownChart = ({ data }) => {
+    const { t } = useTranslation();
     const { theme } = useThemeStore();
     const isDark = theme === 'dark';
     const hasData = data && data.length > 0 && data.some(d => d.amount > 0);
 
     return (
         <ChartCard
-            title="Category Breakdown"
-            subtitle="Top spending categories"
+            title={t('categoryBreakdown')}
+            subtitle={t('topSpendingCategories')}
             icon={FaChartBar}
             iconColor="bg-purple-500"
         >
@@ -84,7 +86,7 @@ const CategoryBreakdownChart = ({ data }) => {
                 </ResponsiveContainer>
             ) : (
                 <div className="h-[270px] flex items-center justify-center text-sm text-gray-400">
-                    No category data available
+                    {t('noCategoryData')}
                 </div>
             )}
         </ChartCard>

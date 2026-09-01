@@ -5,8 +5,10 @@ import api from '../../services/api';
 import axios from 'axios';
 import usePermission from '../../hooks/usePermission';
 import useCycleStore from '../../store/cycleStore';
+import useTranslation from '../../hooks/useTranslation';
 
 const ViewExpenses = () => {
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const { can } = usePermission();
     const [expenses, setExpenses] = useState([]);
@@ -189,14 +191,12 @@ const ViewExpenses = () => {
     if (error) {
         return (
             <div className="bg-white rounded-2xl shadow-sm border border-red-200 p-8 text-center">
-                <div className="text-5xl mb-4">❌</div>
-                <p className="text-red-600 text-lg font-medium">{error}</p>
+                <div className="text-5xl mb-4">❌</div>                        <p className="text-red-600 text-lg font-medium">{error}</p>
                 <button
                     onClick={handleReset}
                     className="mt-4 inline-flex items-center gap-2 px-6 py-2.5 bg-blue-600 text-white font-bold rounded-2xl hover:bg-blue-700 transition-all"
-                >
-                    <FaUndo size={14} />
-                    Try Again
+                >                            <FaUndo size={14} />
+                            {t('tryAgain')}
                 </button>
             </div>
         );
@@ -207,8 +207,8 @@ const ViewExpenses = () => {
             {/* Header */}
             <div className="flex items-center justify-between flex-wrap gap-4 bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
                 <div>
-                    <h1 className="text-2xl font-extrabold text-gray-900">View Expenses</h1>
-                    <p className="text-sm text-gray-500 mt-0.5">Filter and view expense reports</p>
+                    <h1 className="text-2xl font-extrabold text-gray-900">{t('viewExpenses')}</h1>
+                    <p className="text-sm text-gray-500 mt-0.5">{t('filterAndViewExpenses')}</p>
                 </div>
                 <div className="flex items-center gap-3">
                     {can('expenses.download') && (
@@ -223,12 +223,12 @@ const ViewExpenses = () => {
                                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                     </svg>
-                                    Downloading...
+                                    {t('downloading')}
                                 </>
                             ) : (
                                 <>
                                     <FaDownload size={16} />
-                                    Download Excel
+                                    {t('downloadExcel')}
                                 </>
                             )}
                         </button>
@@ -238,7 +238,7 @@ const ViewExpenses = () => {
                         className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 font-medium rounded-2xl hover:bg-gray-50 transition-all"
                     >
                         <FaArrowLeft size={14} />
-                        Back
+                        {t('back')}
                     </button>
                 </div>
             </div>
@@ -247,7 +247,7 @@ const ViewExpenses = () => {
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
                 <div className="flex flex-wrap items-end gap-4">
                     <div>
-                        <label className="block text-sm font-bold text-gray-700 mb-1.5">From</label>                            <input
+                        <label className="block text-sm font-bold text-gray-700 mb-1.5">{t('from')}</label>                            <input
                                 type="date"
                                 value={fromDate}
                                 onChange={handleDateChange(setFromDate)}
@@ -255,7 +255,7 @@ const ViewExpenses = () => {
                             />
                     </div>
                     <div>
-                        <label className="block text-sm font-bold text-gray-700 mb-1.5">To</label>                            <input
+                        <label className="block text-sm font-bold text-gray-700 mb-1.5">{t('to')}</label>                            <input
                                 type="date"
                                 value={toDate}
                                 onChange={handleDateChange(setToDate)}
@@ -267,14 +267,14 @@ const ViewExpenses = () => {
                         className="inline-flex items-center gap-2 px-6 py-2.5 bg-blue-600 text-white font-bold rounded-2xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20"
                     >
                         <FaFilter size={14} />
-                        Filter
+                        {t('filter')}
                     </button>
                     <button
                         onClick={handleReset}
                         className="inline-flex items-center gap-2 px-6 py-2.5 bg-gray-200 text-gray-700 font-bold rounded-2xl hover:bg-gray-300 transition-all"
                     >
                         <FaUndo size={14} />
-                        Reset
+                        {t('reset')}
                     </button>
                 </div>
             </div>
@@ -285,7 +285,7 @@ const ViewExpenses = () => {
                     <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                     <input
                         type="text"
-                        placeholder="Search by title, user, category, description..."
+                        placeholder={t('searchByTitleUser')}
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="w-full pl-12 pr-4 py-3 rounded-2xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -312,7 +312,7 @@ const ViewExpenses = () => {
             {!loading && filteredExpenses.length > 0 && (
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                     <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
-                        <h2 className="text-lg font-bold text-white">Daily Expenses</h2>
+                        <h2 className="text-lg font-bold text-white">{t('dailyExpenses')}</h2>
                     </div>
                     <div className="p-4">
                         {sortedDates.map((date) => (
@@ -324,11 +324,11 @@ const ViewExpenses = () => {
                                     <table className="w-full text-center align-middle">
                                         <thead>
                                             <tr className="bg-gray-50 border-b border-gray-200">
-                                                <th className="py-3 px-4 text-xs font-bold text-gray-600 uppercase tracking-wider">User</th>
-                                                <th className="py-3 px-4 text-xs font-bold text-gray-600 uppercase tracking-wider">Category</th>
-                                                <th className="py-3 px-4 text-xs font-bold text-gray-600 uppercase tracking-wider">Title</th>
-                                                <th className="py-3 px-4 text-xs font-bold text-gray-600 uppercase tracking-wider">Amount</th>
-                                                <th className="py-3 px-4 text-xs font-bold text-gray-600 uppercase tracking-wider">Description</th>
+                                                <th className="py-3 px-4 text-xs font-bold text-gray-600 uppercase tracking-wider">{t('userLabel')}</th>
+                                                <th className="py-3 px-4 text-xs font-bold text-gray-600 uppercase tracking-wider">{t('categoryLabel')}</th>
+                                                <th className="py-3 px-4 text-xs font-bold text-gray-600 uppercase tracking-wider">{t('titleLabel')}</th>
+                                                <th className="py-3 px-4 text-xs font-bold text-gray-600 uppercase tracking-wider">{t('amountLabel')}</th>
+                                                <th className="py-3 px-4 text-xs font-bold text-gray-600 uppercase tracking-wider">{t('descriptionLabel')}</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -373,12 +373,11 @@ const ViewExpenses = () => {
             {/* No Data Message */}
             {!loading && filteredExpenses.length === 0 && (
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
-                    <div className="text-6xl mb-4">📊</div>
-                    <p className="text-gray-500 text-lg font-medium">
-                        {searchTerm ? 'No matching expenses found' : 'No expenses found'}
+                    <div className="text-6xl mb-4">📊</div>                        <p className="text-gray-500 text-lg font-medium">
+                        {searchTerm ? t('noMatchingExpenses') : t('noExpensesFound')}
                     </p>
                     <p className="text-sm text-gray-400 mt-1">
-                        {searchTerm ? 'Try adjusting your search term' : 'Try adjusting your date filter'}
+                        {searchTerm ? t('adjustSearchTerm') : t('adjustDateFilter')}
                     </p>
                 </div>
             )}
@@ -387,13 +386,13 @@ const ViewExpenses = () => {
             {!loading && filteredExpenses.length > 0 && (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 text-center hover:shadow-md transition-shadow">
-                        <p className="text-xs text-blue-600 font-bold uppercase tracking-wider">Total Expenses</p>
+                        <p className="text-xs text-blue-600 font-bold uppercase tracking-wider">{t('totalExpensesLabel')}</p>
                         <p className="text-2xl font-extrabold text-blue-700 mt-2">
                             Rs. {totalExpenses.toFixed(2)}
                         </p>
                     </div>
                     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 text-center hover:shadow-md transition-shadow">
-                        <p className="text-xs text-green-600 font-bold uppercase tracking-wider">Total Paid</p>
+                        <p className="text-xs text-green-600 font-bold uppercase tracking-wider">{t('totalPaidLabel')}</p>
                         <p className="text-2xl font-extrabold text-green-700 mt-2">
                             Rs. {totalPaid.toFixed(2)}
                         </p>

@@ -3,8 +3,10 @@ import usePermissionStore from '../../store/permissionStore';
 import PermissionTable from '../../components/permissions/PermissionTable';
 import PermissionForm from '../../components/permissions/PermissionForm';
 import { showDeleteConfirm, showDeletedSuccess } from '../../utils/toast';
+import useTranslation from '../../hooks/useTranslation';
 
 const Permissions = () => {
+    const { t } = useTranslation();
     const {
         permissions,
         loading,
@@ -84,7 +86,7 @@ const Permissions = () => {
             <div className="flex items-center justify-center min-h-[60vh]">
                 <div className="text-center">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
-                    <p className="mt-4 text-gray-600">Loading permissions...</p>
+                    <p className="mt-4 text-gray-600">{t('loadingPermissions')}</p>
                 </div>
             </div>
         );

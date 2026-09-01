@@ -11,6 +11,7 @@ import NotificationBell from '../../components/dashboard/notification/Notificati
 import usePermission from '../../hooks/usePermission';
 import useCycleStore from '../../store/cycleStore';
 import { showError } from '../../utils/toast';
+import useTranslation from '../../hooks/useTranslation';
 
 const initialState = {
     billingCycle: null,
@@ -31,6 +32,7 @@ const Dashboard = () => {
     const [dashboardData, setDashboardData] = useState(initialState);
     const cycleId = useCycleStore((s) => s.getSelectedId('dashboard'));
     const fetchCycles = useCycleStore((s) => s.fetchCycles);
+    const { t } = useTranslation();
 
     useEffect(() => {
         // Ensure the cycle dropdown is populated (for the close flow + filter)
@@ -75,7 +77,7 @@ const Dashboard = () => {
             <div className="flex items-center justify-center min-h-[60vh]">
                 <div className="text-center">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto" />
-                    <p className="mt-4 text-gray-600">Loading dashboard...</p>
+                    <p className="mt-4 text-gray-600">{t('loadingDashboard')}</p>
                 </div>
             </div>
         );
@@ -93,14 +95,14 @@ const Dashboard = () => {
             <div className="flex items-center justify-center min-h-[60vh]">
                 <div className="text-center">
                     <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded max-w-md">
-                        <p className="font-bold">Error Loading Dashboard</p>
+                        <p className="font-bold">{t('errorLoadingDashboard')}</p>
                         <p className="text-sm mt-2">{displayMessage}</p>
                     </div>
                     <button
                         onClick={fetchDashboardData}
                         className="mt-4 inline-flex items-center gap-2 px-6 py-2.5 bg-blue-600 text-white font-bold rounded-2xl hover:bg-blue-700 transition-all"
                     >
-                        Try Again
+                        {t('tryAgain')}
                     </button>
                 </div>
             </div>
@@ -113,16 +115,15 @@ const Dashboard = () => {
             <div className="flex items-center justify-center min-h-[60vh]">
                 <div className="text-center bg-white rounded-2xl shadow-sm border border-gray-100 p-10 max-w-md">
                     <div className="text-5xl mb-4">📅</div>
-                    <h2 className="text-xl font-extrabold text-gray-900">No Billing Cycle</h2>
+                    <h2 className="text-xl font-extrabold text-gray-900">{t('noBillingCycle')}</h2>
                     <p className="text-gray-500 text-sm mt-2">
-                        No billing cycle is available right now. Please refresh or ask an
-                        administrator to create one.
+                        {t('noBillingCycleDesc')}
                     </p>
                     <button
                         onClick={fetchDashboardData}
                         className="mt-5 inline-flex items-center gap-2 px-6 py-2.5 bg-blue-600 text-white font-bold rounded-2xl hover:bg-blue-700 transition-all"
                     >
-                        Refresh
+                        {t('refresh')}
                     </button>
                 </div>
             </div>
@@ -176,8 +177,8 @@ const Dashboard = () => {
             {!hasData && (
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
                     <div className="text-5xl mb-4">📊</div>
-                    <p className="text-gray-500 text-lg font-medium">No data available</p>
-                    <p className="text-sm text-gray-400 mt-1">Start adding expenses and payments</p>
+                    <p className="text-gray-500 text-lg font-medium">{t('noDataAvailable')}</p>
+                    <p className="text-sm text-gray-400 mt-1">{t('startAddingExpenses')}</p>
                 </div>
             )}
         </div>

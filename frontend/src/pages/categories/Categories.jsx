@@ -5,8 +5,10 @@ import CycleFilter from '../../components/common/CycleFilter';
 import CategoryTable from '../../components/categories/CategoryTable';
 import CategoryForm from '../../components/categories/CategoryForm';
 import { showDeleteConfirm, showDeletedSuccess } from '../../utils/toast';
+import useTranslation from '../../hooks/useTranslation';
 
 const Categories = () => {
+    const { t } = useTranslation();
     const {
         categories,
         loading,
@@ -102,7 +104,7 @@ const Categories = () => {
             <div className="flex items-center justify-center min-h-[60vh]">
                 <div className="text-center">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
-                    <p className="mt-4 text-gray-600">Loading categories...</p>
+                    <p className="mt-4 text-gray-600">{t('loadingCategories')}</p>
                 </div>
             </div>
         );

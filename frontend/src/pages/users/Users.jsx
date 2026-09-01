@@ -6,8 +6,10 @@ import CycleFilter from '../../components/common/CycleFilter';
 import UserTable from '../../components/users/UserTable';
 import UserForm from '../../components/users/UserForm';
 import { showDeleteConfirm, showDeletedSuccess } from '../../utils/toast';
+import useTranslation from '../../hooks/useTranslation';
 
 const Users = () => {
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const {
         users,
@@ -111,7 +113,7 @@ const Users = () => {
             <div className="flex items-center justify-center min-h-[60vh]">
                 <div className="text-center">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-                    <p className="mt-4 text-gray-600">Loading users...</p>
+                    <p className="mt-4 text-gray-600">{t('loadingUsers')}</p>
                 </div>
             </div>
         );

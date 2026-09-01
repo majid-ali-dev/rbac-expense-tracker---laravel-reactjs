@@ -8,14 +8,16 @@ import {
     flexRender,
 } from '@tanstack/react-table';
 import { FaSearch, FaSort, FaSortUp, FaSortDown, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
+import useTranslation from '../../hooks/useTranslation';
 
 const DataTable = ({
+    // eslint-disable-next-line
     data = [],
     columns = [],
     title,
     onCreate,
     createButtonText = 'Create New',
-    searchPlaceholder = 'Search...',
+    searchPlaceholder,
     itemsPerPage = 10,
     onPageChange,
     onPageRowsChange,

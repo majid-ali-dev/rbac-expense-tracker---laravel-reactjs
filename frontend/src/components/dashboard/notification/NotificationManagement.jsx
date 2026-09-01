@@ -3,8 +3,10 @@ import { FaPlus, FaEdit, FaTrash, FaBell, FaTimes, FaCheck, FaClock, FaEye, FaUs
 import useNotificationStore from '../../../store/notificationStore';
 import usePermission from '../../../hooks/usePermission';
 import { showDeleteConfirm, showDeletedSuccess, showError } from '../../../utils/toast';
+import useTranslation from '../../../hooks/useTranslation';
 
 const NotificationManagement = () => {
+    const { t } = useTranslation();
     const { can } = usePermission();
     const [showForm, setShowForm] = useState(false);
     const [editingNotification, setEditingNotification] = useState(null);
@@ -115,8 +117,8 @@ const NotificationManagement = () => {
                         <FaBell className="text-blue-600" size={20} />
                     </div>
                     <div>
-                        <h1 className="text-2xl font-extrabold text-gray-900">Notifications</h1>
-                        <p className="text-sm text-gray-500 mt-0.5">Manage system notifications</p>
+                        <h1 className="text-2xl font-extrabold text-gray-900">{t('notifications')}</h1>
+                        <p className="text-sm text-gray-500 mt-0.5">{t('manageNotifications')}</p>
                     </div>
                 </div>
                 {can('notifications.create') && (
@@ -125,7 +127,7 @@ const NotificationManagement = () => {
                         className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white font-bold rounded-2xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20"
                     >
                         <FaPlus size={14} />
-                        Create Notification
+                        {t('createNotification')}
                     </button>
                 )}
             </div>
@@ -135,7 +137,7 @@ const NotificationManagement = () => {
                 <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
                     <div className="flex items-center justify-between mb-4">
                         <h2 className="text-lg font-bold text-gray-900">
-                            {editingNotification ? 'Edit Notification' : 'Create Notification'}
+                            {editingNotification ? t('editNotification') : t('createNotification')}
                         </h2>
                         <button
                             onClick={handleCancel}
@@ -148,14 +150,14 @@ const NotificationManagement = () => {
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div>
                             <label className="block text-sm font-bold text-gray-700 mb-1.5">
-                                Title <span className="text-red-500">*</span>
+                                {t('title')} <span className="text-red-500">*</span>
                             </label>
                             <input
                                 type="text"
                                 value={formData.title}
                                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                                 className="w-full px-4 py-2.5 rounded-2xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                placeholder="Enter notification title"
+                                placeholder={t('enterNotificationTitle')}
                                 required
                                 disabled={isSubmitting}
                             />
@@ -163,14 +165,14 @@ const NotificationManagement = () => {
 
                         <div>
                             <label className="block text-sm font-bold text-gray-700 mb-1.5">
-                                Content <span className="text-red-500">*</span>
+                                {t('content')} <span className="text-red-500">*</span>
                             </label>
                             <textarea
                                 value={formData.content}
                                 onChange={(e) => setFormData({ ...formData, content: e.target.value })}
                                 rows="4"
                                 className="w-full px-4 py-2.5 rounded-2xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                placeholder="Enter notification content"
+                                placeholder={t('enterNotificationContent')}
                                 required
                                 disabled={isSubmitting}
                             />
@@ -183,14 +185,14 @@ const NotificationManagement = () => {
                                 className="inline-flex items-center gap-2 px-6 py-2.5 bg-green-600 text-white font-bold rounded-2xl hover:bg-green-700 transition-all shadow-lg shadow-green-600/20 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 <FaCheck size={14} />
-                                {isSubmitting ? 'Saving...' : (editingNotification ? 'Update' : 'Send')}
+                                {isSubmitting ? t('saving') : (editingNotification ? t('update') : 'Send')}
                             </button>
                             <button
                                 type="button"
                                 onClick={handleCancel}
                                 className="px-6 py-2.5 border border-gray-300 text-gray-700 font-medium rounded-2xl hover:bg-gray-50 transition-all"
                             >
-                                Cancel
+                                {t('cancel')}
                             </button>
                         </div>
                     </form>
@@ -217,8 +219,8 @@ const NotificationManagement = () => {
                                     <tr>
                                         <td colSpan="6" className="py-12 text-center text-gray-500">
                                             <div className="text-4xl mb-3">📭</div>
-                                            <p className="font-medium">No notifications created yet</p>
-                                            <p className="text-sm mt-1">Click "Create Notification" to send one</p>
+                                            <p className="font-medium">{t('noNotificationsCreated')}</p>
+                                            <p className="text-sm mt-1">{t('clickCreateNotification')}</p>
                                         </td>
                                     </tr>
                                 ) : (
@@ -241,7 +243,7 @@ const NotificationManagement = () => {
                                                     ? 'bg-green-100 text-green-700'
                                                     : 'bg-gray-100 text-gray-500'
                                                     }`}>
-                                                    {notification.is_active ? 'Active' : 'Inactive'}
+                                                    {notification.is_active ? t('activeLabel') : t('inactiveLabel')}
                                                 </span>
                                             </td>
                                             <td className="py-3 px-4 text-sm text-gray-600">
@@ -297,7 +299,7 @@ const NotificationManagement = () => {
                         {/* Modal Header */}
                         <div className="flex items-center justify-between p-6 border-b border-gray-200">
                             <div>
-                                <h2 className="text-xl font-extrabold text-gray-900">Notification Details</h2>
+                                <h2 className="text-xl font-extrabold text-gray-900">{t('notificationDetails')}</h2>
                                 <p className="text-sm text-gray-500 mt-0.5">{viewingNotification.title}</p>
                             </div>
                             <button
@@ -312,7 +314,7 @@ const NotificationManagement = () => {
                         <div className="p-6 overflow-y-auto max-h-[60vh]">
                             {/* Content */}
                             <div className="mb-6">
-                                <h4 className="text-sm font-bold text-gray-700 mb-2">Content</h4>
+                                <h4 className="text-sm font-bold text-gray-700 mb-2">{t('content')}</h4>
                                 <p className="text-sm text-gray-600 bg-gray-50 p-4 rounded-xl border border-gray-100">
                                     {viewingNotification.content}
                                 </p>
@@ -321,13 +323,13 @@ const NotificationManagement = () => {
                             {/* Stats */}
                             <div className="grid grid-cols-2 gap-4 mb-6">
                                 <div className="bg-blue-50 rounded-xl p-4 text-center border border-blue-100">
-                                    <p className="text-xs text-blue-600 font-bold uppercase tracking-wider">Read</p>
+                                    <p className="text-xs text-blue-600 font-bold uppercase tracking-wider">{t('read')}</p>
                                     <p className="text-2xl font-extrabold text-blue-700 mt-1">
                                         {viewingNotification.read_count || 0}
                                     </p>
                                 </div>
                                 <div className="bg-gray-50 rounded-xl p-4 text-center border border-gray-100">
-                                    <p className="text-xs text-gray-600 font-bold uppercase tracking-wider">Total Members</p>
+                                    <p className="text-xs text-gray-600 font-bold uppercase tracking-wider">{t('totalMembersLabel')}</p>
                                     <p className="text-2xl font-extrabold text-gray-700 mt-1">
                                         {viewingNotification.total_members || 0}
                                     </p>
@@ -336,7 +338,7 @@ const NotificationManagement = () => {
 
                             {/* Read List */}
                             <div>
-                                <h4 className="text-sm font-bold text-gray-700 mb-3">Members who read this notification</h4>
+                                <h4 className="text-sm font-bold text-gray-700 mb-3">{t('membersWhoRead')}</h4>
                                 {viewingNotification.reads && viewingNotification.reads.length > 0 ? (
                                     <div className="overflow-x-auto">
                                         <table className="w-full text-center align-middle">
@@ -363,7 +365,7 @@ const NotificationManagement = () => {
                                     </div>
                                 ) : (
                                     <div className="text-center py-8 bg-gray-50 rounded-xl">
-                                        <p className="text-gray-500 text-sm">No one has read this notification yet</p>
+                                        <p className="text-gray-500 text-sm">{t('noOneRead')}</p>
                                     </div>
                                 )}
                             </div>
@@ -375,7 +377,7 @@ const NotificationManagement = () => {
                                 onClick={() => setShowViewModal(false)}
                                 className="px-6 py-2.5 bg-gray-200 text-gray-700 font-bold rounded-2xl hover:bg-gray-300 transition-all"
                             >
-                                Close
+                                {t('close')}
                             </button>
                         </div>
                     </div>

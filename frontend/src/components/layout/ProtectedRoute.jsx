@@ -6,8 +6,10 @@ import Sidebar from './Sidebar';
 import Footer from './Footer';
 import Breadcrumb from './Breadcrumb';
 import AccessDenied from '../common/AccessDenied';
+import useTranslation from '../../hooks/useTranslation';
 
 const ProtectedRoute = () => {
+    const { t } = useTranslation();
     const location = useLocation();
     const { isAuthenticated, fetchUser, user, token } = useAuthStore();
     const [loading, setLoading] = useState(true);
@@ -47,7 +49,7 @@ const ProtectedRoute = () => {
             <div className="flex items-center justify-center min-h-screen bg-gray-50">
                 <div className="text-center">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-                    <p className="mt-4 text-gray-600">Loading...</p>
+                    <p className="mt-4 text-gray-600">{t('loading')}</p>
                 </div>
             </div>
         );

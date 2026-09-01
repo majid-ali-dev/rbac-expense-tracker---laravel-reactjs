@@ -1,7 +1,9 @@
 import React from 'react';
 import { FaWallet } from 'react-icons/fa';
+import useTranslation from '../../hooks/useTranslation';
 
 const Footer = () => {
+    const { t } = useTranslation();
     const year = new Date().getFullYear();
 
     return (
@@ -12,16 +14,16 @@ const Footer = () => {
                     <span className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-600/30">
                         <FaWallet className="text-white" size={18} />
                     </span>
-                    <span className="font-bold text-base text-white">Expense Tracker</span>
+                    <span className="font-bold text-base text-white">{t('appName')}</span>
                 </div>
 
                 {/* Copyright - Centered */}
-                <p className="text-xs text-gray-400">© {year} Expense Tracker. All rights reserved.</p>
+                <p className="text-xs text-gray-400">© {year} {t('appName')}. {t('allRightsReserved')}</p>
 
                 {/* Developer */}
                 <div className="flex items-center gap-1 sm:gap-3 text-xs text-gray-400">
                     <p>
-                        Developed by <span className="font-medium text-white">Majid Baloch</span>
+                        {t('developedBy')} <span className="font-medium text-white">Majid Baloch</span>
                     </p>
                 </div>
             </div>

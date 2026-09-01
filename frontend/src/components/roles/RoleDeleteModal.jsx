@@ -1,7 +1,9 @@
 import React from 'react';
 import { FaExclamationTriangle, FaTimes } from 'react-icons/fa';
+import useTranslation from '../../hooks/useTranslation';
 
 const RoleDeleteModal = ({ role, onConfirm, onCancel, loading }) => {
+    const { t } = useTranslation();
     if (!role) return null;
 
     return (
@@ -12,7 +14,7 @@ const RoleDeleteModal = ({ role, onConfirm, onCancel, loading }) => {
                         <div className="p-2 bg-red-100 rounded-full">
                             <FaExclamationTriangle className="text-red-600" size={20} />
                         </div>
-                        <h2 className="text-xl font-bold text-gray-900">Delete Role</h2>
+                        <h2 className="text-xl font-bold text-gray-900">{t('deleteRole')}</h2>
                     </div>
                     <button
                         onClick={onCancel}
@@ -23,10 +25,10 @@ const RoleDeleteModal = ({ role, onConfirm, onCancel, loading }) => {
                 </div>
 
                 <p className="text-gray-600 mb-2">
-                    Are you sure you want to delete the role <strong>"{role.name}"</strong>?
+                    {t('confirmDeleteRole')} <strong>"{role.name}"</strong>?
                 </p>
                 <p className="text-sm text-red-600 mb-6">
-                    This action cannot be undone. All users with this role will be affected.
+                    {t('roleDeleteMsg2')}
                 </p>
 
                 <div className="flex items-center gap-3">
@@ -35,13 +37,13 @@ const RoleDeleteModal = ({ role, onConfirm, onCancel, loading }) => {
                         disabled={loading}
                         className="flex-1 px-4 py-2.5 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        {loading ? 'Deleting...' : 'Delete Role'}
+                        {loading ? t('deleting') : t('deleteRole')}
                     </button>
                     <button
                         onClick={onCancel}
                         className="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors"
                     >
-                        Cancel
+                        {t('cancel')}
                     </button>
                 </div>
             </div>

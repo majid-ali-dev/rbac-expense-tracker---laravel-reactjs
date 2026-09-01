@@ -2,9 +2,11 @@ import React from 'react';
 import { FaEdit, FaEye } from 'react-icons/fa';
 import DataTable from '../common/DataTable';
 import usePermission from '../../hooks/usePermission';
+import useTranslation from '../../hooks/useTranslation';
 
 const RolePermissionTable = ({ roles = [], pagination, onEdit, onView, onPageChange }) => {
     const { can } = usePermission();
+    const { t } = useTranslation();
 
     const columns = [
         {
@@ -18,7 +20,7 @@ const RolePermissionTable = ({ roles = [], pagination, onEdit, onView, onPageCha
         },
         {
             id: 'name',
-            header: 'Role Name',
+            header: t('roleName'),
             accessorFn: (row) => row.name,
             cell: ({ getValue }) => (
                 <span className="font-semibold text-gray-900">{getValue() || '-'}</span>
@@ -27,13 +29,13 @@ const RolePermissionTable = ({ roles = [], pagination, onEdit, onView, onPageCha
         },
         {
             id: 'permissions',
-            header: 'Permissions',
+            header: t('permissions'),
             accessorFn: (row) => row.permissions || [],
             cell: ({ row }) => {
                 const permissions = row.original.permissions || [];
                 if (permissions.length === 0) {
                     return (
-                        <span className="text-sm text-gray-500">No permissions assigned</span>
+                        <span className="text-sm text-gray-500">{t('noPermissionsAssigned')}</span>
                     );
                 }
                 return (
@@ -55,18 +57,18 @@ const RolePermissionTable = ({ roles = [], pagination, onEdit, onView, onPageCha
         },
         {
             id: 'permissions_count',
-            header: 'Total',
+            header: t('totalAmountCard'),
             accessorFn: (row) => row.permissions?.length || 0,
             cell: ({ getValue }) => (
                 <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-700">
-                    {getValue()} {getValue() === 1 ? 'permission' : 'permissions'}
+                    {getValue()} {getValue() === 1 ? t('permission') : t('permissions')}
                 </span>
             ),
             enableSorting: true,
         },
         {
             id: 'actions',
-            header: 'Actions',
+            header: t('actions'),
             accessorFn: (row) => row.id,
             cell: ({ row }) => {
                 const role = row.original;
@@ -88,7 +90,7 @@ const RolePermissionTable = ({ roles = [], pagination, onEdit, onView, onPageCha
                                 className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-2xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20 text-sm font-medium"
                             >
                                 <FaEdit size={14} />
-                                Assign Permissions
+                                {t('assignPermissions')}
                             </button>
                         )}
                     </div>
@@ -102,9 +104,9 @@ const RolePermissionTable = ({ roles = [], pagination, onEdit, onView, onPageCha
         <DataTable
             data={roles}
             columns={columns}
-            title="Roles & Permissions"
+            title={t('rolesAndPermissions')}
             onCreate={null}
-            searchPlaceholder="Search by ID, Role Name..."
+            searchPlaceholder={t('searchByIdName')}
             itemsPerPage={pagination?.per_page || 10}
             currentPage={pagination?.current_page || 1}
             onPageChange={onPageChange}

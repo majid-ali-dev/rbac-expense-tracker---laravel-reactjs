@@ -2,8 +2,10 @@ import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useRolePermissionStore from '../../store/rolePermissionStore';
 import RolePermissionTable from '../../components/role-permissions/RolePermissionTable';
+import useTranslation from '../../hooks/useTranslation';
 
 const RolePermissions = () => {
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const { roles, loading, pagination, fetchRoles, clearError } = useRolePermissionStore();
 
@@ -31,7 +33,7 @@ const RolePermissions = () => {
             <div className="flex items-center justify-center min-h-[60vh]">
                 <div className="text-center">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-                    <p className="mt-4 text-gray-600">Loading roles...</p>
+                    <p className="mt-4 text-gray-600">{t('loadingRoles')}</p>
                 </div>
             </div>
         );

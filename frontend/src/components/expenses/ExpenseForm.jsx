@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { FaTimes, FaArrowLeft, FaCheckCircle, FaMoneyBillWave } from 'react-icons/fa';
+import useTranslation from '../../hooks/useTranslation';
 
 const ExpenseForm = ({ expense, categories = [], onSubmit, onCancel, loading }) => {
+    const { t } = useTranslation();
     const {
         register,
         handleSubmit,
@@ -48,10 +50,10 @@ const ExpenseForm = ({ expense, categories = [], onSubmit, onCancel, loading }) 
                     </div>
                     <div>
                         <h2 className="text-xl font-extrabold text-gray-900">
-                            {expense ? 'Edit Expense' : 'Add New Expense'}
+                            {expense ? t('editExpense') : t('addNewExpense')}
                         </h2>
                         <p className="text-sm text-gray-500 mt-0.5">
-                            {expense ? 'Update the selected expense' : 'Create a new expense entry'}
+                            {expense ? t('updateExpenseDesc') : t('createNewExpense')}
                         </p>
                     </div>
                 </div>
@@ -67,11 +69,11 @@ const ExpenseForm = ({ expense, categories = [], onSubmit, onCancel, loading }) 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label className="block text-sm font-bold text-gray-700 mb-1.5">
-                            Category <span className="text-red-500">*</span>
+                            {t('category')} <span className="text-red-500">*</span>
                         </label>
                         <select
                             {...register('category_id', {
-                                required: 'Please select a category',
+                                required: t('pleaseSelectCategory'),
                             })}
                             className={`
                                 w-full px-4 py-3 rounded-2xl border transition-all
@@ -84,7 +86,7 @@ const ExpenseForm = ({ expense, categories = [], onSubmit, onCancel, loading }) 
                             `}
                             disabled={loading || isSubmitting}
                         >
-                            <option value="">Select category</option>
+                            <option value="">{t('selectCategory')}</option>
                             {categories.map((category) => (
                                 <option key={category.id} value={category.id}>
                                     {category.name}
@@ -98,15 +100,15 @@ const ExpenseForm = ({ expense, categories = [], onSubmit, onCancel, loading }) 
 
                     <div>
                         <label className="block text-sm font-bold text-gray-700 mb-1.5">
-                            Amount (Rs.) <span className="text-red-500">*</span>
+                            {t('amountRs')} <span className="text-red-500">*</span>
                         </label>
                         <input
                             type="number"
                             step="0.01"
                             min="0"
                             {...register('amount', {
-                                required: 'Amount is required',
-                                min: { value: 0, message: 'Amount must be at least 0' },
+                                required: t('amountRequired'),
+                                min: { value: 0, message: t('amountMin') },
                             })}
                             className={`
                                 w-full px-4 py-3 rounded-2xl border transition-all
@@ -116,7 +118,7 @@ const ExpenseForm = ({ expense, categories = [], onSubmit, onCancel, loading }) 
                                 }
                                 focus:outline-none focus:ring-2 focus:border-transparent
                             `}
-                            placeholder="Enter amount"
+                            placeholder={t('enterAmount')}
                             disabled={loading || isSubmitting}
                         />
                         {errors.amount && (
@@ -126,12 +128,12 @@ const ExpenseForm = ({ expense, categories = [], onSubmit, onCancel, loading }) 
 
                     <div>
                         <label className="block text-sm font-bold text-gray-700 mb-1.5">
-                            Date <span className="text-red-500">*</span>
+                            {t('date')} <span className="text-red-500">*</span>
                         </label>
                         <input
                             type="date"
                             {...register('date', {
-                                required: 'Date is required',
+                                required: t('dateRequired'),
                             })}
                             className={`
                                 w-full px-4 py-3 rounded-2xl border transition-all
@@ -150,7 +152,7 @@ const ExpenseForm = ({ expense, categories = [], onSubmit, onCancel, loading }) 
 
                     <div>
                         <label className="block text-sm font-bold text-gray-700 mb-1.5">
-                            Description
+                            {t('description')}
                         </label>
                         <textarea
                             {...register('description')}
@@ -163,7 +165,7 @@ const ExpenseForm = ({ expense, categories = [], onSubmit, onCancel, loading }) 
                                 }
                                 focus:outline-none focus:ring-2 focus:border-transparent
                             `}
-                            placeholder="Enter description (optional)"
+                            placeholder={t('enterDescription')}
                             disabled={loading || isSubmitting}
                         />
                         {errors.description && (
@@ -179,7 +181,7 @@ const ExpenseForm = ({ expense, categories = [], onSubmit, onCancel, loading }) 
                         className="inline-flex items-center gap-2 px-6 py-2.5 bg-green-600 text-white font-bold rounded-2xl hover:bg-green-700 transition-all shadow-lg shadow-green-600/20 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         <FaCheckCircle size={16} />
-                        {loading || isSubmitting ? 'Saving...' : (expense ? 'Update' : 'Save')}
+                        {loading || isSubmitting ? t('saving') : (expense ? t('update') : t('save'))}
                     </button>
                     <button
                         type="button"
@@ -187,7 +189,7 @@ const ExpenseForm = ({ expense, categories = [], onSubmit, onCancel, loading }) 
                         className="inline-flex items-center gap-2 px-6 py-2.5 border border-gray-300 text-gray-700 font-medium rounded-2xl hover:bg-gray-50 transition-all"
                     >
                         <FaArrowLeft size={14} />
-                        Back
+                        {t('back')}
                     </button>
                 </div>
             </form>

@@ -6,8 +6,10 @@ import AddPaymentForm from '../../components/payments/AddPaymentForm';
 import AccessDenied from '../../components/common/AccessDenied';
 import usePermission from '../../hooks/usePermission';
 import { showDeleteConfirm, showDeletedSuccess } from '../../utils/toast';
+import useTranslation from '../../hooks/useTranslation';
 
 const AddPayment = () => {
+    const { t } = useTranslation();
     const { id } = useParams();
     const navigate = useNavigate();
     const { can } = usePermission();
@@ -58,7 +60,7 @@ const AddPayment = () => {
             <div className="flex items-center justify-center min-h-[60vh]">
                 <div className="text-center">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-                    <p className="mt-4 text-gray-600">Loading user details...</p>
+                    <p className="mt-4 text-gray-600">{t('loadingUserDetails')}</p>
                 </div>
             </div>
         );

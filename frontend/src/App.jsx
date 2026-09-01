@@ -19,10 +19,12 @@ import BillingCycles from './pages/billing-cycles/BillingCycles';
 import ProtectedRoute from './components/layout/ProtectedRoute';
 import NotificationManagement from './components/dashboard/notification/NotificationManagement';
 import ThemeToggle from './components/layout/ThemeToggle';
+import LanguageToggle from './components/layout/LanguageToggle';
 
 function App() {
   return (
     <Router>
+      <LanguageToggle />
       <ThemeToggle />
       <Routes>
         <Route path="/login" element={<Login />} />

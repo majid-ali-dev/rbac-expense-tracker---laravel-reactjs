@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { FaTimes, FaArrowLeft, FaCheckCircle, FaTags } from 'react-icons/fa';
+import useTranslation from '../../hooks/useTranslation';
 
 const CategoryForm = ({ category, onSubmit, onCancel, loading }) => {
+    const { t } = useTranslation();
     const {
         register,
         handleSubmit,
@@ -38,10 +40,10 @@ const CategoryForm = ({ category, onSubmit, onCancel, loading }) => {
                     </div>
                     <div>
                         <h2 className="text-xl font-extrabold text-gray-900">
-                            {category ? 'Edit Category' : 'Add New Category'}
+                            {category ? t('editCategory') : t('addNewCategory')}
                         </h2>
                         <p className="text-sm text-gray-500 mt-0.5">
-                            {category ? 'Update category name' : 'Create a new expense category'}
+                            {category ? t('updateCategoryName') : t('createNewCategory')}
                         </p>
                     </div>
                 </div>
@@ -56,14 +58,14 @@ const CategoryForm = ({ category, onSubmit, onCancel, loading }) => {
             <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
                 <div>
                     <label className="block text-sm font-bold text-gray-700 mb-1.5">
-                        Category Name <span className="text-red-500">*</span>
+                        {t('categoryName')} <span className="text-red-500">*</span>
                     </label>
                     <input
                         type="text"
                         {...register('name', {
-                            required: 'Category name is required',
-                            minLength: { value: 2, message: 'Name must be at least 2 characters' },
-                            maxLength: { value: 255, message: 'Name must not exceed 255 characters' },
+                            required: t('categoryNameRequired'),
+                            minLength: { value: 2, message: t('nameMinLength2') },
+                            maxLength: { value: 255, message: t('nameMaxLength') },
                         })}
                         className={`
                             w-full max-w-md px-4 py-3 rounded-2xl border transition-all
@@ -73,7 +75,7 @@ const CategoryForm = ({ category, onSubmit, onCancel, loading }) => {
                             }
                             focus:outline-none focus:ring-2 focus:border-transparent
                         `}
-                        placeholder="Enter category name (e.g., Milk, Water, Grocery)"
+                        placeholder={t('enterCategoryName')}
                         disabled={loading || isSubmitting}
                     />
                     {errors.name && (
@@ -88,7 +90,7 @@ const CategoryForm = ({ category, onSubmit, onCancel, loading }) => {
                         className="inline-flex items-center gap-2 px-6 py-2.5 bg-green-600 text-white font-bold rounded-2xl hover:bg-green-700 transition-all shadow-lg shadow-green-600/20 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         <FaCheckCircle size={16} />
-                        {loading || isSubmitting ? 'Saving...' : (category ? 'Update' : 'Save')}
+                        {loading || isSubmitting ? t('saving') : (category ? t('update') : t('save'))}
                     </button>
                     <button
                         type="button"
@@ -96,7 +98,7 @@ const CategoryForm = ({ category, onSubmit, onCancel, loading }) => {
                         className="inline-flex items-center gap-2 px-6 py-2.5 border border-gray-300 text-gray-700 font-medium rounded-2xl hover:bg-gray-50 transition-all"
                     >
                         <FaArrowLeft size={14} />
-                        Back
+                        {t('back')}
                     </button>
                 </div>
             </form>

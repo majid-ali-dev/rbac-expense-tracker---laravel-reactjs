@@ -2,9 +2,11 @@ import React from 'react';
 import { FaEdit, FaTrash } from 'react-icons/fa';
 import DataTable from '../common/DataTable';
 import usePermission from '../../hooks/usePermission';
+import useTranslation from '../../hooks/useTranslation';
 
 const PermissionTable = ({ permissions = [], pagination, onEdit, onDelete, onCreate, onPageChange }) => {
     const { can } = usePermission();
+    const { t } = useTranslation();
 
     // Define columns for DataTable with proper accessor functions
     const columns = [
@@ -19,7 +21,7 @@ const PermissionTable = ({ permissions = [], pagination, onEdit, onDelete, onCre
         },
         {
             id: 'name',
-            header: 'Permission Name',
+            header: t('permissionName'),
             accessorFn: (row) => row.name,
             cell: ({ getValue }) => (
                 <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-purple-100 text-purple-700">
@@ -30,18 +32,18 @@ const PermissionTable = ({ permissions = [], pagination, onEdit, onDelete, onCre
         },
         {
             id: 'roles_count',
-            header: 'Roles',
+            header: t('roles'),
             accessorFn: (row) => row.roles_count || 0,
             cell: ({ getValue }) => (
                 <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-700">
-                    {getValue()} {getValue() === 1 ? 'role' : 'roles'}
+                    {getValue()} {getValue() === 1 ? t('role') : t('roles')}
                 </span>
             ),
             enableSorting: true,
         },
         {
             id: 'created_at',
-            header: 'Created At',
+            header: t('createdAt'),
             accessorFn: (row) => row.created_at,
             cell: ({ getValue }) => (
                 <span className="text-gray-600">
@@ -52,7 +54,7 @@ const PermissionTable = ({ permissions = [], pagination, onEdit, onDelete, onCre
         },
         {
             id: 'actions',
-            header: 'Actions',
+            header: t('actions'),
             accessorFn: (row) => row.id,
             cell: ({ row }) => {
                 const permission = row.original;
@@ -89,10 +91,10 @@ const PermissionTable = ({ permissions = [], pagination, onEdit, onDelete, onCre
         <DataTable
             data={permissions}
             columns={columns}
-            title="Permissions"
-            createButtonText="Create Permission"
+            title={t('permissionsTitle')}
+            createButtonText={t('createPermission')}
             onCreate={can('permissions.create') ? onCreate : null}
-            searchPlaceholder="Search by ID, Name..."
+            searchPlaceholder={t('searchByIdName')}
             itemsPerPage={pagination?.per_page || 10}
             currentPage={pagination?.current_page || 1}
             onPageChange={onPageChange}

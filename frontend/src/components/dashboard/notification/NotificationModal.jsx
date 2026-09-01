@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { FaBell, FaTimes } from 'react-icons/fa';
 import useNotificationStore from '../../../store/notificationStore';
+import useTranslation from '../../../hooks/useTranslation';
 
 const NotificationModal = ({ notification, onClose, onRead }) => {
+    const { t } = useTranslation();
     const [isVisible, setIsVisible] = useState(true);
 
     const handleOk = async () => {
@@ -27,7 +29,7 @@ const NotificationModal = ({ notification, onClose, onRead }) => {
                             <FaBell className="text-blue-600" size={20} />
                         </div>
                         <div>
-                            <h2 className="text-lg font-extrabold text-gray-900">New Notification</h2>
+                            <h2 className="text-lg font-extrabold text-gray-900">{t('newNotification')}</h2>
                             <p className="text-xs text-gray-400">{new Date(notification.created_at).toLocaleString()}</p>
                         </div>
                     </div>

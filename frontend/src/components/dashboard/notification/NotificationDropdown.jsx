@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { FaCheckCircle, FaClock, FaBell } from 'react-icons/fa';
 import useNotificationStore from '../../../store/notificationStore';
 import { formatDistanceToNow } from 'date-fns';
+import useTranslation from '../../../hooks/useTranslation';
 
 const NotificationDropdown = ({ onClose }) => {
+    const { t } = useTranslation();
     const [loading, setLoading] = useState(false);
     const { unreadNotifications, fetchUnreadNotifications, markAsRead, fetchUnreadCount } = useNotificationStore();
 
@@ -43,8 +45,8 @@ const NotificationDropdown = ({ onClose }) => {
         return (
             <div className="p-6 text-center">
                 <div className="text-4xl mb-3">🔔</div>
-                <p className="text-gray-500 font-medium">No new notifications</p>
-                <p className="text-xs text-gray-400 mt-1">You're all caught up!</p>
+                <p className="text-gray-500 font-medium">{t('noNewNotifications')}</p>
+                <p className="text-xs text-gray-400 mt-1">{t('allCaughtUp')}</p>
             </div>
         );
     }
@@ -54,9 +56,9 @@ const NotificationDropdown = ({ onClose }) => {
             <div className="flex items-center justify-between mb-3">
                 <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
                     <FaBell size={14} className="text-blue-600" />
-                    Notifications
+                    {t('notifications')}
                     <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
-                        {unreadNotifications.length} new
+                        {unreadNotifications.length} {t('newCount')}
                     </span>
                 </h3>
                 {unreadNotifications.length > 0 && (
@@ -65,7 +67,7 @@ const NotificationDropdown = ({ onClose }) => {
                         disabled={loading}
                         className="text-xs text-blue-600 hover:text-blue-700 font-medium disabled:opacity-50"
                     >
-                        Mark all as read
+                        {t('markAllRead')}
                     </button>
                 )}
             </div>
@@ -107,7 +109,7 @@ const NotificationDropdown = ({ onClose }) => {
                     onClick={onClose}
                     className="w-full text-xs text-gray-500 hover:text-gray-700 font-medium py-1"
                 >
-                    Close
+                    {t('close')}
                 </button>
             </div>
         </div>

@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { FaTimes, FaArrowLeft, FaCheckCircle } from 'react-icons/fa';
+import useTranslation from '../../hooks/useTranslation';
 
 const RoleForm = ({ role, onSubmit, onCancel, loading }) => {
+    const { t } = useTranslation();
     const {
         register,
         handleSubmit,
@@ -33,7 +35,7 @@ const RoleForm = ({ role, onSubmit, onCancel, loading }) => {
         <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
             <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-extrabold text-gray-900">
-                    {role ? 'Edit Role' : 'Create Role'}
+                    {role ? t('editRole') : t('createRole')}
                 </h2>
                 <button
                     onClick={onCancel}
@@ -45,13 +47,13 @@ const RoleForm = ({ role, onSubmit, onCancel, loading }) => {
 
             <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
                 <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-1.5">Role Name</label>
+                    <label className="block text-sm font-bold text-gray-700 mb-1.5">{t('roleName')}</label>
                     <input
                         type="text"
                         {...register('name', {
-                            required: 'Role name is required',
-                            minLength: { value: 2, message: 'Role name must be at least 2 characters' },
-                            maxLength: { value: 255, message: 'Role name must not exceed 255 characters' },
+                            required: t('roleNameRequired'),
+                            minLength: { value: 2, message: t('roleNameMinLength') },
+                            maxLength: { value: 255, message: t('roleNameMaxLength') },
                         })}
                         className={`
                             w-full px-4 py-3 rounded-2xl border transition-all
@@ -61,7 +63,7 @@ const RoleForm = ({ role, onSubmit, onCancel, loading }) => {
                             }
                             focus:outline-none focus:ring-2 focus:border-transparent
                         `}
-                        placeholder="Enter role name"
+                        placeholder={t('enterRoleName')}
                         disabled={loading || isSubmitting}
                     />
                     {errors.name && (
@@ -76,7 +78,7 @@ const RoleForm = ({ role, onSubmit, onCancel, loading }) => {
                         className="inline-flex items-center gap-2 px-6 py-2.5 bg-green-600 text-white font-bold rounded-2xl hover:bg-green-700 transition-all shadow-lg shadow-green-600/20 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         <FaCheckCircle size={16} />
-                        {loading || isSubmitting ? 'Saving...' : (role ? 'Update' : 'Save')}
+                        {loading || isSubmitting ? t('saving') : (role ? t('update') : t('save'))}
                     </button>
                     <button
                         type="button"
@@ -84,7 +86,7 @@ const RoleForm = ({ role, onSubmit, onCancel, loading }) => {
                         className="inline-flex items-center gap-2 px-6 py-2.5 border border-gray-300 text-gray-700 font-medium rounded-2xl hover:bg-gray-50 transition-all"
                     >
                         <FaArrowLeft size={14} />
-                        Back
+                        {t('back')}
                     </button>
                 </div>
             </form>

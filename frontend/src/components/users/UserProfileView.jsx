@@ -2,8 +2,10 @@ import React from 'react';
 import { FaArrowLeft, FaDownload, FaWallet, FaCalendar, FaPhone, FaEnvelope, FaUser } from 'react-icons/fa';
 import { generateUserProfilePDF } from '../../utils/pdfExport';
 import { showError } from '../../utils/toast';
+import useTranslation from '../../hooks/useTranslation';
 
 const UserProfileView = ({ user, paymentHistory, cycle, onBack }) => {
+    const { t } = useTranslation();
     if (!user) return null;
 
     const handleDownloadPDF = () => {
@@ -59,8 +61,8 @@ const UserProfileView = ({ user, paymentHistory, cycle, onBack }) => {
                         <FaArrowLeft size={18} className="text-gray-700" />
                     </button>
                     <div>
-                        <h1 className="text-2xl font-extrabold text-gray-900">User Profile</h1>
-                        <p className="text-sm text-gray-500">Complete user information and payment history</p>
+                        <h1 className="text-2xl font-extrabold text-gray-900">{t('userProfile')}</h1>
+                        <p className="text-sm text-gray-500">{t('completeUserInfo')}</p>
                         {cycle && (
                             <span className="inline-flex mt-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700">
                                 {cycle.label}{cycle.status === 'closed' ? ' (Closed)' : ''}
@@ -78,14 +80,14 @@ const UserProfileView = ({ user, paymentHistory, cycle, onBack }) => {
                         <line x1="12" y1="18" x2="12" y2="12" />
                         <polyline points="9 15 12 18 15 15" />
                     </svg>
-                    <span>PDF</span>
+                    <span>{t('pdf')}</span>
                 </button>
             </div>
 
             {/* User Info Card */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                 <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
-                    <h2 className="text-lg font-bold text-white">User Information</h2>
+                    <h2 className="text-lg font-bold text-white">{t('userInformation')}</h2>
                 </div>
                 <div className="p-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -94,7 +96,7 @@ const UserProfileView = ({ user, paymentHistory, cycle, onBack }) => {
                                 <FaUser className="text-blue-600" size={18} />
                             </div>
                             <div>
-                                <p className="text-xs text-gray-500 font-medium">Full Name</p>
+                                <p className="text-xs text-gray-500 font-medium">{t('fullUserName')}</p>
                                 <p className="text-sm font-bold text-gray-900">{user.name}</p>
                             </div>
                         </div>
@@ -103,7 +105,7 @@ const UserProfileView = ({ user, paymentHistory, cycle, onBack }) => {
                                 <FaEnvelope className="text-purple-600" size={18} />
                             </div>
                             <div>
-                                <p className="text-xs text-gray-500 font-medium">Email</p>
+                                <p className="text-xs text-gray-500 font-medium">{t('email')}</p>
                                 <p className="text-sm font-bold text-gray-900">{user.email}</p>
                             </div>
                         </div>
@@ -112,7 +114,7 @@ const UserProfileView = ({ user, paymentHistory, cycle, onBack }) => {
                                 <FaPhone className="text-green-600" size={18} />
                             </div>
                             <div>
-                                <p className="text-xs text-gray-500 font-medium">Phone</p>
+                                <p className="text-xs text-gray-500 font-medium">{t('phone')}</p>
                                 <p className="text-sm font-bold text-gray-900">{user.phone || 'N/A'}</p>
                             </div>
                         </div>
@@ -130,25 +132,25 @@ const UserProfileView = ({ user, paymentHistory, cycle, onBack }) => {
                     {/* Financial Summary */}
                     <div className="mt-6 grid grid-cols-1 md:grid-cols-4 gap-4">
                         <div className="p-4 bg-blue-50 rounded-2xl border border-blue-100 text-center">
-                            <p className="text-xs text-blue-600 font-medium uppercase tracking-wider">Total Amount</p>
+                            <p className="text-xs text-blue-600 font-medium uppercase tracking-wider">{t('totalAmount')}</p>
                             <p className="text-2xl font-extrabold text-blue-700 mt-1">
                                 Rs. {(user.total_amount || 0).toFixed(2)}
                             </p>
                         </div>
                         <div className="p-4 bg-green-50 rounded-2xl border border-green-100 text-center">
-                            <p className="text-xs text-green-600 font-medium uppercase tracking-wider">Total Paid</p>
+                            <p className="text-xs text-green-600 font-medium uppercase tracking-wider">{t('totalPaid')}</p>
                             <p className="text-2xl font-extrabold text-green-700 mt-1">
                                 Rs. {(user.total_paid || 0).toFixed(2)}
                             </p>
                         </div>
                         <div className="p-4 bg-red-50 rounded-2xl border border-red-100 text-center">
-                            <p className="text-xs text-red-600 font-medium uppercase tracking-wider">Remaining</p>
+                            <p className="text-xs text-red-600 font-medium uppercase tracking-wider">{t('remaining')}</p>
                             <p className="text-2xl font-extrabold text-red-700 mt-1">
                                 Rs. {(user.remaining || 0).toFixed(2)}
                             </p>
                         </div>
                         <div className="p-4 bg-gray-50 rounded-2xl border border-gray-200 text-center">
-                            <p className="text-xs text-gray-600 font-medium uppercase tracking-wider">Status</p>
+                            <p className="text-xs text-gray-600 font-medium uppercase tracking-wider">{t('status')}</p>
                             <span className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-bold border ${getStatusBadge(user.payment_status)} mt-1`}>
                                 {getStatusIcon(user.payment_status)}
                                 {(user.payment_status || 'UNPAID').toUpperCase()}
@@ -158,7 +160,7 @@ const UserProfileView = ({ user, paymentHistory, cycle, onBack }) => {
 
                     <div className="mt-4">
                         <p className="text-xs text-gray-500">
-                            <span className="font-bold">Roles:</span> {user.roles?.join(', ') || 'No roles assigned'}
+                            <span className="font-bold">{t('rolesLabel')}:</span> {user.roles?.join(', ') || t('noRolesAssigned')}
                         </p>
                     </div>
                 </div>
@@ -169,15 +171,15 @@ const UserProfileView = ({ user, paymentHistory, cycle, onBack }) => {
                 <div className="bg-gradient-to-r from-green-600 to-green-700 px-6 py-4">
                     <h2 className="text-lg font-bold text-white flex items-center gap-2">
                         <FaWallet size={18} />
-                        Payment History
+                        {t('paymentHistory')}
                     </h2>
                 </div>
                 <div className="p-6">
                     {!paymentHistory || paymentHistory.length === 0 ? (
                         <div className="text-center py-12">
                             <div className="text-6xl mb-4">💳</div>
-                            <p className="text-gray-500 text-lg font-medium">No payment history found</p>
-                            <p className="text-sm text-gray-400 mt-1">This user hasn't made any payments yet</p>
+                            <p className="text-gray-500 text-lg font-medium">{t('noPaymentHistory')}</p>
+                            <p className="text-sm text-gray-400 mt-1">{t('noPaymentHistoryDesc')}</p>
                         </div>
                     ) : (
                         <div className="space-y-6">
@@ -193,10 +195,10 @@ const UserProfileView = ({ user, paymentHistory, cycle, onBack }) => {
                                         <table className="w-full">
                                             <thead className="bg-gray-50">
                                                 <tr>
-                                                    <th className="text-left py-2.5 px-4 text-xs font-bold text-gray-600 uppercase tracking-wider">Date</th>
-                                                    <th className="text-left py-2.5 px-4 text-xs font-bold text-gray-600 uppercase tracking-wider">Amount</th>
-                                                    <th className="text-left py-2.5 px-4 text-xs font-bold text-gray-600 uppercase tracking-wider">Month</th>
-                                                    <th className="text-left py-2.5 px-4 text-xs font-bold text-gray-600 uppercase tracking-wider">Updated By</th>
+                                                    <th className="text-left py-2.5 px-4 text-xs font-bold text-gray-600 uppercase tracking-wider">{t('date')}</th>
+                                                    <th className="text-left py-2.5 px-4 text-xs font-bold text-gray-600 uppercase tracking-wider">{t('amount')}</th>
+                                                    <th className="text-left py-2.5 px-4 text-xs font-bold text-gray-600 uppercase tracking-wider">{t('month')}</th>
+                                                    <th className="text-left py-2.5 px-4 text-xs font-bold text-gray-600 uppercase tracking-wider">{t('updatedBy')}</th>
                                                 </tr>
                                             </thead>
                                             <tbody>

@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { FaTimes, FaArrowLeft, FaCheckCircle } from 'react-icons/fa';
+import useTranslation from '../../hooks/useTranslation';
 
 const UserForm = ({ user, roles = [], onSubmit, onCancel, loading }) => {
+    const { t } = useTranslation();
     const {
         register,
         handleSubmit,
@@ -61,7 +63,7 @@ const UserForm = ({ user, roles = [], onSubmit, onCancel, loading }) => {
         <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
             <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-extrabold text-gray-900">
-                    {user ? 'Edit User' : 'Add New User'}
+                    {user ? t('editUser') : t('addUser')}
                 </h2>
                 <button
                     onClick={onCancel}
@@ -75,14 +77,14 @@ const UserForm = ({ user, roles = [], onSubmit, onCancel, loading }) => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label className="block text-sm font-bold text-gray-700 mb-1.5">
-                            Name <span className="text-red-500">*</span>
+                            {t('name')} <span className="text-red-500">*</span>
                         </label>
                         <input
                             type="text"
                             {...register('name', {
-                                required: 'Name is required',
-                                minLength: { value: 2, message: 'Name must be at least 2 characters' },
-                                maxLength: { value: 255, message: 'Name must not exceed 255 characters' },
+                                required: t('nameRequired2'),
+                                minLength: { value: 2, message: t('nameMinLength2') },
+                                maxLength: { value: 255, message: t('nameMaxLength') },
                             })}
                             className={`
                                 w-full px-4 py-3 rounded-2xl border transition-all
@@ -92,7 +94,7 @@ const UserForm = ({ user, roles = [], onSubmit, onCancel, loading }) => {
                                 }
                                 focus:outline-none focus:ring-2 focus:border-transparent
                             `}
-                            placeholder="Enter full name"
+                            placeholder={t('enterFullName2')}
                             disabled={loading || isSubmitting}
                         />
                         {errors.name && (
@@ -102,15 +104,15 @@ const UserForm = ({ user, roles = [], onSubmit, onCancel, loading }) => {
 
                     <div>
                         <label className="block text-sm font-bold text-gray-700 mb-1.5">
-                            Email <span className="text-red-500">*</span>
+                            {t('email')} <span className="text-red-500">*</span>
                         </label>
                         <input
                             type="email"
                             {...register('email', {
-                                required: 'Email is required',
+                                required: t('emailRequired'),
                                 pattern: {
                                     value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                                    message: 'Invalid email address',
+                                    message: t('invalidEmail'),
                                 },
                             })}
                             className={`
@@ -121,7 +123,7 @@ const UserForm = ({ user, roles = [], onSubmit, onCancel, loading }) => {
                                 }
                                 focus:outline-none focus:ring-2 focus:border-transparent
                             `}
-                            placeholder="Enter email address"
+                            placeholder={t('enterEmail2')}
                             disabled={loading || isSubmitting}
                         />
                         {errors.email && (
@@ -131,13 +133,13 @@ const UserForm = ({ user, roles = [], onSubmit, onCancel, loading }) => {
 
                     <div>
                         <label className="block text-sm font-bold text-gray-700 mb-1.5">
-                            Phone <span className="text-red-500">*</span>
+                            {t('phone')} <span className="text-red-500">*</span>
                         </label>
                         <input
                             type="text"
                             {...register('phone', {
-                                required: 'Phone is required',
-                                minLength: { value: 10, message: 'Phone must be at least 10 digits' },
+                                required: t('phoneRequired2'),
+                                minLength: { value: 10, message: t('phoneMinLength2') },
                             })}
                             className={`
                                 w-full px-4 py-3 rounded-2xl border transition-all
@@ -147,7 +149,7 @@ const UserForm = ({ user, roles = [], onSubmit, onCancel, loading }) => {
                                 }
                                 focus:outline-none focus:ring-2 focus:border-transparent
                             `}
-                            placeholder="Enter phone number"
+                            placeholder={t('enterPhone')}
                             disabled={loading || isSubmitting}
                         />
                         {errors.phone && (
@@ -157,16 +159,16 @@ const UserForm = ({ user, roles = [], onSubmit, onCancel, loading }) => {
 
                     <div>
                         <label className="block text-sm font-bold text-gray-700 mb-1.5">
-                            {user ? 'Password (leave blank to keep current)' : 'Password'}
+                            {user ? t('passwordLabelEdit') : t('passwordLabel')}
                             <span className="text-red-500"> *</span>
                         </label>
                         <input
                             type="password"
                             {...register('password', {
-                                required: user ? false : 'Password is required',
+                                required: user ? false : t('passwordRequired2'),
                                 minLength: {
                                     value: 5,
-                                    message: 'Password must be at least 5 characters'
+                                    message: t('passwordMinLength2')
                                 },
                             })}
                             className={`
@@ -177,7 +179,7 @@ const UserForm = ({ user, roles = [], onSubmit, onCancel, loading }) => {
                                 }
                                 focus:outline-none focus:ring-2 focus:border-transparent
                             `}
-                            placeholder={user ? 'Enter new password (optional)' : 'Enter password'}
+                            placeholder={user ? t('enterNewPassword') : t('enterPassword2')}
                             disabled={loading || isSubmitting}
                         />
                         {errors.password && (
@@ -187,8 +189,7 @@ const UserForm = ({ user, roles = [], onSubmit, onCancel, loading }) => {
                 </div>
 
                 <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-1.5">
-                        Total Amount <span className="text-red-500">*</span>
+                    <label className="block text-sm font-bold text-gray-700 mb-1.5">                            {t('totalAmountLabel')} <span className="text-red-500">*</span>
                     </label>
                     <input
                         type="number"
@@ -204,21 +205,19 @@ const UserForm = ({ user, roles = [], onSubmit, onCancel, loading }) => {
                                 : 'border-gray-300 focus:ring-blue-500'
                             }
                             focus:outline-none focus:ring-2 focus:border-transparent
-                        `}
-                        placeholder="Enter total amount"
+                        `}                            placeholder={t('enterTotalAmount')}
                         disabled={loading || isSubmitting}
                     />
                     {errors.total_amount && (
                         <p className="mt-1.5 text-sm text-red-600">{errors.total_amount.message}</p>
                     )}
-                    <p className="mt-1 text-xs text-gray-500">
-                        <span className="font-semibold">Note:</span> This is the total amount the user has paid.
+                    <p className="mt-1 text-xs text-gray-500">                            <span className="font-semibold">Note:</span> {t('totalAmountNote')}
                     </p>
                 </div>
 
                 <div>
                     <label className="block text-sm font-bold text-gray-700 mb-2">
-                        Assign Roles
+                        {t('assignRoles')}
                     </label>
                     <div className="flex flex-wrap gap-3">
                         {roles.map((role) => (
@@ -235,7 +234,7 @@ const UserForm = ({ user, roles = [], onSubmit, onCancel, loading }) => {
                     </div>
                     {selectedRoles.length === 0 && (
                         <p className="mt-1 text-xs text-yellow-600">
-                            No roles selected. User will be assigned as "member" by default.
+                            {t('noRolesSelected')}
                         </p>
                     )}
                 </div>
@@ -247,7 +246,7 @@ const UserForm = ({ user, roles = [], onSubmit, onCancel, loading }) => {
                         className="inline-flex items-center gap-2 px-6 py-2.5 bg-green-600 text-white font-bold rounded-2xl hover:bg-green-700 transition-all shadow-lg shadow-green-600/20 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         <FaCheckCircle size={16} />
-                        {loading || isSubmitting ? 'Saving...' : (user ? 'Update' : 'Save')}
+                        {loading || isSubmitting ? t('saving') : (user ? t('update') : t('save'))}
                     </button>
                     <button
                         type="button"
@@ -255,7 +254,7 @@ const UserForm = ({ user, roles = [], onSubmit, onCancel, loading }) => {
                         className="inline-flex items-center gap-2 px-6 py-2.5 border border-gray-300 text-gray-700 font-medium rounded-2xl hover:bg-gray-50 transition-all"
                     >
                         <FaArrowLeft size={14} />
-                        Back
+                        {t('back')}
                     </button>
                 </div>
             </form>

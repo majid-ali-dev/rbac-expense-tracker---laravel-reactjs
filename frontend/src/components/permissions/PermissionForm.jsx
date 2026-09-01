@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { FaTimes, FaArrowLeft, FaCheckCircle } from 'react-icons/fa';
+import useTranslation from '../../hooks/useTranslation';
 
 const PermissionForm = ({ permission, onSubmit, onCancel, loading }) => {
+    const { t } = useTranslation();
     const {
         register,
         handleSubmit,
@@ -33,7 +35,7 @@ const PermissionForm = ({ permission, onSubmit, onCancel, loading }) => {
         <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
             <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-extrabold text-gray-900">
-                    {permission ? 'Edit Permission' : 'Create Permission'}
+                    {permission ? t('editPermission') : t('createPermission')}
                 </h2>
                 <button
                     onClick={onCancel}
@@ -45,16 +47,16 @@ const PermissionForm = ({ permission, onSubmit, onCancel, loading }) => {
 
             <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
                 <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-1.5">Permission Name</label>
+                    <label className="block text-sm font-bold text-gray-700 mb-1.5">{t('permissionName')}</label>
                     <input
                         type="text"
                         {...register('name', {
-                            required: 'Permission name is required',
-                            minLength: { value: 2, message: 'Permission name must be at least 2 characters' },
-                            maxLength: { value: 255, message: 'Permission name must not exceed 255 characters' },
+                            required: t('permissionNameRequired'),
+                            minLength: { value: 2, message: t('permissionNameMinLength') },
+                            maxLength: { value: 255, message: t('permissionNameMaxLength') },
                             pattern: {
                                 value: /^[a-z0-9.-]+$/,
-                                message: 'Use lowercase letters, numbers, dots and hyphens only',
+                                message: t('permissionNameFormat'),
                             },
                         })}
                         className={`
@@ -65,14 +67,14 @@ const PermissionForm = ({ permission, onSubmit, onCancel, loading }) => {
                             }
                             focus:outline-none focus:ring-2 focus:border-transparent
                         `}
-                        placeholder="Enter permission name (e.g., roles.view)"
+                        placeholder={t('enterPermissionName')}
                         disabled={loading || isSubmitting}
                     />
                     {errors.name && (
                         <p className="mt-1.5 text-sm text-red-600">{errors.name.message}</p>
                     )}
                     <p className="mt-1.5 text-xs text-gray-500">
-                        Use module.action format (e.g., expenses.view, expenses.create)
+                        {t('permissionFormatHint')}
                     </p>
                 </div>
 
@@ -83,7 +85,7 @@ const PermissionForm = ({ permission, onSubmit, onCancel, loading }) => {
                         className="inline-flex items-center gap-2 px-6 py-2.5 bg-green-600 text-white font-bold rounded-2xl hover:bg-green-700 transition-all shadow-lg shadow-green-600/20 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         <FaCheckCircle size={16} />
-                        {loading || isSubmitting ? 'Saving...' : (permission ? 'Update' : 'Save')}
+                        {loading || isSubmitting ? t('saving') : (permission ? t('update') : t('save'))}
                     </button>
                     <button
                         type="button"
@@ -91,7 +93,7 @@ const PermissionForm = ({ permission, onSubmit, onCancel, loading }) => {
                         className="inline-flex items-center gap-2 px-6 py-2.5 border border-gray-300 text-gray-700 font-medium rounded-2xl hover:bg-gray-50 transition-all"
                     >
                         <FaArrowLeft size={14} />
-                        Back
+                        {t('back')}
                     </button>
                 </div>
             </form>

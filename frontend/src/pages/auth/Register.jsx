@@ -2,11 +2,13 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import useAuthStore from '../../store/authStore';
+import useTranslation from '../../hooks/useTranslation';
 
 const Register = () => {
     const navigate = useNavigate();
     const { register: registerUser, loading } = useAuthStore();
     const [showPassword, setShowPassword] = useState(false);
+    const { t } = useTranslation();
 
     const {
         register,
@@ -35,8 +37,8 @@ const Register = () => {
                     <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-2xl text-white text-2xl mb-4">
                         💰
                     </div>
-                    <h1 className="text-2xl font-bold text-gray-900">Create Account</h1>
-                    <p className="text-gray-600 mt-1">Join Expense Tracker today</p>
+                    <h1 className="text-2xl font-bold text-gray-900">{t('createAccount')}</h1>
+                    <p className="text-gray-600 mt-1">{t('joinExpenseTracker')}</p>
                 </div>
 
                 {/* Register Form */}
@@ -44,15 +46,15 @@ const Register = () => {
                     {/* Name */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Full Name
+                            {t('fullName')}
                         </label>
                         <input
                             type="text"
                             {...register('name', {
-                                required: 'Name is required',
+                                required: t('nameRequired'),
                                 minLength: {
                                     value: 2,
-                                    message: 'Name must be at least 2 characters',
+                                    message: t('nameMinLength'),
                                 },
                             })}
                             className={`
@@ -63,7 +65,7 @@ const Register = () => {
                                 }
                                 focus:outline-none focus:ring-2
                             `}
-                            placeholder="Enter your full name"
+                            placeholder={t('enterFullName')}
                         />
                         {errors.name && (
                             <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>
@@ -73,15 +75,15 @@ const Register = () => {
                     {/* Email */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Email Address
+                            {t('emailAddress')}
                         </label>
                         <input
                             type="email"
                             {...register('email', {
-                                required: 'Email is required',
+                                required: t('emailRequired'),
                                 pattern: {
                                     value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                                    message: 'Invalid email address',
+                                    message: t('invalidEmail'),
                                 },
                             })}
                             className={`
@@ -92,7 +94,7 @@ const Register = () => {
                                 }
                                 focus:outline-none focus:ring-2
                             `}
-                            placeholder="Enter your email"
+                            placeholder={t('enterEmail')}
                         />
                         {errors.email && (
                             <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
@@ -102,15 +104,15 @@ const Register = () => {
                     {/* Phone */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Phone Number
+                            {t('phoneNumber')}
                         </label>
                         <input
                             type="text"
                             {...register('phone', {
-                                required: 'Phone number is required',
+                                required: t('phoneRequired'),
                                 minLength: {
                                     value: 10,
-                                    message: 'Phone number must be at least 10 digits',
+                                    message: t('phoneMinLength'),
                                 },
                             })}
                             className={`
@@ -121,7 +123,7 @@ const Register = () => {
                                 }
                                 focus:outline-none focus:ring-2
                             `}
-                            placeholder="Enter your phone number"
+                            placeholder={t('enterPhoneNumber')}
                         />
                         {errors.phone && (
                             <p className="mt-1 text-sm text-red-600">{errors.phone.message}</p>
@@ -131,16 +133,16 @@ const Register = () => {
                     {/* Password */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Password
+                            {t('password')}
                         </label>
                         <div className="relative">
                             <input
                                 type={showPassword ? 'text' : 'password'}
                                 {...register('password', {
-                                    required: 'Password is required',
+                                    required: t('passwordRequired'),
                                     minLength: {
                                         value: 5,
-                                        message: 'Password must be at least 5 characters',
+                                        message: t('passwordMinLength'),
                                     },
                                 })}
                                 className={`
@@ -151,7 +153,7 @@ const Register = () => {
                                     }
                                     focus:outline-none focus:ring-2
                                 `}
-                                placeholder="Create a password"
+                                placeholder={t('createPassword')}
                             />
                             <button
                                 type="button"
@@ -178,19 +180,19 @@ const Register = () => {
                                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                 </svg>
-                                Creating account...
+                                {t('creatingAccount')}
                             </span>
                         ) : (
-                            'Create Account'
+                            t('createAccount')
                         )}
                     </button>
                 </form>
 
                 {/* Login Link */}
                 <p className="text-center text-gray-600 mt-6">
-                    Already have an account?{' '}
+                    {t('alreadyHaveAccount')}{' '}
                     <Link to="/login" className="text-blue-600 hover:text-blue-700 font-medium">
-                        Sign in
+                        {t('signIn')}
                     </Link>
                 </p>
             </div>

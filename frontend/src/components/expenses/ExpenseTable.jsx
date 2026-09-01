@@ -3,10 +3,12 @@ import { FaEye, FaEdit, FaTrash, FaFileAlt } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import DataTable from '../common/DataTable';
 import usePermission from '../../hooks/usePermission';
+import useTranslation from '../../hooks/useTranslation';
 
 const ExpenseTable = ({ expenses = [], pagination, cycleFilter, readOnly = false, onView, onEdit, onDelete, onCreate, onPageChange }) => {
     const navigate = useNavigate();
     const { can, canActOn } = usePermission();
+    const { t } = useTranslation();
 
     const handleViewExpenses = () => {
         navigate('/expenses/view');
@@ -24,7 +26,7 @@ const ExpenseTable = ({ expenses = [], pagination, cycleFilter, readOnly = false
         },
         {
             id: 'user',
-            header: 'User',
+            header: t('userLabel'),
             accessorFn: (row) => row.user?.name || '-',
             cell: ({ getValue }) => (
                 <span className="text-gray-700 font-medium">{getValue()}</span>
@@ -33,7 +35,7 @@ const ExpenseTable = ({ expenses = [], pagination, cycleFilter, readOnly = false
         },
         {
             id: 'title',
-            header: 'Title',
+            header: t('titleLabel'),
             accessorFn: (row) => row.title,
             cell: ({ getValue }) => (
                 <span className="font-semibold text-gray-900">{getValue() || '-'}</span>
@@ -42,7 +44,7 @@ const ExpenseTable = ({ expenses = [], pagination, cycleFilter, readOnly = false
         },
         {
             id: 'amount',
-            header: 'Amount',
+            header: t('amountLabel'),
             accessorFn: (row) => row.amount || 0,
             cell: ({ getValue }) => (
                 <span className="font-bold text-blue-600">
@@ -53,7 +55,7 @@ const ExpenseTable = ({ expenses = [], pagination, cycleFilter, readOnly = false
         },
         {
             id: 'date',
-            header: 'Date',
+            header: t('date'),
             accessorFn: (row) => row.date_formatted,
             cell: ({ getValue }) => (
                 <span className="text-gray-700">{getValue() || '-'}</span>
@@ -62,7 +64,7 @@ const ExpenseTable = ({ expenses = [], pagination, cycleFilter, readOnly = false
         },
         {
             id: 'actions',
-            header: 'Actions',
+            header: t('actions'),
             accessorFn: (row) => row.id,
             cell: ({ row }) => {
                 const expense = row.original;
@@ -117,7 +119,7 @@ const ExpenseTable = ({ expenses = [], pagination, cycleFilter, readOnly = false
                 <div className="flex items-center gap-3">
                     {readOnly ? (
                         <p className="text-sm text-gray-500">
-                            This cycle is closed and read-only. You can only modify data in the current open cycle.
+                            {t('readOnly')}
                         </p>
                     ) : (
                         can('expenses.create') && (
@@ -126,7 +128,7 @@ const ExpenseTable = ({ expenses = [], pagination, cycleFilter, readOnly = false
                                 className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white font-bold rounded-2xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20"
                             >
                                 <span className="text-lg font-bold">+</span>
-                                Add Expense
+                                {t('addExpense')}
                             </button>
                         )
                     )}
@@ -139,7 +141,7 @@ const ExpenseTable = ({ expenses = [], pagination, cycleFilter, readOnly = false
                             className="inline-flex items-center gap-2 px-4 py-2.5 bg-purple-600 text-white font-bold rounded-2xl hover:bg-purple-700 transition-all shadow-lg shadow-purple-600/20"
                         >
                             <FaFileAlt size={16} />
-                            View Expenses
+                            {t('viewExpenses')}
                         </button>
                     )}
                 </div>
@@ -151,7 +153,7 @@ const ExpenseTable = ({ expenses = [], pagination, cycleFilter, readOnly = false
                 columns={columns}
                 title=""
                 onCreate={null}
-                searchPlaceholder="Search by ID, Title, User..."
+                searchPlaceholder={t('searchByIdTitleUser')}
                 itemsPerPage={pagination?.per_page || 10}
                 currentPage={pagination?.current_page || 1}
                 onPageChange={onPageChange}

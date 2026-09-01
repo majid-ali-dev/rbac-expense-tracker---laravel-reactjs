@@ -16,6 +16,7 @@ import {
 } from 'react-icons/fa';
 import useAuthStore from '../../store/authStore';
 import { canAccessModule } from '../../utils/permissions';
+import useTranslation from '../../hooks/useTranslation';
 
 const Sidebar = () => {
     const location = useLocation();
@@ -23,6 +24,7 @@ const Sidebar = () => {
     const { user, logout, fetchUser } = useAuthStore();
     const [isMobileOpen, setIsMobileOpen] = useState(false);
     const [isLoggingOut, setIsLoggingOut] = useState(false);
+    const { t } = useTranslation();
 
     useEffect(() => {
         if (!user) {
@@ -42,15 +44,15 @@ const Sidebar = () => {
     }, [isMobileOpen]);
 
     const menuItems = [
-        { title: 'Dashboard', icon: FaHome, path: '/dashboard' },
-        { title: 'Roles', icon: FaUserShield, path: '/roles' },
-        { title: 'Permissions', icon: FaKey, path: '/permissions' },
-        { title: 'Roles & Permissions', icon: FaLayerGroup, path: '/role-permissions' },
-        { title: 'Manage Users', icon: FaUsers, path: '/users' },
-        { title: 'Categories', icon: FaShoppingCart, path: '/categories' },
-        { title: 'Expenses', icon: FaMoneyBillWave, path: '/expenses' },
-        { title: 'Payments', icon: FaWallet, path: '/payments' },
-        { title: 'Billing Cycles', icon: FaCalendarAlt, path: '/billing-cycles' },
+        { title: t('dashboard'), icon: FaHome, path: '/dashboard' },
+        { title: t('roles'), icon: FaUserShield, path: '/roles' },
+        { title: t('permissions'), icon: FaKey, path: '/permissions' },
+        { title: t('rolesAndPermissions'), icon: FaLayerGroup, path: '/role-permissions' },
+        { title: t('manageUsers'), icon: FaUsers, path: '/users' },
+        { title: t('categories'), icon: FaShoppingCart, path: '/categories' },
+        { title: t('expenses'), icon: FaMoneyBillWave, path: '/expenses' },
+        { title: t('payments'), icon: FaWallet, path: '/payments' },
+        { title: t('billingCycles'), icon: FaCalendarAlt, path: '/billing-cycles' },
     ];
 
     const filteredMenuItems = menuItems.filter(item => canAccessModule(user, item.path));
@@ -116,8 +118,8 @@ const Sidebar = () => {
                             <FaWallet className="text-white" size={22} />
                         </div>
                         <div>
-                            <h1 className="text-lg font-bold">Expense Tracker</h1>
-                            <p className="text-xs text-gray-400">Smart admin workspace</p>
+                            <h1 className="text-lg font-bold">{t('appName')}</h1>
+                            <p className="text-xs text-gray-400">{t('smartAdminWorkspace')}</p>
                         </div>
                     </div>
                     <button

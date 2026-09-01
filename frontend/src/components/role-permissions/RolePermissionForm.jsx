@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { FaTimes, FaArrowLeft, FaCheckCircle, FaShieldAlt } from 'react-icons/fa';
 import DataTable from '../common/DataTable';
+import useTranslation from '../../hooks/useTranslation';
 
 const RolePermissionForm = ({ role, allPermissions, onSubmit, onCancel, loading }) => {
+    const { t } = useTranslation();
     const [selectedPermissions, setSelectedPermissions] = useState([]);
     const [currentPageIds, setCurrentPageIds] = useState([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -101,7 +103,7 @@ const RolePermissionForm = ({ role, allPermissions, onSubmit, onCancel, loading 
                             Assign Permissions to "{role.name}"
                         </h2>
                         <p className="text-sm text-gray-500 mt-0.5">
-                            Select permissions to assign to this role
+                            {t('selectPermissionsDesc')}
                         </p>
                     </div>
                 </div>
@@ -116,22 +118,22 @@ const RolePermissionForm = ({ role, allPermissions, onSubmit, onCancel, loading 
             <form onSubmit={handleFormSubmit} className="space-y-4">
                 <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium text-gray-700">
-                        {selectedPermissions.length} of {allPermissions.length} permissions selected
+                        {selectedPermissions.length} / {allPermissions.length} {t('permissionsSelected')}
                     </span>
                     <button
                         type="button"
                         onClick={handleSelectPage}
                         className="text-sm text-blue-600 hover:text-blue-700 font-medium"
                     >
-                        {allOnPageSelected ? 'Deselect Current Page' : 'Select Current Page'}
+                        {allOnPageSelected ? t('deselectCurrentPage') : t('selectCurrentPage')}
                     </button>
                 </div>
 
                 <DataTable
                     data={allPermissions}
                     columns={columns}
-                    title="Permissions"
-                    searchPlaceholder="Search permissions..."
+                    title={t('permissionsTitle')}
+                    searchPlaceholder={t('searchPermissions')}
                     itemsPerPage={10}
                     onCreate={null}
                     onPageRowsChange={setCurrentPageIds}
@@ -144,7 +146,7 @@ const RolePermissionForm = ({ role, allPermissions, onSubmit, onCancel, loading 
                         className="inline-flex items-center gap-2 px-6 py-2.5 bg-green-600 text-white font-bold rounded-2xl hover:bg-green-700 transition-all shadow-lg shadow-green-600/20 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         <FaCheckCircle size={16} />
-                        {loading || isSubmitting ? 'Saving...' : 'Save Permissions'}
+                        {loading || isSubmitting ? t('saving') : t('savePermissions')}
                     </button>
                     <button
                         type="button"
@@ -152,7 +154,7 @@ const RolePermissionForm = ({ role, allPermissions, onSubmit, onCancel, loading 
                         className="inline-flex items-center gap-2 px-6 py-2.5 border border-gray-300 text-gray-700 font-medium rounded-2xl hover:bg-gray-50 transition-all"
                     >
                         <FaArrowLeft size={14} />
-                        Back
+                        {t('back')}
                     </button>
                 </div>
             </form>

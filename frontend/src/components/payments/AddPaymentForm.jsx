@@ -3,8 +3,10 @@ import { FaArrowLeft, FaUser, FaEnvelope, FaPhone, FaWallet, FaMoneyBillWave, Fa
 import { useNavigate } from 'react-router-dom';
 import usePaymentStore from '../../store/paymentStore';
 import usePermission from '../../hooks/usePermission';
+import useTranslation from '../../hooks/useTranslation';
 
 const AddPaymentForm = ({ user, cycleId = null, onSubmit, onCancel, loading, onPaymentDeleted }) => {
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const { deletePayment } = usePaymentStore();
     const { can } = usePermission();
@@ -69,12 +71,11 @@ const AddPaymentForm = ({ user, cycleId = null, onSubmit, onCancel, loading, onP
                         onClick={handleBack}
                         className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 font-medium rounded-2xl hover:bg-gray-50 transition-all"
                     >
-                        <FaArrowLeft size={14} />
-                        Back
+                        <FaArrowLeft size={14} />                            {t('back')}
                     </button>
                     <div>
-                        <h1 className="text-2xl font-extrabold text-gray-900">Add Payment</h1>
-                        <p className="text-sm text-gray-500 mt-0.5">Add payment for {user.name}</p>
+                        <h1 className="text-2xl font-extrabold text-gray-900">{t('addPayment')}</h1>
+                        <p className="text-sm text-gray-500 mt-0.5">{t('addPaymentFor')} {user.name}</p>
                     </div>
                 </div>
             </div>
@@ -101,19 +102,19 @@ const AddPaymentForm = ({ user, cycleId = null, onSubmit, onCancel, loading, onP
                 {/* Financial Summary */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
                     <div className="bg-blue-50 rounded-2xl p-4 text-center border border-blue-100">
-                        <p className="text-xs text-blue-600 font-bold uppercase tracking-wider">Total Amount</p>
+                        <p className="text-xs text-blue-600 font-bold uppercase tracking-wider">{t('totalAmountCard')}</p>
                         <p className="text-2xl font-extrabold text-blue-700 mt-1">
                             Rs {parseFloat(user.total_amount || 0).toFixed(2)}
                         </p>
                     </div>
                     <div className="bg-green-50 rounded-2xl p-4 text-center border border-green-100">
-                        <p className="text-xs text-green-600 font-bold uppercase tracking-wider">Total Paid</p>
+                        <p className="text-xs text-green-600 font-bold uppercase tracking-wider">{t('totalPaidCard')}</p>
                         <p className="text-2xl font-extrabold text-green-700 mt-1">
                             Rs {parseFloat(user.total_paid || 0).toFixed(2)}
                         </p>
                     </div>
                     <div className="bg-yellow-50 rounded-2xl p-4 text-center border border-yellow-100">
-                        <p className="text-xs text-yellow-600 font-bold uppercase tracking-wider">Remaining Balance</p>
+                        <p className="text-xs text-yellow-600 font-bold uppercase tracking-wider">{t('remainingBalance')}</p>
                         <p className="text-2xl font-extrabold text-yellow-700 mt-1">
                             Rs {remaining.toFixed(2)}
                         </p>
@@ -127,7 +128,7 @@ const AddPaymentForm = ({ user, cycleId = null, onSubmit, onCancel, loading, onP
                     <form onSubmit={handleSubmit}>
                         <div className="mb-4">
                             <label className="block text-sm font-bold text-gray-700 mb-1.5">
-                                Payment Amount (Rs)
+                                {t('paymentAmountRs')}
                             </label>
                             <div className="flex gap-2">
                                 <div className="relative flex-1">
@@ -152,11 +153,11 @@ const AddPaymentForm = ({ user, cycleId = null, onSubmit, onCancel, loading, onP
                                     onClick={handleFillRemaining}
                                     className="px-4 py-2.5 bg-gray-200 text-gray-700 font-medium rounded-2xl hover:bg-gray-300 transition-all whitespace-nowrap"
                                 >
-                                    Fill Remaining
+                                    {t('fillRemaining')}
                                 </button>
                             </div>
                             <p className="mt-1.5 text-sm text-gray-500">
-                                Maximum allowed: Rs {maxAmount.toFixed(2)}
+                                {t('maximumAllowed')}: Rs {maxAmount.toFixed(2)}
                             </p>
                             {error && (
                                 <p className="mt-1.5 text-sm text-red-600">{error}</p>
@@ -170,14 +171,14 @@ const AddPaymentForm = ({ user, cycleId = null, onSubmit, onCancel, loading, onP
                                 className="inline-flex items-center gap-2 px-6 py-2.5 bg-blue-600 text-white font-bold rounded-2xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 <FaCheckCircle size={16} />
-                                {loading ? 'Processing...' : 'Submit Payment'}
+                                {loading ? t('process') : t('submitPayment')}
                             </button>
                             <button
                                 type="button"
                                 onClick={handleBack}
                                 className="inline-flex items-center gap-2 px-6 py-2.5 border border-gray-300 text-gray-700 font-medium rounded-2xl hover:bg-gray-50 transition-all"
                             >
-                                Cancel
+                                {t('cancel')}
                             </button>
                         </div>
                     </form>
@@ -185,16 +186,15 @@ const AddPaymentForm = ({ user, cycleId = null, onSubmit, onCancel, loading, onP
             ) : (
                 <div className="bg-green-50 rounded-2xl border border-green-200 p-8 text-center">
                     <div className="text-5xl mb-4">✅</div>
-                    <h3 className="text-xl font-bold text-green-700">Payment Complete!</h3>
+                    <h3 className="text-xl font-bold text-green-700">{t('paymentComplete')}</h3>
                     <p className="text-green-600 mt-1">
-                        This user has fully paid their dues. Total paid: Rs {parseFloat(user.total_paid || 0).toFixed(2)}
+                        {t('fullyPaidDesc')}: Rs {parseFloat(user.total_paid || 0).toFixed(2)}
                     </p>
                     <button
                         onClick={handleBack}
                         className="mt-4 inline-flex items-center gap-2 px-6 py-2.5 bg-blue-600 text-white font-bold rounded-2xl hover:bg-blue-700 transition-all"
-                    >
-                        <FaArrowLeft size={14} />
-                        Back to Payments
+                    >                            <FaArrowLeft size={14} />
+                        {t('back')} to Payments
                     </button>
                 </div>
             )}
@@ -205,7 +205,7 @@ const AddPaymentForm = ({ user, cycleId = null, onSubmit, onCancel, loading, onP
                     <div className="bg-gradient-to-r from-purple-600 to-purple-700 px-6 py-4">
                         <h2 className="text-lg font-bold text-white flex items-center gap-2">
                             <FaWallet size={18} />
-                            Payment History
+                            {t('paymentHistoryTitle')}
                         </h2>
                     </div>
                     <div className="p-4">
@@ -213,10 +213,10 @@ const AddPaymentForm = ({ user, cycleId = null, onSubmit, onCancel, loading, onP
                             <table className="w-full text-center align-middle">
                                 <thead>
                                     <tr className="bg-gray-50 border-b border-gray-200">
-                                        <th className="py-2.5 px-4 text-xs font-bold text-gray-600 uppercase tracking-wider">Date & Time</th>
-                                        <th className="py-2.5 px-4 text-xs font-bold text-gray-600 uppercase tracking-wider">Month</th>
-                                        <th className="py-2.5 px-4 text-xs font-bold text-gray-600 uppercase tracking-wider">Amount Paid</th>
-                                        <th className="py-2.5 px-4 text-xs font-bold text-gray-600 uppercase tracking-wider">Action</th>
+                                        <th className="py-2.5 px-4 text-xs font-bold text-gray-600 uppercase tracking-wider">{t('dateTime')}</th>
+                                        <th className="py-2.5 px-4 text-xs font-bold text-gray-600 uppercase tracking-wider">{t('month')}</th>
+                                        <th className="py-2.5 px-4 text-xs font-bold text-gray-600 uppercase tracking-wider">{t('amountPaid')}</th>
+                                        <th className="py-2.5 px-4 text-xs font-bold text-gray-600 uppercase tracking-wider">{t('actions')}</th>
                                     </tr>
                                 </thead>
                                 <tbody>

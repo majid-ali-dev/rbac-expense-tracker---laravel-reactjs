@@ -2,6 +2,7 @@ import React from 'react';
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { FaUsers } from 'react-icons/fa';
 import ChartCard from '../ChartCard';
+import useTranslation from '../../../hooks/useTranslation';
 
 const STATUS_GRADIENTS = {
     Paid: ['#4ade80', '#16a34a'],
@@ -69,12 +70,13 @@ const renderLegend = (props, total) => {
 };
 
 const MemberStatusChart = ({ data, total }) => {
+    const { t } = useTranslation();
     const hasData = data && data.some((d) => d.value > 0);
 
     return (
         <ChartCard
-            title="Member Payment Status"
-            subtitle="Paid vs Partial vs Unpaid"
+            title={t('memberPaymentStatus')}
+            subtitle={t('paidVsPartialUnpaid')}
             icon={FaUsers}
             iconColor="bg-cyan-500"
         >
@@ -118,12 +120,12 @@ const MemberStatusChart = ({ data, total }) => {
                     </ResponsiveContainer>
                     <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none" style={{ top: '-10%' }}>
                         <span className="text-[26px] font-extrabold text-gray-900 leading-none">{total}</span>
-                        <span className="text-[10.5px] text-gray-400 font-semibold mt-1 uppercase tracking-wide">Members</span>
+                        <span className="text-[10.5px] text-gray-400 font-semibold mt-1 uppercase tracking-wide">{t('members')}</span>
                     </div>
                 </div>
             ) : (
                 <div className="h-[270px] flex items-center justify-center text-sm text-gray-400">
-                    No member data available
+                    {t('noMemberData')}
                 </div>
             )}
         </ChartCard>

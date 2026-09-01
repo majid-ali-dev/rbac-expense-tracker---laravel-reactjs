@@ -2,9 +2,11 @@ import React from 'react';
 import { FaEdit, FaTrash } from 'react-icons/fa';
 import DataTable from '../common/DataTable';
 import usePermission from '../../hooks/usePermission';
+import useTranslation from '../../hooks/useTranslation';
 
 const RoleTable = ({ roles = [], pagination, onEdit, onDelete, onCreate, onPageChange }) => {
     const { can } = usePermission();
+    const { t } = useTranslation();
 
     // Define columns for DataTable with proper accessor functions
     const columns = [
@@ -19,7 +21,7 @@ const RoleTable = ({ roles = [], pagination, onEdit, onDelete, onCreate, onPageC
         },
         {
             id: 'name',
-            header: 'Role Name',
+            header: t('roleName'),
             accessorFn: (row) => row.name,
 
             cell: ({ getValue }) => (
@@ -29,18 +31,18 @@ const RoleTable = ({ roles = [], pagination, onEdit, onDelete, onCreate, onPageC
         },
         {
             id: 'users_count',
-            header: 'Users',
+            header: t('users'),
             accessorFn: (row) => row.users_count || 0,
             cell: ({ getValue }) => (
                 <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-700">
-                    {getValue()} {getValue() === 1 ? 'user' : 'users'}
+                    {getValue()} {getValue() === 1 ? t('user') : t('users')}
                 </span>
             ),
             enableSorting: true,
         },
         {
             id: 'created_at',
-            header: 'Created At',
+            header: t('createdAt'),
             accessorFn: (row) => row.created_at,
             cell: ({ getValue }) => (
                 <span className="text-gray-600">
@@ -51,7 +53,7 @@ const RoleTable = ({ roles = [], pagination, onEdit, onDelete, onCreate, onPageC
         },
         {
             id: 'actions',
-            header: 'Actions',
+            header: t('actions'),
             accessorFn: (row) => row.id,
             cell: ({ row }) => {
                 const role = row.original;
@@ -88,10 +90,10 @@ const RoleTable = ({ roles = [], pagination, onEdit, onDelete, onCreate, onPageC
         <DataTable
             data={roles}
             columns={columns}
-            title="Roles"
-            createButtonText="Create Role"
+            title={t('rolesTitle')}
+            createButtonText={t('createRole')}
             onCreate={can('roles.create') ? onCreate : null}
-            searchPlaceholder="Search by ID, Name..."
+            searchPlaceholder={t('searchByIdName')}
             itemsPerPage={pagination?.per_page || 10}
             currentPage={pagination?.current_page || 1}
             onPageChange={onPageChange}

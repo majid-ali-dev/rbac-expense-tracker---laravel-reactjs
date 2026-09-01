@@ -2,9 +2,11 @@ import React from 'react';
 import { FaEdit, FaTrash } from 'react-icons/fa';
 import DataTable from '../common/DataTable';
 import usePermission from '../../hooks/usePermission';
+import useTranslation from '../../hooks/useTranslation';
 
 const CategoryTable = ({ categories = [], pagination, cycleFilter, readOnly = false, onEdit, onDelete, onCreate, onPageChange }) => {
     const { can } = usePermission();
+    const { t } = useTranslation();
 
     const columns = [
         {
@@ -18,7 +20,7 @@ const CategoryTable = ({ categories = [], pagination, cycleFilter, readOnly = fa
         },
         {
             id: 'name',
-            header: 'Category Name',
+            header: t('categoryName'),
             accessorFn: (row) => row.name,
             cell: ({ getValue }) => (
                 <span className="font-semibold text-gray-900">{getValue() || '-'}</span>
@@ -27,7 +29,7 @@ const CategoryTable = ({ categories = [], pagination, cycleFilter, readOnly = fa
         },
         {
             id: 'expense_count',
-            header: 'Expenses (Cycle)',
+            header: t('expensesCycle'),
             accessorFn: (row) => row.expense_count ?? '-',
             cell: ({ getValue }) => (
                 <span className="text-gray-700 font-medium">{getValue()}</span>
@@ -36,7 +38,7 @@ const CategoryTable = ({ categories = [], pagination, cycleFilter, readOnly = fa
         },
         {
             id: 'total_expense',
-            header: 'Spent (Cycle)',
+            header: t('spentCycle'),
             accessorFn: (row) => row.total_expense ?? '-',
             cell: ({ getValue }) => {
                 const value = getValue();
@@ -52,7 +54,7 @@ const CategoryTable = ({ categories = [], pagination, cycleFilter, readOnly = fa
         },
         {
             id: 'created_at',
-            header: 'Created At',
+            header: t('createdAt'),
             accessorFn: (row) => row.created_at,
             cell: ({ getValue }) => (
                 <span className="text-gray-600">
@@ -63,7 +65,7 @@ const CategoryTable = ({ categories = [], pagination, cycleFilter, readOnly = fa
         },
         {
             id: 'actions',
-            header: 'Actions',
+            header: t('actions'),
             accessorFn: (row) => row.id,
             cell: ({ row }) => {
                 const category = row.original;
@@ -104,7 +106,7 @@ const CategoryTable = ({ categories = [], pagination, cycleFilter, readOnly = fa
                 <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
                     {readOnly && (
                         <p className="text-sm text-gray-500">
-                            This cycle is closed and read-only. You can only modify data in the current open cycle.
+                            {t('readOnly')}
                         </p>
                     )}
                     <div className={readOnly ? '' : 'ml-auto'}>{cycleFilter}</div>
@@ -113,10 +115,10 @@ const CategoryTable = ({ categories = [], pagination, cycleFilter, readOnly = fa
             <DataTable
                 data={categories}
             columns={columns}
-            title="Manage Categories"
-            createButtonText="Add Category"
+            title={t('manageCategories')}
+            createButtonText={t('addCategory')}
             onCreate={can('categories.create') && !readOnly ? onCreate : null}
-            searchPlaceholder="Search by ID, Name..."
+            searchPlaceholder={t('searchByIdName')}
             itemsPerPage={pagination?.per_page || 10}
             currentPage={pagination?.current_page || 1}
             onPageChange={onPageChange}

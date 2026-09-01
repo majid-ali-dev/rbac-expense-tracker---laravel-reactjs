@@ -2,9 +2,11 @@ import React from 'react';
 import { FaEdit, FaTrash, FaEye } from 'react-icons/fa';
 import DataTable from '../common/DataTable';
 import usePermission from '../../hooks/usePermission';
+import useTranslation from '../../hooks/useTranslation';
 
 const UserTable = ({ users = [], pagination, cycleFilter, readOnly = false, onEdit, onDelete, onView, onCreate, onPageChange }) => {
     const { can } = usePermission();
+    const { t } = useTranslation();
     const columns = [
         {
             id: 'id',
@@ -17,7 +19,7 @@ const UserTable = ({ users = [], pagination, cycleFilter, readOnly = false, onEd
         },
         {
             id: 'name',
-            header: 'Name',
+            header: t('name'),
             accessorFn: (row) => row.name,
             cell: ({ getValue }) => (
                 <span className="font-semibold text-gray-900">{getValue() || '-'}</span>
@@ -26,7 +28,7 @@ const UserTable = ({ users = [], pagination, cycleFilter, readOnly = false, onEd
         },
         {
             id: 'email',
-            header: 'Email',
+            header: t('email'),
             accessorFn: (row) => row.email,
             cell: ({ getValue }) => (
                 <span className="text-gray-700">{getValue() || '-'}</span>
@@ -35,7 +37,7 @@ const UserTable = ({ users = [], pagination, cycleFilter, readOnly = false, onEd
         },
         {
             id: 'phone',
-            header: 'Phone',
+            header: t('phone'),
             accessorFn: (row) => row.phone,
             cell: ({ getValue }) => (
                 <span className="text-gray-700">{getValue() || '-'}</span>
@@ -44,7 +46,7 @@ const UserTable = ({ users = [], pagination, cycleFilter, readOnly = false, onEd
         },
         {
             id: 'total_amount',
-            header: 'Total Amount',
+            header: t('totalAmount'),
             accessorFn: (row) => row.total_amount || 0,
             cell: ({ getValue }) => {
                 const amount = parseFloat(getValue());
@@ -60,7 +62,7 @@ const UserTable = ({ users = [], pagination, cycleFilter, readOnly = false, onEd
         },
         {
             id: 'total_paid',
-            header: 'Paid',
+            header: t('paid'),
             accessorFn: (row) => row.total_paid || 0,
             cell: ({ getValue }) => {
                 const amount = parseFloat(getValue());
@@ -74,7 +76,7 @@ const UserTable = ({ users = [], pagination, cycleFilter, readOnly = false, onEd
         },
         {
             id: 'remaining',
-            header: 'Remaining',
+            header: t('remaining'),
             accessorFn: (row) => row.remaining || 0,
             cell: ({ getValue }) => {
                 const amount = parseFloat(getValue());
@@ -88,7 +90,7 @@ const UserTable = ({ users = [], pagination, cycleFilter, readOnly = false, onEd
         },
         {
             id: 'payment_status',
-            header: 'Status',
+            header: t('status'),
             accessorFn: (row) => row.payment_status || 'unpaid',
             cell: ({ getValue }) => {
                 const status = getValue();
@@ -115,7 +117,7 @@ const UserTable = ({ users = [], pagination, cycleFilter, readOnly = false, onEd
         },
         {
             id: 'actions',
-            header: 'Actions',
+            header: t('actions'),
             accessorFn: (row) => row.id,
             cell: ({ row }) => {
                 const userData = row.original;
@@ -167,7 +169,7 @@ const UserTable = ({ users = [], pagination, cycleFilter, readOnly = false, onEd
                 <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
                     {readOnly && (
                         <p className="text-sm text-gray-500">
-                            This cycle is closed and read-only. You can only modify data in the current open cycle.
+                            {t('readOnly')}
                         </p>
                     )}
                     <div className={readOnly ? '' : 'ml-auto'}>{cycleFilter}</div>
@@ -176,10 +178,10 @@ const UserTable = ({ users = [], pagination, cycleFilter, readOnly = false, onEd
             <DataTable
                 data={users}
             columns={columns}
-            title="Users List"
-            createButtonText="Add New User"
+            title={t('usersList')}
+            createButtonText={t('addNewUser')}
             onCreate={can('users.create') && !readOnly ? onCreate : null}
-            searchPlaceholder="Search by ID, Name, Email..."
+            searchPlaceholder={t('searchByIdNameEmail')}
             itemsPerPage={pagination?.per_page || 10}
             currentPage={pagination?.current_page || 1}
             onPageChange={onPageChange}

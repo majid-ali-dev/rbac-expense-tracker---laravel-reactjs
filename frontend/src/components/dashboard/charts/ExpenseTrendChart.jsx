@@ -11,6 +11,7 @@ import {
 import { FaChartArea, FaHourglassHalf } from 'react-icons/fa';
 import ChartCard from '../ChartCard';
 import useThemeStore from '../../../store/themeStore';
+import useTranslation from '../../../hooks/useTranslation';
 
 const CustomTooltip = ({ active, payload, label }) => {
     if (!active || !payload || !payload.length) return null;
@@ -23,6 +24,7 @@ const CustomTooltip = ({ active, payload, label }) => {
 };
 
 const ExpenseTrendChart = ({ data }) => {
+    const { t } = useTranslation();
     const { theme } = useThemeStore();
     const isDark = theme === 'dark';
     const hasAnyValue = data && data.length > 0 && data.some((d) => d.amount > 0);
@@ -34,8 +36,8 @@ const ExpenseTrendChart = ({ data }) => {
 
     return (
         <ChartCard
-            title="Expense Trend"
-            subtitle="Daily spending — current cycle"
+            title={t('expenseTrend')}
+            subtitle={t('dailySpending')}
             icon={FaChartArea}
             iconColor="bg-blue-500"
             className="lg:col-span-2"
@@ -80,15 +82,15 @@ const ExpenseTrendChart = ({ data }) => {
                     <div className="p-3 bg-blue-50 rounded-full mb-3">
                         <FaHourglassHalf className="text-blue-500" size={20} />
                     </div>
-                    <p className="text-sm font-bold text-gray-700">Cycle just started</p>
+                    <p className="text-sm font-bold text-gray-700">{t('cycleJustStarted')}</p>
                     <p className="text-xs text-gray-400 mt-1">
-                        Rs. {todayOnly.amount.toFixed(2)} spent so far ({todayOnly.date})
+                        Rs. {todayOnly.amount.toFixed(2)} {t('spentSoFar')} ({todayOnly.date})
                     </p>
-                    <p className="text-xs text-gray-400 mt-1">Trend will build up over the next few days</p>
+                    <p className="text-xs text-gray-400 mt-1">{t('trendWillBuild')}</p>
                 </div>
             ) : (
                 <div className="h-[260px] flex items-center justify-center text-sm text-gray-400">
-                    No expenses recorded yet this cycle
+                    {t('noExpensesThisCycle')}
                 </div>
             )}
         </ChartCard>

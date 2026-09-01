@@ -11,6 +11,7 @@ import {
 import { billingCycleAPI } from '../../services/api';
 import useCycleStore from '../../store/cycleStore';
 import usePermission from '../../hooks/usePermission';
+import useTranslation from '../../hooks/useTranslation';
 import { showSuccess, showError, showDeletedSuccess } from '../../utils/toast';
 
 const formatDate = (d) => {
@@ -35,6 +36,7 @@ const localDate = (d) => {
  */
 const BillingCycles = () => {
     const { can } = usePermission();
+    const { t } = useTranslation();
     const cycles = useCycleStore((s) => s.cycles);
     const currentCycle = useCycleStore((s) => s.currentCycle);
     const selectedCycleId = useCycleStore((s) => s.selectedCycleId);
@@ -184,7 +186,7 @@ const BillingCycles = () => {
                     <div>
                         <h1 className="text-2xl font-extrabold text-gray-900 flex items-center gap-2">
                             <FaCalendarAlt className="text-blue-600" size={22} />
-                            Billing Cycles
+                            {t('billingCycles')}
                         </h1>
                         <p className="text-sm text-gray-500 mt-1">
                             Create, close and manage billing cycles. Selecting a cycle makes it the
@@ -197,7 +199,7 @@ const BillingCycles = () => {
                             className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white font-bold rounded-2xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20"
                         >
                             <FaCalendarPlus size={15} />
-                            Create Cycle
+                            {t('createCycle')}
                         </button>
                     )}
                 </div>
@@ -206,14 +208,14 @@ const BillingCycles = () => {
                 <div className="mt-4 flex flex-wrap gap-3">
                     <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold bg-green-100 text-green-700">
                         <FaCheckCircle size={13} />
-                        Current: {openCycle?.label || 'No active cycle'}
+                        Current: {openCycle?.label || t('noActiveCycle')}
                     </span>
                     <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold bg-blue-100 text-blue-700">
                         <FaRegCircle size={13} />
-                        Selected across app:{' '}
+                        {t('selectedAcrossApp')}:{' '}
                         {selectedCycle
                             ? `${selectedCycle.label} (${selectedCycle.status})`
-                            : (openCycle?.label || 'No active cycle')}
+                            : (openCycle?.label || t('noActiveCycle'))}
                     </span>
                 </div>
             </div>
@@ -222,11 +224,11 @@ const BillingCycles = () => {
             {showForm && (
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
                     <h2 className="text-lg font-bold text-gray-900 mb-4">
-                        {editingCycle ? `Edit Cycle: ${editingCycle.label}` : 'Create New Cycle'}
+                        {editingCycle ? `${t('editCycleLabel')}: ${editingCycle.label}` : t('createNewCycle')}
                     </h2>
                     <form onSubmit={handleSubmitForm} className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
                         <div>
-                            <label className="block text-sm font-bold text-gray-700 mb-1.5">Start Date</label>
+                            <label className="block text-sm font-bold text-gray-700 mb-1.5">{t('startDate')}</label>
                             <input
                                 type="date"
                                 value={startDate}
@@ -235,7 +237,7 @@ const BillingCycles = () => {
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-bold text-gray-700 mb-1.5">End Date</label>
+                            <label className="block text-sm font-bold text-gray-700 mb-1.5">{t('endDate')}</label>
                             <input
                                 type="date"
                                 value={endDate}
@@ -249,14 +251,14 @@ const BillingCycles = () => {
                                 disabled={loading}
                                 className="px-5 py-2.5 bg-green-600 text-white font-bold rounded-2xl hover:bg-green-700 transition-all disabled:opacity-50"
                             >
-                                {loading ? 'Saving...' : (editingCycle ? 'Update Cycle' : 'Create Cycle')}
+                                {loading ? t('saving') : (editingCycle ? t('editCycle') : t('createCycle'))}
                             </button>
                             <button
                                 type="button"
                                 onClick={() => { setShowForm(false); setEditingCycle(null); }}
                                 className="px-5 py-2.5 border border-gray-300 text-gray-700 font-medium rounded-2xl hover:bg-gray-50 transition-all"
                             >
-                                Cancel
+                                {t('cancel')}
                             </button>
                         </div>
                     </form>
@@ -269,20 +271,20 @@ const BillingCycles = () => {
                     <table className="w-full text-center align-middle">
                         <thead>
                             <tr className="bg-gray-50 border-b border-gray-200">
-                                <th className="py-3 px-4 text-xs font-bold text-gray-600 uppercase tracking-wider">Cycle</th>
-                                <th className="py-3 px-4 text-xs font-bold text-gray-600 uppercase tracking-wider">Start Date</th>
-                                <th className="py-3 px-4 text-xs font-bold text-gray-600 uppercase tracking-wider">End Date</th>
-                                <th className="py-3 px-4 text-xs font-bold text-gray-600 uppercase tracking-wider">Status</th>
-                                <th className="py-3 px-4 text-xs font-bold text-gray-600 uppercase tracking-wider">Closed At</th>
-                                <th className="py-3 px-4 text-xs font-bold text-gray-600 uppercase tracking-wider">Selection</th>
-                                <th className="py-3 px-4 text-xs font-bold text-gray-600 uppercase tracking-wider">Actions</th>
+                                <th className="py-3 px-4 text-xs font-bold text-gray-600 uppercase tracking-wider">                                {t('cycleLabel')}</th>
+                                <th className="py-3 px-4 text-xs font-bold text-gray-600 uppercase tracking-wider">{t('startDate')}</th>
+                                <th className="py-3 px-4 text-xs font-bold text-gray-600 uppercase tracking-wider">{t('endDate')}</th>
+                                <th className="py-3 px-4 text-xs font-bold text-gray-600 uppercase tracking-wider">{t('status')}</th>
+                                <th className="py-3 px-4 text-xs font-bold text-gray-600 uppercase tracking-wider">{t('closedAt')}</th>
+                                <th className="py-3 px-4 text-xs font-bold text-gray-600 uppercase tracking-wider">{t('selection')}</th>
+                                <th className="py-3 px-4 text-xs font-bold text-gray-600 uppercase tracking-wider">{t('actions')}</th>
                             </tr>
                         </thead>
                         <tbody>
                             {cycles.length === 0 && (
                                 <tr>
                                     <td colSpan="7" className="py-12 text-center text-gray-500">
-                                        No billing cycles found.
+                                        {t('noBillingCyclesFound')}
                                     </td>
                                 </tr>
                             )}
@@ -295,7 +297,7 @@ const BillingCycles = () => {
                                             {cycle.label}
                                             {isOpen && (
                                                 <span className="ml-2 inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-100 text-green-700">
-                                                    ACTIVE
+                                                    {t('active')}
                                                 </span>
                                             )}
                                         </td>
@@ -305,7 +307,7 @@ const BillingCycles = () => {
                                             <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-bold ${
                                                 isOpen ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
                                             }`}>
-                                                {isOpen ? 'OPEN' : 'CLOSED'}
+                                                {isOpen ? t('openStatus') : t('closedStatus')}
                                             </span>
                                         </td>
                                         <td className="py-3 px-4 text-sm text-gray-700">
@@ -314,10 +316,10 @@ const BillingCycles = () => {
                                         <td className="py-3 px-4">
                                             {isSelected ? (
                                                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-600 text-white">
-                                                    <FaCheckCircle size={12} /> Selected
+                                                    <FaCheckCircle size={12} /> {t('select')}
                                                 </span>
                                             ) : (
-                                                <span className="text-gray-400 text-xs">Not selected</span>
+                                                <span className="text-gray-400 text-xs">{t('notSelected')}</span>
                                             )}
                                         </td>
                                         <td className="py-3 px-4">
@@ -329,7 +331,7 @@ const BillingCycles = () => {
                                                         title="Use this cycle everywhere in the app"
                                                     >
                                                         <FaRegCircle size={12} />
-                                                        Select
+                                                        {t('selectThisCycle')}
                                                     </button>
                                                 )}
                                                 {can('billing-cycle.edit') && (
@@ -349,7 +351,7 @@ const BillingCycles = () => {
                                                         title="Close this cycle and start the next one"
                                                     >
                                                         <FaLock size={12} />
-                                                        Close
+                                                        {t('closeCycle')}
                                                     </button>
                                                 )}
                                             </div>
