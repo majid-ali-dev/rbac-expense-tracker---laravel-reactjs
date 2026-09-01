@@ -2,12 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { FaTimes, FaArrowLeft, FaCheckCircle, FaMoneyBillWave } from 'react-icons/fa';
 
-const ExpenseForm = ({ expense, categories = [], onSubmit, onCancel, loading }) => {
+const ExpenseForm = ({ expense, categories = [], onSubmit, onCancel, loading, cycle = null }) => {
     const {
         register,
         handleSubmit,
         reset,
         formState: { errors },
+        setError,
+        clearErrors,
     } = useForm();
 
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -31,6 +33,19 @@ const ExpenseForm = ({ expense, categories = [], onSubmit, onCancel, loading }) 
     }, [expense, reset]);
 
     const handleFormSubmit = async (data) => {
+        // Frontend validation: ensure expense date falls within the active cycle
+        if (cycle && cycle.start_date && cycle.end_date && data.date) {
+            const cycleStart = cycle.start_date.split('T')[0];
+            const cycleEnd = cycle.end_date.split('T')[0];
+            if (data.date < cycleStart || data.date > cycleEnd) {
+                setError('date', {
+                    type: 'manual',
+                    message: 'The selected date is outside the active billing cycle. Please create or update the billing cycle before adding this expense.',
+                });
+                return;
+            }
+        }
+        clearErrors('date');
         setIsSubmitting(true);
         try {
             await onSubmit(data);

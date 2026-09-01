@@ -13,10 +13,14 @@ use Carbon\Carbon;
 class ExpenseService
 {
     protected ExpenseRepositoryInterface $expenseRepository;
+    protected BillingCycleValidationService $cycleValidator;
 
-    public function __construct(ExpenseRepositoryInterface $expenseRepository)
-    {
+    public function __construct(
+        ExpenseRepositoryInterface $expenseRepository,
+        BillingCycleValidationService $cycleValidator,
+    ) {
         $this->expenseRepository = $expenseRepository;
+        $this->cycleValidator = $cycleValidator;
     }
 
     /**
@@ -69,6 +73,13 @@ class ExpenseService
             BillingCycle::assertCycleWritable($data['billing_cycle_id']);
         }
 
+        // Validate that the expense date falls within the target cycle.
+        $this->cycleValidator->assertDateInCycle(
+            $data['billing_cycle_id'],
+            $data['date'],
+            'expense',
+        );
+
         $expense = $this->expenseRepository->create($data);
 
         ExpenseHistory::create([
@@ -106,15 +117,29 @@ class ExpenseService
             BillingCycle::assertCycleWritable($currentCycleId);
         }
 
+        // Determine the final billing_cycle_id and date for validation.
+        $finalCycleId = $expense->billing_cycle_id;
+        $finalDate = $data['date'] ?? $expense->date?->format('Y-m-d') ?? '';
+
         if (isset($data['date']) && $data['date'] && $expense->date?->format('Y-m-d') !== $data['date']) {
             if ($cycleId) {
                 // Keep the expense inside the explicitly selected cycle.
                 $data['billing_cycle_id'] = (int) $cycleId;
+                $finalCycleId = (int) $cycleId;
             } else {
                 $data['billing_cycle_id'] = $this->resolveCycleIdForDate($data['date']);
+                $finalCycleId = $data['billing_cycle_id'];
                 BillingCycle::assertCycleWritable($data['billing_cycle_id']);
             }
+            $finalDate = $data['date'];
         }
+
+        // Validate that the expense date falls within the target cycle.
+        $this->cycleValidator->assertDateInCycle(
+            $finalCycleId,
+            $finalDate,
+            'expense',
+        );
 
         $updated = $this->expenseRepository->update($expense, $data);
 
