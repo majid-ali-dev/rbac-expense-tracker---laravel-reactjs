@@ -14,6 +14,12 @@ use Carbon\Carbon;
 
 class MonthlyRolloverService
 {
+    protected BillingCycleValidationService $cycleValidator;
+
+    public function __construct(BillingCycleValidationService $cycleValidator)
+    {
+        $this->cycleValidator = $cycleValidator;
+    }
     /**
      * Close the current open cycle and start a new one.
      *
@@ -58,6 +64,13 @@ class MonthlyRolloverService
                     'end_date' => 'End date cannot be in the future.',
                 ]);
             }
+
+            // Validate that no cycle-related records exist outside the close range.
+            $this->cycleValidator->assertNoRecordsOutsideRange(
+                $current,
+                $closeStart,
+                $closeEnd,
+            );
 
             // 1. Snapshot totals for the SELECTED date range (not the whole cycle)
             $totalExpense = Expense::whereBetween('date', [
@@ -119,14 +132,12 @@ class MonthlyRolloverService
                 'total_paid' => 0,
             ]);
 
-            // 6. Any expense dated after the closed range (including records
-            //    that were previously assigned to the closing cycle) belongs to
-            //    the new cycle — nothing may be lost between ranges.
+            // 6. Assign UNASSIGNED expenses dated after the close end to the
+            //    new cycle. Expenses already attributed to the closing cycle
+            //    are never silently moved — the assertNoRecordsOutsideRange
+            //    guard above already blocks the close if any exist.
             Expense::where('date', '>', $closeEnd->format('Y-m-d'))
-                ->where(function ($q) use ($current) {
-                    $q->whereNull('billing_cycle_id')
-                        ->orWhere('billing_cycle_id', $current->id);
-                })
+                ->whereNull('billing_cycle_id')
                 ->update(['billing_cycle_id' => $newCycle->id]);
 
             // 7. Reset members for the new cycle (operational values only —

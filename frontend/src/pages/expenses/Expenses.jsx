@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import useExpenseStore from '../../store/expenseStore';
 import useCycleStore from '../../store/cycleStore';
+import { billingCycleAPI } from '../../services/api';
 import CycleFilter from '../../components/common/CycleFilter';
 import ExpenseTable from '../../components/expenses/ExpenseTable';
 import ExpenseForm from '../../components/expenses/ExpenseForm';
@@ -29,13 +30,35 @@ const Expenses = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const cycleId = useCycleStore((s) => s.getSelectedId('expenses'));
     const fetchCycles = useCycleStore((s) => s.fetchCycles);
+    const getCycleById = useCycleStore((s) => s.getCycleById);
     // Closed (historical) cycles are read-only everywhere.
     const readOnly = useCycleStore((s) => s.isReadOnly('expenses'));
+    const [activeCycle, setActiveCycle] = useState(null);
 
     useEffect(() => {
         fetchCycles();
         return () => clearError();
     }, [fetchCycles]);
+
+    // Fetch the current active cycle details for frontend date validation.
+    useEffect(() => {
+        const loadCycle = async () => {
+            if (cycleId) {
+                const found = getCycleById(cycleId);
+                if (found) {
+                    setActiveCycle(found);
+                    return;
+                }
+            }
+            try {
+                const res = await billingCycleAPI.getCurrent();
+                setActiveCycle(res.data.data || null);
+            } catch {
+                setActiveCycle(null);
+            }
+        };
+        loadCycle();
+    }, [cycleId, getCycleById]);
 
     // Reload the list whenever the selected cycle changes (default: current)
     useEffect(() => {
@@ -138,6 +161,7 @@ const Expenses = () => {
                     onSubmit={handleFormSubmit}
                     onCancel={handleCancelForm}
                     loading={isSubmitting || loading}
+                    cycle={activeCycle}
                 />
             ) : (
                 <ExpenseTable

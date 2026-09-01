@@ -8,16 +8,21 @@ use App\Models\BillingCycle;
 use App\Models\Payment;
 use App\Models\User;
 use App\Services\PaymentService;
+use App\Services\BillingCycleValidationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class PaymentController extends Controller
 {
     protected PaymentService $paymentService;
+    protected BillingCycleValidationService $cycleValidator;
 
-    public function __construct(PaymentService $paymentService)
-    {
+    public function __construct(
+        PaymentService $paymentService,
+        BillingCycleValidationService $cycleValidator,
+    ) {
         $this->paymentService = $paymentService;
+        $this->cycleValidator = $cycleValidator;
     }
 
     public function index(Request $request): JsonResponse
@@ -152,6 +157,17 @@ class PaymentController extends Controller
                     'success' => false,
                     'message' => 'No active billing cycle. Please create or reopen a cycle first.',
                 ], 409);
+            }
+
+            // Only validate date range when using the default (open) cycle.
+            // An explicit cycle_id means the user intentionally selected a
+            // specific cycle (possibly historical) — skip date validation.
+            if (!$cycleId) {
+                $this->cycleValidator->assertDateInCycle(
+                    $cycle->id,
+                    now()->format('Y-m-d'),
+                    'payment',
+                );
             }
 
             $payment = Payment::create([
