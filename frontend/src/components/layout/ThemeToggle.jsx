@@ -68,14 +68,14 @@ const ThemeToggle = () => {
                 flex items-center justify-center w-11 h-11 rounded-full
                 bg-white/85 backdrop-blur-md border border-gray-200
                 dark:bg-white/10 dark:!border-white/15
-                text-[#4a4a4a] dark:text-white
-                shadow-[0_4px_16px_rgba(15,23,42,0.15)] dark:shadow-[0_4px_16px_rgba(0,0,0,0.45)]
+                text-[#0f1b3d] dark:text-[#e8edf9]
+                shadow-[0_4px_16px_rgba(15,27,61,0.18)] dark:shadow-[0_4px_16px_rgba(0,0,0,0.5)]
                 transition-all duration-300
                 hover:scale-110 hover:rotate-12 hover:bg-gray-100
                 dark:hover:!bg-white/20 dark:hover:rotate-0
                 active:scale-95 focus:outline-none focus-visible:ring-2
                 focus-visible:ring-blue-500 focus-visible:ring-offset-2
-                dark:focus-visible:ring-offset-[#23272f]
+                dark:focus-visible:ring-offset-[#131a3a]
             "
         >
             <span key={theme} className="flex items-center justify-center animate-[spin_0.5s_ease-in-out]">
