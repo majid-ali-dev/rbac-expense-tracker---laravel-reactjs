@@ -171,7 +171,7 @@ const Sidebar = () => {
                 {/* Brand — circular logo + name, like a professional sidebar */}
                 <div className="relative flex items-center justify-between px-4 pt-5 pb-4 shrink-0">
                     <div className={`flex items-center gap-3 ${isCompact ? 'justify-center mx-auto' : ''}`}>
-                        <div className="w-11 h-11 shrink-0 rounded-full bg-white border border-[#0f1b3d]/10 dark:border-white/15 shadow-md shadow-[#0f1b3d]/15 dark:shadow-black/30 flex items-center justify-center overflow-hidden">
+                        <div className="w-11 h-11 shrink-0 rounded-full bg-[#ffffff] border border-[#0f1b3d]/10 dark:border-white/15 shadow-md shadow-[#0f1b3d]/15 dark:shadow-black/30 flex items-center justify-center overflow-hidden">
                             <img
                                 src={logo}
                                 alt="Expense Tracker"
