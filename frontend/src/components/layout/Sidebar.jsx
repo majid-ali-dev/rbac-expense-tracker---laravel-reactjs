@@ -18,6 +18,7 @@ import {
 } from 'react-icons/fa';
 import useAuthStore from '../../store/authStore';
 import { canAccessModule } from '../../utils/permissions';
+import logo from '../../assets/logo.png';
 
 // Menu groups — dividers are rendered between groups automatically.
 const menuGroups = [
@@ -167,15 +168,19 @@ const Sidebar = () => {
                     lg:shadow-[0_10px_40px_-12px_rgba(15,27,61,0.35)] dark:lg:shadow-[0_10px_40px_-12px_rgba(0,0,0,0.7)]
                 `}
             >
-                {/* Brand */}
+                {/* Brand — circular logo + name, like a professional sidebar */}
                 <div className="relative flex items-center justify-between px-4 pt-5 pb-4 shrink-0">
-                    <div className={`flex items-center gap-3 ${isCompact ? 'mx-auto' : ''}`}>
-                        <div className="w-11 h-11 shrink-0 bg-[#0f1b3d] dark:bg-[#1e2f5c] rounded-2xl flex items-center justify-center shadow-lg shadow-[#0f1b3d]/25 dark:shadow-black/40">
-                            <FaWallet className="text-white dark:text-[#aebfea]" size={20} />
+                    <div className={`flex items-center gap-3 ${isCompact ? 'justify-center mx-auto' : ''}`}>
+                        <div className="w-11 h-11 shrink-0 rounded-full bg-white border border-[#0f1b3d]/10 dark:border-white/15 shadow-md shadow-[#0f1b3d]/15 dark:shadow-black/30 flex items-center justify-center overflow-hidden">
+                            <img
+                                src={logo}
+                                alt="Expense Tracker"
+                                className="w-[80%] h-[80%] object-contain"
+                            />
                         </div>
                         {!isCompact && (
                             <div className="min-w-0">
-                                <h1 className="text-base font-bold text-[#0f1b3d] dark:text-white leading-tight">
+                                <h1 className="text-base font-bold text-[#0f1b3d] dark:text-white leading-tight whitespace-nowrap">
                                     Expense Tracker
                                 </h1>
                                 <p className="text-[11px] text-[#3d4a73] dark:text-[#8393c4] truncate">
