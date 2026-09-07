@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import useAuthStore from '../../store/authStore';
+import logo from '../../assets/logo.png';
 
 const Register = () => {
     const navigate = useNavigate();
@@ -32,8 +33,12 @@ const Register = () => {
             <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8">
                 {/* Logo/Brand */}
                 <div className="text-center mb-8">
-                    <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-2xl text-white text-2xl mb-4">
-                        💰
+                    <div className="inline-flex items-center justify-center w-24 h-24 mx-auto rounded-full bg-[#ffffff] border border-[#0f1b3d]/10 dark:border-white/15 shadow-lg shadow-[#0f1b3d]/15 dark:shadow-black/30 overflow-hidden mb-5">
+                        <img
+                            src={logo}
+                            alt="Expense Tracker"
+                            className="w-[80%] h-[80%] object-contain"
+                        />
                     </div>
                     <h1 className="text-2xl font-bold text-gray-900">Create Account</h1>
                     <p className="text-gray-600 mt-1">Join Expense Tracker today</p>
