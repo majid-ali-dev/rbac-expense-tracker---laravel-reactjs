@@ -9,6 +9,47 @@ import {
 } from '@tanstack/react-table';
 import { FaSearch, FaSort, FaSortUp, FaSortDown, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 
+// Generate page numbers array with ellipsis for Amazon-style pagination
+const generatePageNumbers = (currentPage, totalPages) => {
+    const delta = 1; // pages to show around current page
+    const range = [];
+    const rangeWithDots = [];
+
+    // Always include first page
+    range.push(1);
+
+    // Add pages around current page
+    for (let i = currentPage - delta; i <= currentPage + delta; i++) {
+        if (i > 1 && i < totalPages) {
+            range.push(i);
+        }
+    }
+
+    // Always include last page
+    if (totalPages > 1) {
+        range.push(totalPages);
+    }
+
+    // Sort and deduplicate
+    const sorted = [...new Set(range)].sort((a, b) => a - b);
+
+    // Add ellipsis
+    let prev = 0;
+    for (const i of sorted) {
+        if (prev) {
+            if (i - prev === 2) {
+                rangeWithDots.push(prev + 1);
+            } else if (i - prev > 2) {
+                rangeWithDots.push('...');
+            }
+        }
+        rangeWithDots.push(i);
+        prev = i;
+    }
+
+    return rangeWithDots;
+};
+
 const DataTable = ({
     data = [],
     columns = [],
@@ -191,27 +232,60 @@ const DataTable = ({
                             </span>
                         )}
                     </div>
-                    <div className="flex items-center gap-2 order-1 sm:order-2">
-                        <button
-                            type="button"
-                            onClick={() => table.previousPage()}
-                            disabled={!table.getCanPreviousPage()}
-                            className="p-2 border border-gray-300 rounded-2xl text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-all"
-                        >
-                            <FaChevronLeft size={14} />
-                        </button>
-                        <span className="px-4 py-2 bg-blue-600 text-white rounded-2xl text-sm font-bold shadow-lg shadow-blue-600/20 min-w-[40px] text-center">
-                            {currentPage_}
-                        </span>
-                        <button
-                            type="button"
-                            onClick={() => table.nextPage()}
-                            disabled={!table.getCanNextPage()}
-                            className="p-2 border border-gray-300 rounded-2xl text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-all"
-                        >
-                            <FaChevronRight size={14} />
-                        </button>
-                    </div>
+                    {/* Amazon-style pagination */}
+                    {pageCount_ > 1 && (
+                        <div className="flex items-center gap-1 order-1 sm:order-2">
+                            {/* Previous button */}
+                            <button
+                                type="button"
+                                onClick={() => table.previousPage()}
+                                disabled={!table.getCanPreviousPage()}
+                                className="inline-flex items-center gap-1.5 px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-50 transition-all text-gray-700"
+                            >
+                                <FaChevronLeft size={12} />
+                                <span>Previous</span>
+                            </button>
+
+                            {/* Page numbers */}
+                            {generatePageNumbers(currentPage_, pageCount_).map((page, index) => {
+                                if (page === '...') {
+                                    return (
+                                        <span
+                                            key={`ellipsis-${index}`}
+                                            className="px-2 py-2 text-sm text-gray-400 select-none"
+                                        >
+                                            ...
+                                        </span>
+                                    );
+                                }
+                                return (
+                                    <button
+                                        key={page}
+                                        type="button"
+                                        onClick={() => table.setPageIndex(page - 1)}
+                                        className={`min-w-[40px] h-10 flex items-center justify-center border rounded-lg text-sm font-medium transition-all ${
+                                            page === currentPage_
+                                                ? 'bg-white border-gray-800 text-gray-900 shadow-sm font-bold'
+                                                : 'border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300'
+                                        }`}
+                                    >
+                                        {page}
+                                    </button>
+                                );
+                            })}
+
+                            {/* Next button */}
+                            <button
+                                type="button"
+                                onClick={() => table.nextPage()}
+                                disabled={!table.getCanNextPage()}
+                                className="inline-flex items-center gap-1.5 px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-50 transition-all text-gray-700"
+                            >
+                                <span>Next</span>
+                                <FaChevronRight size={12} />
+                            </button>
+                        </div>
+                    )}
                 </div>
             )}
         </div>
