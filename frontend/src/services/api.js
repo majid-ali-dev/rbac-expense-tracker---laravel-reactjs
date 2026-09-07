@@ -60,6 +60,7 @@ export const billingCycleAPI = {
     createCycle: (data) => api.post('/billing-cycle', data),
     updateCycle: (id, data) => api.put(`/billing-cycle/${id}`, data),
     closeMonth: (data) => api.post('/billing-cycle/close', data),
+    deleteCycle: (id) => api.delete(`/billing-cycle/${id}`),
 };
 
 export default api;

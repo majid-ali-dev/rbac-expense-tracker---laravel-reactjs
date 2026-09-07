@@ -5,6 +5,7 @@ import {
     FaCalendarPlus,
     FaEdit,
     FaLock,
+    FaTrash,
     FaCheckCircle,
     FaRegCircle,
 } from 'react-icons/fa';
@@ -173,6 +174,37 @@ const BillingCycles = () => {
         }
     };
 
+    const handleDelete = async (cycle) => {
+        const result = await Swal.fire({
+            title: `Delete "${cycle?.label}"?`,
+            html: `<p style="color:#64748b;font-size:14px">This billing cycle and all its associated data will be permanently deleted. This action cannot be undone.</p>`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc2626',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Yes, delete',
+            cancelButtonText: 'Cancel',
+            reverseButtons: true,
+        });
+
+        if (!result.isConfirmed) return;
+
+        setLoading(true);
+        try {
+            const response = await billingCycleAPI.deleteCycle(cycle.id);
+            if (response.data.success) {
+                showDeletedSuccess('Cycle Deleted', `"${cycle.label}" has been permanently deleted.`);
+                await fetchCycles();
+            } else {
+                showError(response.data.message || 'Failed to delete the cycle');
+            }
+        } catch (err) {
+            showError(err.response?.data?.message || 'Failed to delete the cycle');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const openCycle = currentCycle;
     const selectedCycle = cycles.find((c) => c.id === Number(selectedCycleId)) || null;
 
@@ -325,7 +357,7 @@ const BillingCycles = () => {
                                                 {!isSelected && (
                                                     <button
                                                         onClick={() => handleSelect(cycle)}
-                                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-blue-600 text-white hover:bg-blue-700 transition-all"
+                                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-green-600 text-white hover:bg-green-700 transition-all"
                                                         title="Use this cycle everywhere in the app"
                                                     >
                                                         <FaRegCircle size={12} />
@@ -345,11 +377,23 @@ const BillingCycles = () => {
                                                     <button
                                                         onClick={() => handleClose(cycle)}
                                                         disabled={loading}
-                                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-red-600 text-white hover:bg-red-700 transition-all disabled:opacity-50"
+                                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-blue-600 text-white hover:bg-blue-700 transition-all disabled:opacity-50"
                                                         title="Close this cycle and start the next one"
                                                     >
                                                         <FaLock size={12} />
                                                         Close
+                                                    </button>
+                                                )}
+                                                {/* Delete: only show for CLOSED cycles (not open/current) */}
+                                                {!isOpen && !isSelected && can('billing-cycle.delete') && (
+                                                    <button
+                                                        onClick={() => handleDelete(cycle)}
+                                                        disabled={loading}
+                                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-red-600 text-white hover:bg-red-700 transition-all disabled:opacity-50"
+                                                        title="Delete this closed cycle"
+                                                    >
+                                                        <FaTrash size={12} />
+                                                       
                                                     </button>
                                                 )}
                                             </div>

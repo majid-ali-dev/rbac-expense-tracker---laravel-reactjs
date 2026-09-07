@@ -46,6 +46,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
             ->middleware('permission:billing-cycle.edit');
         Route::post('/close', [BillingCycleController::class, 'closeCurrentMonth'])
             ->middleware('permission:billing-cycle.close');
+        Route::delete('/{id}', [BillingCycleController::class, 'destroy'])
+            ->middleware('permission:billing-cycle.delete')
+            ->name('billing-cycle.delete');
     });
 
     // Role Management Routes

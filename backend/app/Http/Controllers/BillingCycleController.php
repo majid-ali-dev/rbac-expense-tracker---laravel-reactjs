@@ -168,4 +168,40 @@ class BillingCycleController extends Controller
             ], 422);
         }
     }
+
+    /**
+     * DELETE /api/billing-cycle/{id}
+     *
+     * Permanently deletes a billing cycle and all its related data.
+     * Only closed cycles can be deleted. The currently open/active cycle
+     * cannot be deleted to prevent data loss.
+     */
+    public function destroy(int $id): JsonResponse
+    {
+        $cycle = BillingCycle::find($id);
+
+        if (!$cycle) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Billing cycle not found.',
+            ], 404);
+        }
+
+        // Cannot delete the currently open/active cycle
+        if ($cycle->status === 'open') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Cannot delete the currently open billing cycle. Close it first before deleting.',
+            ], 409);
+        }
+
+        // Delete the cycle — related records (member_dues) will cascade delete
+        // due to the foreign key constraint. Expenses will be detached (nullOnDelete).
+        $cycle->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Billing cycle and all associated data deleted successfully.',
+        ]);
+    }
 }
