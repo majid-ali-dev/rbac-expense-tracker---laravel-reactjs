@@ -48,6 +48,10 @@ class UserService
             return false;
         }
 
+        if (empty($data['password'])) {
+            unset($data['password']);
+        }
+
         $updated = $this->userRepository->update($user, $data);
 
         if ($updated && array_key_exists('total_amount', $data) && $data['total_amount'] !== null) {
