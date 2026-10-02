@@ -12,19 +12,20 @@ class UserUpdateRequest extends FormRequest
         return auth()->user()->hasPermission('users.edit');
     }
 
-    public function rules(): array
-    {
-        $userId = $this->route('id');
+   public function rules(): array
+{
+    $userId = $this->route('id');
 
-        return [
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($userId)],
-            'phone' => ['required', 'string', 'max:255'],
-            'total_amount' => ['nullable', 'numeric', 'min:0'],
-            'roles' => ['nullable', 'array'],
-            'roles.*' => ['integer', 'exists:roles,id'],
-        ];
-    }
+    return [
+        'name' => ['required', 'string', 'max:255'],
+        'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($userId)],
+        'phone' => ['required', 'string', 'max:255'],
+        'total_amount' => ['nullable', 'numeric', 'min:0'],
+        'roles' => ['nullable', 'array'],
+        'roles.*' => ['integer', 'exists:roles,id'],
+        'password' => ['nullable', 'string', 'min:5'], 
+    ];
+}
 
     public function messages(): array
     {
@@ -44,6 +45,7 @@ class UserUpdateRequest extends FormRequest
             'roles.array' => 'Roles selection is invalid.',
             'roles.*.integer' => 'Each selected role must be valid.',
             'roles.*.exists' => 'One or more selected roles are invalid.',
+            'password.min' => 'Password must be at least 5 characters.',
         ];
     }
 }

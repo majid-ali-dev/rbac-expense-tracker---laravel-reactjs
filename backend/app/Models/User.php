@@ -19,6 +19,7 @@ class User extends Authenticatable
     protected $casts = [
         'total_amount' => 'decimal:2',
         'email_verified_at' => 'datetime',
+        'password' => 'hashed',
     ];
 
     protected $hidden = [
